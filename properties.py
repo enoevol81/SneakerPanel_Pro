@@ -1,0 +1,107 @@
+import bpy
+from .utils.panel_utils import update_stabilizer, update_stabilizer_ui
+
+def register_properties():
+    bpy.types.Scene.spp_panel_count = bpy.props.IntProperty(
+        name="Panel Count",
+        description="Counter for panel numbering",
+        default=1,
+        min=1
+    )
+    
+    bpy.types.Scene.spp_panel_name = bpy.props.StringProperty(
+        name="Panel Name",
+        description="Descriptive name for the current panel (e.g., Toecap, Quarter Panel)",
+        default="Panel"
+    )
+    
+    bpy.types.Scene.spp_shell_object = bpy.props.PointerProperty(
+        name="Shell Object", 
+        type=bpy.types.Object,
+        poll=lambda self, obj: obj.type == 'MESH'
+    )
+    
+    bpy.types.Scene.spp_use_stabilizer = bpy.props.BoolProperty(
+        name="Use Stabilizer", 
+        description="Enable stroke stabilization for Grease Pencil",
+        default=False, 
+        update=update_stabilizer
+    )
+    
+    bpy.types.Scene.spp_stabilizer_radius = bpy.props.IntProperty(
+        name="Stabilizer Radius", 
+        default=10, 
+        min=1, 
+        max=100, 
+        update=update_stabilizer
+    )
+    
+    bpy.types.Scene.spp_stabilizer_factor = bpy.props.FloatProperty(
+        name="Stabilizer Factor",
+        default=0.5,
+        min=0.0,
+        max=1.0,
+    )
+    
+    bpy.types.Scene.spp_reduce_verts = bpy.props.BoolProperty(
+        name="Reduce Verts",
+        description="Enable vertex reduction options",
+        default=False
+    )
+    
+    bpy.types.Scene.spp_stabilizer_strength_ui = bpy.props.IntProperty(
+        name="Stabilizer Strength",
+        description="Control stabilizer strength from 1 (low) to 10 (high)",
+        default=10,
+        min=1,
+        max=10,
+        update=update_stabilizer_ui
+    )
+    
+    bpy.types.Scene.spp_smooth_factor = bpy.props.FloatProperty(
+        name="Smooth Factor", 
+        default=1.0, 
+        min=0.0, 
+        max=1.0
+    )
+    
+    bpy.types.Scene.spp_grid_fill_span = bpy.props.IntProperty(
+        name="Grid Fill Span", 
+        description="Span for grid fill operation",
+        default=2, 
+        min=0, 
+        max=100
+    )
+    
+    bpy.types.Scene.spp_decimate_ratio = bpy.props.FloatProperty(
+        name="Decimate Ratio", 
+        description="How much to simplify the curve (lower = simpler)",
+        default=0.5, 
+        min=0.01, 
+        max=1.0
+    )
+
+def unregister_properties():
+    props = [
+        "spp_panel_count",
+        "spp_panel_name",
+        "spp_shell_object",
+        "spp_use_stabilizer",
+        "spp_stabilizer_radius",
+        "spp_stabilizer_factor",
+        "spp_reduce_verts",
+        "spp_stabilizer_strength_ui",
+        "spp_smooth_factor",
+        "spp_grid_fill_span",
+        "spp_decimate_ratio"
+    ]
+    
+    for prop in props:
+        if hasattr(bpy.types.Scene, prop):
+            delattr(bpy.types.Scene, prop)
+
+def register():
+    register_properties()
+
+def unregister():
+    unregister_properties()
