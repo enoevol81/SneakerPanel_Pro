@@ -24,16 +24,7 @@ class OBJECT_PT_SneakerPanelProMain(bpy.types.Panel):
         
         box.prop_search(context.scene, "spp_shell_object", bpy.data, "objects", text="Shell Object")
         
-        # Final operations section
-        box = layout.box()
-        box.label(text="Final Operations", icon="CHECKMARK")
-        # Placeholder for final operations like UV creation and panel manipulation
-        # These will be populated with actual operators later
-        box.operator("object.panel_generate", text="Generate Panel", icon='MOD_MESHDEFORM')
-        
-        # Information about modules
-        layout.label(text="Use the modules below for specific operations:")
-
+     
 # Registration
 classes = [OBJECT_PT_SneakerPanelProMain]
 

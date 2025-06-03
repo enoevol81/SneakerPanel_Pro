@@ -1,7 +1,7 @@
 import bpy
 
 class OBJECT_PT_SolidifyPanel(bpy.types.Panel):
-    bl_label = "Module 3 - Solidify Panel"
+    bl_label = "Finalize"
     bl_idname = "OBJECT_PT_solidify_panel"
     bl_space_type = 'VIEW_3D'
     bl_region_type = 'UI'

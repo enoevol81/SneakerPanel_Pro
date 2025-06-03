@@ -1,7 +1,7 @@
 import bpy
 
 class OBJECT_PT_ShellUVCrvPanel(bpy.types.Panel):
-    bl_label = "Module 2 - Shell UV to Panel"
+    bl_label = "Shell UV to Panel"
     bl_idname = "OBJECT_PT_shell_uv_to_panel"
     bl_space_type = 'VIEW_3D'
     bl_region_type = 'UI'
