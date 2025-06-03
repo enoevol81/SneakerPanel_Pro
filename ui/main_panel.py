@@ -10,6 +10,22 @@ class OBJECT_PT_SneakerPanelProMain(bpy.types.Panel):
     def draw(self, context):
         layout = self.layout
         
+        # Shell UV Generation Section
+        box = layout.box()
+        row = box.row()
+        row.label(text="Generate Shell UV", icon="OUTLINER_OB_LIGHTPROBE")
+        
+        box.label(text="** First Mark Seams At Heel And Boundary Edges**")
+        
+        # Unwrap Shell button
+        box.operator("object.unwrap_shell", text="Unwrap Shell", icon="MOD_UVPROJECT")
+        
+        # Define Toe button
+        box.operator("object.define_toe", text="Define Toe", icon="CURVE_PATH")
+        
+        # Orient UV Island button
+        box.operator("object.orient_uv_island", text="Orient UV Island", icon="ORIENTATION_LOCAL")
+        
         # Panel number and name (global settings)
         box = layout.box()
         box.label(text="Panel Settings", icon="SETTINGS")

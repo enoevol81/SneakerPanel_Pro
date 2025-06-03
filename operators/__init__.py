@@ -26,6 +26,9 @@ from . import bezier_to_panel
 from . import shell_uv_to_panel
 from . import solidify_panel
 from . import flatten_panel_uv
+from . import unwrap_shell
+from . import define_toe
+from . import orient_uv_island
 
 # Register/unregister functions
 def register():
@@ -41,6 +44,9 @@ def register():
     shell_uv_to_panel.register()
     solidify_panel.register()
     flatten_panel_uv.register()
+    unwrap_shell.register()
+    define_toe.register()
+    orient_uv_island.register()
     
     # Import and register uv_to_mesh separately to avoid circular imports
     from . import uv_to_mesh
@@ -55,6 +61,9 @@ def unregister():
         pass
         
     # Unregister other operators
+    orient_uv_island.unregister()
+    define_toe.unregister()
+    unwrap_shell.unregister()
     flatten_panel_uv.unregister()
     solidify_panel.unregister()
     shell_uv_to_panel.unregister()
