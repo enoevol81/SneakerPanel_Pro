@@ -35,7 +35,7 @@ class OBJECT_PT_BezierToPanel(bpy.types.Panel):
         
         box = layout.box()
         box.label(text="3. Convert Bezier to Surface - Edit", icon='OUTLINER_OB_SURFACE')
-        box.operator("curvetools.convert_bezier_to_surface", text="Convert Bezier to Surface", icon='SURFACE_DATA')
+        box.operator("spp.convert_bezier_to_surface", text="Convert Bezier to Surface", icon='SURFACE_DATA')
 
 
 # Registration
