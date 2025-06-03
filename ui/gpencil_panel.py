@@ -18,7 +18,7 @@ class OBJECT_PT_GPencilToPanel(bpy.types.Panel):
     def draw_grease_pencil_section(self, layout, context):
         box = layout.box()
         box.label(text="1. Draw Panel Using Grease Pencil", icon="GREASEPENCIL")
-        box.operator("object.add_gp_draw", text="Add Grease Pencil Item", icon='GREASEPENCIL')
+        box.operator("object.add_gp_draw", text="Add Grease Pencil Item", icon='OUTLINER_OB_GREASEPENCIL')
         box.prop(context.scene, "spp_use_stabilizer", text="Use Stabilizer")
         if context.scene.spp_use_stabilizer:
             box.prop(context.scene, "spp_stabilizer_radius", text="Stabilizer Radius")
@@ -27,7 +27,7 @@ class OBJECT_PT_GPencilToPanel(bpy.types.Panel):
     def draw_conversion_section(self, layout, context):
         box = layout.box()
         box.label(text="2. Convert Grease Pencil to Curve - Edit", icon='OUTLINER_OB_CURVE')
-        box.operator("object.gp_to_curve", text="Create Curve", icon='OUTLINER_OB_CURVE')
+        box.operator("object.gp_to_curve", text="Create Curve", icon='IPO_BEZIER')
         box.label(text="-- 2a. Optional - Decimate Curve --")
         box.prop(context.scene, "spp_decimate_ratio", text="Ratio")
         box.operator("object.decimate_curve", text="Decimate Curve", icon='MOD_DECIM')
@@ -35,7 +35,7 @@ class OBJECT_PT_GPencilToPanel(bpy.types.Panel):
     def draw_mesh_edit_section(self, layout, context):
         box = layout.box()
         box.label(text="3. Convert Curve to Mesh - Edit", icon='OUTLINER_OB_MESH')
-        box.operator("object.convert_to_mesh", text="Convert to Mesh", icon='OUTLINER_OB_MESH')
+        box.operator("object.convert_to_mesh", text="Convert to Mesh", icon='MESH_DATA')
         
         # Show vertex count if we have a mesh
         obj = context.active_object
