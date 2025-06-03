@@ -313,3 +313,13 @@ def generate_panel(panel_obj, shell_obj, filled_obj_name=None, grid_span=4, uv_l
 
     info("Panel generation complete!")
     return filled_obj
+
+
+# Add register and unregister functions to fix the error when disabling the addon
+def register():
+    # This module only contains utility functions, no classes to register
+    pass
+
+def unregister():
+    # This module only contains utility functions, no classes to unregister
+    pass
