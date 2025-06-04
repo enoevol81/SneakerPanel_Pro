@@ -1,8 +1,8 @@
 import bpy
 
-class OBJECT_PT_ShellPatternPanel(bpy.types.Panel):
-    bl_label = "Pattern from Shell"
-    bl_idname = "OBJECT_PT_shell_pattern_panel"
+class OBJECT_PT_ShellPatternToOverlay(bpy.types.Panel):
+    bl_label = "Shell Pattern To Overlay"
+    bl_idname = "OBJECT_PT_shell_pattern_to_overlay"
     bl_space_type = 'VIEW_3D'
     bl_region_type = 'UI'
     bl_category = 'Sneaker Panel'
@@ -24,7 +24,7 @@ class OBJECT_PT_ShellPatternPanel(bpy.types.Panel):
         row.operator("object.shell_uv_to_panel", icon='MOD_SOLIDIFY')
 
 # Registration
-classes = [OBJECT_PT_ShellPatternPanel]
+classes = [OBJECT_PT_ShellPatternToOverlay]
 
 def register():
     for cls in classes:

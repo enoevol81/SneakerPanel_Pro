@@ -26,7 +26,7 @@ class OBJECT_PT_SneakerPanelProMain(bpy.types.Panel):
         # Orient UV Island button
         box.operator("object.orient_uv_island", text="Orient UV Island", icon="ORIENTATION_LOCAL")
         
-        # Panel number and name (global settings)
+        # Panel Settings Section
         box = layout.box()
         box.label(text="Panel Settings", icon="SETTINGS")
         
@@ -39,7 +39,22 @@ class OBJECT_PT_SneakerPanelProMain(bpy.types.Panel):
         row.prop(context.scene, "spp_panel_name", text="")
         
         box.prop_search(context.scene, "spp_shell_object", bpy.data, "objects", text="Shell Object")
-        
+
+        # Common Panel Creation Tools Section
+        box = layout.box()
+        box.label(text="1. Draw Panel Using Grease Pencil", icon="GREASEPENCIL")
+        box.operator("object.add_gp_draw", text="Add Grease Pencil Item", icon='OUTLINER_OB_GREASEPENCIL')
+        box.prop(context.scene, "spp_use_stabilizer", text="Use Stabilizer")
+        if context.scene.spp_use_stabilizer:
+            box.prop(context.scene, "spp_stabilizer_radius", text="Stabilizer Radius")
+            box.prop(context.scene, "spp_stabilizer_strength_ui", text="Stabilizer Strength")
+
+        box = layout.box()
+        box.label(text="2. Convert Grease Pencil to Curve - Edit", icon='OUTLINER_OB_CURVE')
+        box.operator("object.gp_to_curve", text="Create Curve", icon='IPO_BEZIER')
+        box.label(text="2a. Optional - Decimate Curve")
+        box.prop(context.scene, "spp_decimate_ratio", text="Ratio")
+        box.operator("object.decimate_curve", text="Decimate Curve", icon='MOD_DECIM')
      
 # Registration
 classes = [OBJECT_PT_SneakerPanelProMain]
