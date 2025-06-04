@@ -55,6 +55,12 @@ class OBJECT_PT_SneakerPanelProMain(bpy.types.Panel):
         box.label(text="2a. Optional - Decimate Curve")
         box.prop(context.scene, "spp_decimate_ratio", text="Ratio")
         box.operator("object.decimate_curve", text="Decimate Curve", icon='MOD_DECIM')
+        # In main_panel.py, draw() method, within a curve tools section:
+        box.separator()
+        col = box.column(align=True)
+        col.label(text="Mirror Curve (Edit Mode):")
+        col.operator("curve.mirror_selected_points_at_cursor", text="Mirror Selected Points at Cursor")
+        # Its 'axis' property will appear in the Redo Last panel (F9)
      
 # Registration
 classes = [OBJECT_PT_SneakerPanelProMain]

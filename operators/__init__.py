@@ -29,6 +29,7 @@ from . import uv_to_mesh
 from . import unwrap_shell
 from . import define_toe
 from . import orient_uv_island
+from . import mirror_curve_points
 
 # Register/unregister functions
 def register():
@@ -48,6 +49,7 @@ def register():
     unwrap_shell.register()
     define_toe.register()
     orient_uv_island.register()
+    mirror_curve_points.register()
 
 def unregister():
     orient_uv_island.unregister()
@@ -66,3 +68,4 @@ def unregister():
     decimate_curve.unregister()
     gp_to_curve.unregister()
     add_gp_draw.unregister()
+    mirror_curve_points.unregister()
