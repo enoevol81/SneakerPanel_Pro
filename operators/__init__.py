@@ -16,16 +16,16 @@ bl_info = {
 from . import add_gp_draw
 from . import gp_to_curve
 from . import decimate_curve
+from . import convert_bezier_to_surface
 from . import convert_to_mesh
+from . import surface_resolution
 from . import smooth_vertices
 from . import reduce_verts
 from . import panel_generate
 from . import panel_generator
-from . import convert_bezier_to_surface
-from . import bezier_to_panel
 from . import shell_uv_to_panel
 from . import solidify_panel
-from . import flatten_panel_uv
+from . import uv_to_mesh
 from . import unwrap_shell
 from . import define_toe
 from . import orient_uv_island
@@ -35,45 +35,34 @@ def register():
     add_gp_draw.register()
     gp_to_curve.register()
     decimate_curve.register()
+    convert_bezier_to_surface.register()
     convert_to_mesh.register()
+    surface_resolution.register()
     smooth_vertices.register()
     reduce_verts.register()
     panel_generate.register()
-    convert_bezier_to_surface.register()
-    bezier_to_panel.register()
+    panel_generator.register()
     shell_uv_to_panel.register()
     solidify_panel.register()
-    flatten_panel_uv.register()
+    uv_to_mesh.register()
     unwrap_shell.register()
     define_toe.register()
     orient_uv_island.register()
-    
-    # Import and register uv_to_mesh separately to avoid circular imports
-    from . import uv_to_mesh
-    uv_to_mesh.register()
 
 def unregister():
-    # Import and unregister uv_to_mesh first
-    try:
-        from . import uv_to_mesh
-        uv_to_mesh.unregister()
-    except:
-        pass
-        
-    # Unregister other operators
     orient_uv_island.unregister()
     define_toe.unregister()
     unwrap_shell.unregister()
-    flatten_panel_uv.unregister()
+    uv_to_mesh.unregister()
     solidify_panel.unregister()
     shell_uv_to_panel.unregister()
-    bezier_to_panel.unregister()
-    convert_bezier_to_surface.unregister()
-    panel_generate.unregister()
     panel_generator.unregister()
+    panel_generate.unregister()
     reduce_verts.unregister()
     smooth_vertices.unregister()
+    surface_resolution.unregister()
     convert_to_mesh.unregister()
+    convert_bezier_to_surface.unregister()
     decimate_curve.unregister()
     gp_to_curve.unregister()
     add_gp_draw.unregister()
