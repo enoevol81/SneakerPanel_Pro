@@ -17,13 +17,11 @@ class OBJECT_OT_SolidifyPanel(bpy.types.Operator):
         solidify = obj.modifiers.get('Solidify')
         if not solidify:
             solidify = obj.modifiers.new(name='Solidify', type='SOLIDIFY')
-
-        # Apply settings from scene properties
-        solidify.thickness = context.scene.spp_solidify_thickness
-        solidify.offset = context.scene.spp_solidify_offset
-        solidify.use_even_offset = context.scene.spp_solidify_even_thickness
-        solidify.use_rim = context.scene.spp_solidify_rim
-        solidify.use_rim_only = context.scene.spp_solidify_rim_only
+            # Set some reasonable defaults for shoe panels
+            solidify.thickness = 0.002  # 2mm default thickness
+            solidify.offset = 0.0      # Centered offset
+            solidify.use_even_offset = True  # Even thickness distribution
+            solidify.use_rim = True    # Create rim faces
 
         return {'FINISHED'}
 

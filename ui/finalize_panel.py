@@ -15,10 +15,10 @@ class OBJECT_PT_SolidifyPanel(bpy.types.Panel):
     def draw(self, context):
         layout = self.layout
         obj = context.active_object
-        scene = context.scene
 
         # Solidify button if no modifier exists
-        if not obj.modifiers.get('Solidify'):
+        solidify = obj.modifiers.get('Solidify')
+        if not solidify:
             layout.operator("object.solidify_panel", text="Solidify", icon='MODIFIER')
             return
 
@@ -28,11 +28,22 @@ class OBJECT_PT_SolidifyPanel(bpy.types.Panel):
         
         # Thickness
         row = box.row()
-        row.prop(scene, "spp_solidify_thickness", text="Thickness")
+        row.prop(solidify, "thickness", text="Thickness")
 
         # Offset
         row = box.row()
-        row.prop(scene, "spp_solidify_offset", text="Offset")
+        row.prop(solidify, "offset", text="Offset")
+
+        # Additional useful parameters
+        row = box.row()
+        row.prop(solidify, "use_even_offset", text="Even Thickness")
+        
+        row = box.row()
+        row.prop(solidify, "use_rim", text="Fill Rim")
+
+        # Apply button
+        box.separator()
+        box.operator("object.apply_solidify", text="Apply Solidify", icon='CHECKMARK')
 
         # Even thickness
         row = box.row()
