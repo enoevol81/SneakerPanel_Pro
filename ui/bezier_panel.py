@@ -56,7 +56,7 @@ class OBJECT_PT_BezierToPanel(bpy.types.Panel):
         box.prop(context.scene, "spp_shade_smooth", text="Smooth Shading")
         
         # Surface to Mesh conversion button
-        box.operator("spp.convert_surface_to_mesh", text="Convert Surface to Mesh", icon='MESH_GRID')
+        box.operator("object.convert", text="Convert Surface to Mesh", icon='MESH_GRID').target = 'MESH'
 
 
 # Registration
