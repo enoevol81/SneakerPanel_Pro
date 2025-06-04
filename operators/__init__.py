@@ -21,6 +21,7 @@ from . import convert_to_mesh
 from . import surface_resolution
 from . import smooth_vertices
 from . import reduce_verts
+from . import mirror_curve
 from . import panel_generate
 from . import panel_generator
 from . import shell_uv_to_panel
@@ -40,6 +41,7 @@ def register():
     surface_resolution.register()
     smooth_vertices.register()
     reduce_verts.register()
+    mirror_curve.register()
     panel_generate.register()
     panel_generator.register()
     shell_uv_to_panel.register()
@@ -60,6 +62,7 @@ def unregister():
     panel_generate.unregister()
     reduce_verts.unregister()
     smooth_vertices.unregister()
+    mirror_curve.unregister()
     surface_resolution.unregister()
     convert_to_mesh.unregister()
     convert_bezier_to_surface.unregister()
