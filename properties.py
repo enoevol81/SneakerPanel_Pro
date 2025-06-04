@@ -80,6 +80,46 @@ def register_properties():
         min=0.01, 
         max=1.0
     )
+    
+    # Solidify properties
+    bpy.types.Scene.spp_solidify_thickness = bpy.props.FloatProperty(
+        name="Thickness",
+        description="Thickness of the solidified panel",
+        default=0.01,
+        min=0.0,
+        unit='LENGTH',
+        update=lambda self, context: context.active_object.modifiers.get('Solidify').thickness if context.active_object and context.active_object.modifiers.get('Solidify') else None
+    )
+    
+    bpy.types.Scene.spp_solidify_offset = bpy.props.FloatProperty(
+        name="Offset",
+        description="Offset the thickness from the center",
+        default=-1.0,
+        min=-1.0,
+        max=1.0,
+        update=lambda self, context: context.active_object.modifiers.get('Solidify').offset if context.active_object and context.active_object.modifiers.get('Solidify') else None
+    )
+    
+    bpy.types.Scene.spp_solidify_even_thickness = bpy.props.BoolProperty(
+        name="Even Thickness",
+        description="Maintain thickness by adjusting for sharp corners",
+        default=True,
+        update=lambda self, context: context.active_object.modifiers.get('Solidify').use_even_offset if context.active_object and context.active_object.modifiers.get('Solidify') else None
+    )
+    
+    bpy.types.Scene.spp_solidify_rim = bpy.props.BoolProperty(
+        name="Fill Rim",
+        description="Fill the rim with faces",
+        default=True,
+        update=lambda self, context: context.active_object.modifiers.get('Solidify').use_rim if context.active_object and context.active_object.modifiers.get('Solidify') else None
+    )
+    
+    bpy.types.Scene.spp_solidify_rim_only = bpy.props.BoolProperty(
+        name="Only Rim",
+        description="Only create the rim, without filling the surfaces",
+        default=False,
+        update=lambda self, context: context.active_object.modifiers.get('Solidify').use_rim_only if context.active_object and context.active_object.modifiers.get('Solidify') else None
+    )
 
 def unregister_properties():
     props = [
@@ -93,7 +133,12 @@ def unregister_properties():
         "spp_stabilizer_strength_ui",
         "spp_smooth_factor",
         "spp_grid_fill_span",
-        "spp_decimate_ratio"
+        "spp_decimate_ratio",
+        "spp_solidify_thickness",
+        "spp_solidify_offset",
+        "spp_solidify_even_thickness",
+        "spp_solidify_rim",
+        "spp_solidify_rim_only"
     ]
     
     for prop in props:

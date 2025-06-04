@@ -3,14 +3,14 @@ from . import main_panel
 from . import gpencil_panel
 from . import bezier_panel
 from . import shell_uv_panel
-from . import solidify_panel
+from . import finalize_panel
 
 modules = [
     main_panel,
     gpencil_panel,
     bezier_panel,
     shell_uv_panel,
-    solidify_panel,
+    finalize_panel,
 ]
 
 def register():
