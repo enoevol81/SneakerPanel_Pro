@@ -1,8 +1,8 @@
 import bpy
 
-class OBJECT_PT_ShellUVCrvPanel(bpy.types.Panel):
-    bl_label = "Shell UV to Panel"
-    bl_idname = "OBJECT_PT_shell_uv_to_panel"
+class OBJECT_PT_ShellPatternPanel(bpy.types.Panel):
+    bl_label = "Pattern from Shell"
+    bl_idname = "OBJECT_PT_shell_pattern_panel"
     bl_space_type = 'VIEW_3D'
     bl_region_type = 'UI'
     bl_category = 'Sneaker Panel'
@@ -24,7 +24,7 @@ class OBJECT_PT_ShellUVCrvPanel(bpy.types.Panel):
         row.operator("object.shell_uv_to_panel", icon='MOD_SOLIDIFY')
 
 # Registration
-classes = [OBJECT_PT_ShellUVCrvPanel]
+classes = [OBJECT_PT_ShellPatternPanel]
 
 def register():
     for cls in classes:
