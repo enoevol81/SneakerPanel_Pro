@@ -35,17 +35,80 @@ class OBJECT_PT_BezierToPanel(bpy.types.Panel):
         
         box = layout.box()
         box.label(text="3. Convert Bezier to Surface - Edit", icon='OUTLINER_OB_SURFACE')
+        
+        # Bezier to Surface conversion options
+        row = box.row()
+        row.prop(context.scene, "spp_bezier_center", text="Center")
+        
+        row = box.row(align=True)
+        row.prop(context.scene, "spp_resolution_u", text="Resolution U")
+        row.prop(context.scene, "spp_resolution_v", text="Resolution V")
+        
+        # Bezier to Surface conversion button
         box.operator("spp.convert_bezier_to_surface", text="Convert Bezier to Surface", icon='SURFACE_DATA')
+        
+        # Surface to Mesh conversion section
+        box = layout.box()
+        box.label(text="4. Convert Surface to Mesh", icon='MESH_DATA')
+        
+        # Surface to Mesh conversion options
+        box.prop(context.scene, "spp_preserve_surface", text="Preserve Surface")
+        box.prop(context.scene, "spp_shade_smooth", text="Smooth Shading")
+        
+        # Surface to Mesh conversion button
+        box.operator("spp.convert_surface_to_mesh", text="Convert Surface to Mesh", icon='MESH_GRID')
 
 
 # Registration
 classes = [OBJECT_PT_BezierToPanel]
 
 def register():
+    # Register scene properties for operator settings
+    bpy.types.Scene.spp_bezier_center = bpy.props.BoolProperty(
+        name="Center",
+        description="Consider center points when creating the surface",
+        default=False
+    )
+    
+    bpy.types.Scene.spp_resolution_u = bpy.props.IntProperty(
+        name="Resolution U",
+        description="Surface resolution in the U direction",
+        default=4,
+        min=1,
+        soft_max=64
+    )
+    
+    bpy.types.Scene.spp_resolution_v = bpy.props.IntProperty(
+        name="Resolution V",
+        description="Surface resolution in the V direction",
+        default=4,
+        min=1,
+        soft_max=64
+    )
+    
+    bpy.types.Scene.spp_preserve_surface = bpy.props.BoolProperty(
+        name="Preserve Surface",
+        description="Keep the original NURBS surface after conversion",
+        default=True
+    )
+    
+    bpy.types.Scene.spp_shade_smooth = bpy.props.BoolProperty(
+        name="Smooth Shading",
+        description="Apply smooth shading to the resulting mesh",
+        default=True
+    )
+    
     for cls in classes:
         bpy.utils.register_class(cls)
 
 def unregister():
+    # Unregister scene properties
+    del bpy.types.Scene.spp_bezier_center
+    del bpy.types.Scene.spp_resolution_u
+    del bpy.types.Scene.spp_resolution_v
+    del bpy.types.Scene.spp_preserve_surface
+    del bpy.types.Scene.spp_shade_smooth
+    
     for cls in reversed(classes):
         bpy.utils.unregister_class(cls)
 
