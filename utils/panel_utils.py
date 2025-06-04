@@ -14,6 +14,9 @@ def update_stabilizer_ui(self, context):
     context.scene.spp_stabilizer_factor = mapped_value
     update_stabilizer(self, context)
 
+# In SneakerPanel_Pro/utils/panel_utils.py
+import bpy # Make sure bpy is imported if not already
+
 def apply_surface_snap():
     """Apply a fake transform to snap vertices to the nearest surface"""
     bpy.ops.transform.translate(
@@ -30,12 +33,12 @@ def apply_surface_snap():
         use_proportional_projected=False,
         snap=True,
         snap_elements={'FACE_NEAREST'},
-        use_snap_project=False,
         snap_target='CLOSEST',
-        use_snap_self=True,
+        use_snap_project=False,
+        use_snap_self=False,    # <--- CRITICAL CHANGE HERE
         use_snap_edit=True,
         use_snap_nonedit=True,
-        use_snap_selectable=False
+        use_snap_selectable=False # Allow snapping to non-selectable if shell is not selectable
     )
 
 def reduce_mesh_verts(context, percentage):

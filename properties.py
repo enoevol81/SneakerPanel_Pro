@@ -120,6 +120,33 @@ def register_properties():
         default=False,
         update=lambda self, context: context.active_object.modifiers.get('Solidify').use_rim_only if context.active_object and context.active_object.modifiers.get('Solidify') else None
     )
+    
+    # In properties.py, within register_properties():
+    bpy.types.Scene.spp_panel_add_subdivision = bpy.props.BoolProperty(
+        name="Add Subdivision",
+        description="Add a Subdivision Surface modifier to the generated panel",
+        default=True
+    )
+
+    bpy.types.Scene.spp_panel_subdivision_levels = bpy.props.IntProperty(
+        name="Subdivision Levels",
+        description="Number of subdivision levels to apply",
+        default=1,
+        min=0, # Level 0 means no effective subdivision from modifier
+        max=6 
+    )
+
+    bpy.types.Scene.spp_panel_conform_after_subdivision = bpy.props.BoolProperty(
+        name="Conform After Subdivision",
+        description="Apply a Shrinkwrap modifier after subdivision to re-conform to the shell",
+        default=True
+    )
+
+    bpy.types.Scene.spp_panel_shade_smooth = bpy.props.BoolProperty(
+        name="Shade Smooth Panel",
+        description="Apply smooth shading to the final panel",
+        default=True
+    )
 
 def unregister_properties():
     props = [
@@ -139,6 +166,10 @@ def unregister_properties():
         "spp_solidify_even_thickness",
         "spp_solidify_rim",
         "spp_solidify_rim_only"
+        "spp_panel_add_subdivision",
+        "spp_panel_subdivision_levels",
+        "spp_panel_conform_after_subdivision",
+        "spp_panel_shade_smooth"
     ]
     
     for prop in props:
