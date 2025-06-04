@@ -2,8 +2,8 @@ import bpy
 import bmesh
 from mathutils import Vector, geometry
 from ..utils.collections import add_object_to_panel_collection
-from .panel_generator import generate_panel, get_boundary_verts # Import get_boundary_verts
-from ..utils.panel_utils import apply_surface_snap 
+from .panel_generator import generate_panel # Import the utility function
+from ..utils.panel_utils import apply_surface_snap # For transform-based snap
 
 # (get_3d_point_from_uv function remains as previously corrected - ensure it's here)
 def get_3d_point_from_uv(shell_obj, uv_layer_name, uv_coord_target_2d, context):
@@ -58,17 +58,17 @@ def get_3d_point_from_uv(shell_obj, uv_layer_name, uv_coord_target_2d, context):
 class OBJECT_OT_ShellUVToPanel(bpy.types.Operator):
     bl_idname = "object.shell_uv_to_panel"
     bl_label = "Shell UV Design to 3D Panel"
-    bl_description = "Reprojects a 2D design (Curve or Mesh outline) from UV space onto the 3D shell and creates a panel"
+    bl_description = "Reprojects a 2D design (curve) from UV space onto the 3D shell and creates a panel"
     bl_options = {'REGISTER', 'UNDO'}
 
     @classmethod
     def poll(cls, context):
         active_obj = context.active_object
-        return (active_obj and (active_obj.type == 'CURVE' or active_obj.type == 'MESH') and # MODIFIED POLL
+        return (active_obj and active_obj.type == 'CURVE' and
                 hasattr(context.scene, 'spp_shell_object') and context.scene.spp_shell_object and
                 context.scene.spp_shell_object.type == 'MESH')
 
-    def find_uv_reference_mesh(self, context, shell_obj_name): # (as before)
+    def find_uv_reference_mesh(self, context, shell_obj_name):
         for obj in context.scene.objects:
             if obj.type == 'MESH' and "spp_original_3d_mesh_name" in obj:
                 if obj["spp_original_3d_mesh_name"] == shell_obj_name:
@@ -78,17 +78,17 @@ class OBJECT_OT_ShellUVToPanel(bpy.types.Operator):
     def execute(self, context):
         bpy.ops.ed.undo_push(message="Shell UV to Panel")
 
-        design_obj = context.active_object # This can now be CURVE or MESH
+        design_obj = context.active_object
         shell_obj = context.scene.spp_shell_object
         
-        # Variables for intermediate objects/data for cleanup
         intermediate_curve_obj_name = None 
-        curve_data_3d_ref = None 
-        curve_data_3d_name_for_report = None
+        curve_data_3d_ref = None # Python reference to the Curve datablock
+        curve_data_3d_name_for_report = None # Store name before potential removal
         
-        intermediate_boundary_mesh_name = None # Name of the mesh passed to generate_panel
-        intermediate_boundary_mesh_data_ref = None # Its data
-        intermediate_boundary_mesh_data_name_for_report = None
+        boundary_mesh_obj_name = None 
+        mesh_data_boundary_ref = None # Python reference to Mesh datablock
+        mesh_data_boundary_name_for_report = None # Store name before potential removal
+
 
         if not shell_obj: self.report({'ERROR'}, "Scene 'Shell Object' not set."); return {'CANCELLED'}
         uv_mesh_obj = self.find_uv_reference_mesh(context, shell_obj.name)
@@ -99,140 +99,86 @@ class OBJECT_OT_ShellUVToPanel(bpy.types.Operator):
         source_uv_map_name = uv_mesh_obj["spp_source_uv_map_name"]
         if scale_factor == 0: self.report({'ERROR'}, "UV ref scale factor is zero."); return {'CANCELLED'}
 
-        panel_count = context.scene.spp_panel_count
-        panel_name_prop = context.scene.spp_panel_name
-        
-        # This will become the mesh object whose boundary is used by generate_panel
-        boundary_mesh_for_generator = None 
-
-        if design_obj.type == 'CURVE':
-            self.report({'INFO'}, f"Processing CURVE input: {design_obj.name}")
-            reprojected_splines_data = []
-            for spline in design_obj.data.splines: # ... (reprojection logic as before) ...
-                if not spline.bezier_points and not spline.points: continue
-                points_3d_for_spline = []
-                source_points = spline.bezier_points if spline.type == 'BEZIER' else spline.points
-                for point_idx, point in enumerate(source_points):
-                    p_world_curve = design_obj.matrix_world @ point.co.xyz
-                    p_local_uv_mesh = uv_mesh_obj.matrix_world.inverted() @ p_world_curve
-                    uv_original_x = p_local_uv_mesh.x / scale_factor
-                    uv_original_y = p_local_uv_mesh.y / scale_factor
-                    current_uv = Vector((uv_original_x, uv_original_y))
-                    point_3d = get_3d_point_from_uv(shell_obj, source_uv_map_name, current_uv, context)
-                    if point_3d: points_3d_for_spline.append(point_3d)
-                    else: self.report({'WARNING'}, f"Pt {point_idx}: No 3D map for UV {current_uv} on '{design_obj.name}'.")
-                if points_3d_for_spline:
-                     reprojected_splines_data.append({"points": points_3d_for_spline, "is_cyclic": spline.use_cyclic_u if spline.type == 'BEZIER' else spline.use_cyclic, "type": spline.type})
-            if not reprojected_splines_data: self.report({'ERROR'}, "No points reprojected from curve."); return {'CANCELLED'}
-
-            base_curve_name = f"{panel_name_prop}_Curve3D_{panel_count}" if panel_name_prop and panel_name_prop.strip() else f"PanelCurve3D_{panel_count}"
-            curve_data_3d_ref = bpy.data.curves.new(name=f"{base_curve_name}_Data", type='CURVE'); curve_data_3d_ref.dimensions = '3D'
-            curve_data_3d_name_for_report = curve_data_3d_ref.name
-            for spline_data in reprojected_splines_data: # ... (populate curve_data_3d_ref as before) ...
-                new_spline = curve_data_3d_ref.splines.new(type=spline_data["type"])
-                if spline_data["type"] == 'BEZIER':
-                    if spline_data["points"]: 
-                        new_spline.bezier_points.add(len(spline_data["points"]) -1)
-                        for i, coord_3d in enumerate(spline_data["points"]):
-                            bp = new_spline.bezier_points[i]; bp.co = coord_3d; bp.handle_left_type = bp.handle_right_type = 'AUTO'
-                        new_spline.use_cyclic_u = spline_data["is_cyclic"]
-                else: 
-                    if spline_data["points"]:
-                        new_spline.points.add(len(spline_data["points"]) -1)
-                        for i, coord_3d in enumerate(spline_data["points"]): new_spline.points[i].co = list(coord_3d) + [1.0]
-                        new_spline.use_cyclic = spline_data["is_cyclic"]
-            
-            curve_obj_3d_ref = bpy.data.objects.new(base_curve_name, curve_data_3d_ref) 
-            intermediate_curve_obj_name = curve_obj_3d_ref.name 
-            context.collection.objects.link(curve_obj_3d_ref); bpy.ops.object.select_all(action='DESELECT'); context.view_layer.objects.active = curve_obj_3d_ref; curve_obj_3d_ref.select_set(True)
-            if curve_obj_3d_ref.mode != 'EDIT': bpy.ops.object.mode_set(mode='EDIT')
-            bpy.ops.curve.select_all(action='SELECT'); bpy.ops.transform.translate(value=(0,0,0), snap=True, snap_elements={'FACE_NEAREST'}, snap_target='CLOSEST'); bpy.ops.object.mode_set(mode='OBJECT')
-            
-            bpy.ops.object.convert(target='MESH') 
-            boundary_mesh_for_generator = context.active_object # This is the mesh converted from the 3D curve
-            if boundary_mesh_for_generator.type != 'MESH' : self.report({'ERROR'}, "Conversion of 3D curve to mesh failed."); return {'CANCELLED'} # Simplified check
-
-        elif design_obj.type == 'MESH':
-            self.report({'INFO'}, f"Processing MESH input: {design_obj.name}")
-            bm_design_2d = bmesh.new()
-            bm_design_2d.from_mesh(design_obj.data)
-            
-            # Use get_boundary_verts from panel_generator (already imported)
-            # It expects a BMesh and returns a list of BMVerts
-            boundary_verts_2d_bmesh = get_boundary_verts(bm_design_2d)
-            if not boundary_verts_2d_bmesh:
-                self.report({'WARNING'}, "Could not determine clear boundary for 2D mesh input, using all verts as outline.")
-                boundary_verts_2d_bmesh = list(bm_design_2d.verts) # Fallback
-
-            points_3d_for_boundary = []
-            for v_2d_bm in boundary_verts_2d_bmesh:
-                p_world_2d_design = design_obj.matrix_world @ v_2d_bm.co # Use BMVert coordinate
-                p_local_uv_mesh = uv_mesh_obj.matrix_world.inverted() @ p_world_2d_design
+        reprojected_splines_data = []
+        for spline in design_obj.data.splines:
+            if not spline.bezier_points and not spline.points: continue
+            points_3d_for_spline = []
+            source_points = spline.bezier_points if spline.type == 'BEZIER' else spline.points
+            for point_idx, point in enumerate(source_points):
+                p_world_curve = design_obj.matrix_world @ point.co.xyz
+                p_local_uv_mesh = uv_mesh_obj.matrix_world.inverted() @ p_world_curve
                 uv_original_x = p_local_uv_mesh.x / scale_factor
                 uv_original_y = p_local_uv_mesh.y / scale_factor
                 current_uv = Vector((uv_original_x, uv_original_y))
                 point_3d = get_3d_point_from_uv(shell_obj, source_uv_map_name, current_uv, context)
-                if point_3d: points_3d_for_boundary.append(point_3d)
-                else: self.report({'WARNING'}, f"Could not reproject UV {current_uv} for 2D mesh vertex index {v_2d_bm.index}.")
-            
-            bm_design_2d.free()
+                if point_3d: points_3d_for_spline.append(point_3d)
+                else: self.report({'WARNING'}, f"Pt {point_idx}: No 3D map for UV {current_uv} on '{design_obj.name}'.")
+            if points_3d_for_spline:
+                 reprojected_splines_data.append({"points": points_3d_for_spline, "is_cyclic": spline.use_cyclic_u if spline.type == 'BEZIER' else spline.use_cyclic, "type": spline.type})
+        if not reprojected_splines_data: self.report({'ERROR'}, "No points reprojected."); return {'CANCELLED'}
 
-            if not points_3d_for_boundary or len(points_3d_for_boundary) < 3:
-                self.report({'ERROR'}, "Not enough points reprojected from 2D mesh boundary."); return {'CANCELLED'}
-
-            # Create a new MESH object from these 3D points to serve as the boundary for generate_panel
-            mesh_data_3d_boundary = bpy.data.meshes.new(name=f"{panel_name_prop}_BoundaryFromMesh2D_{panel_count}_Data")
-            mesh_data_3d_boundary.from_pydata(points_3d_for_boundary, [], []) # Verts only, generate_panel will fill
-            
-            boundary_mesh_for_generator = bpy.data.objects.new(
-                name=f"{panel_name_prop}_BoundaryFromMesh2D_{panel_count}",
-                object_data=mesh_data_3d_boundary
-            )
-            context.collection.objects.link(boundary_mesh_for_generator)
-            # This object is intermediate and will be cleaned up
+        panel_count = context.scene.spp_panel_count
+        panel_name_prop = context.scene.spp_panel_name
+        base_curve_name = f"{panel_name_prop}_Curve3D_{panel_count}" if panel_name_prop and panel_name_prop.strip() else f"PanelCurve3D_{panel_count}"
         
-        else: # Should be caught by poll
-            self.report({'ERROR'}, f"Unsupported design object type: {design_obj.type}"); return {'CANCELLED'}
+        curve_data_3d_ref = bpy.data.curves.new(name=f"{base_curve_name}_Data", type='CURVE')
+        curve_data_3d_ref.dimensions = '3D'
+        curve_data_3d_name_for_report = curve_data_3d_ref.name # Store name before it might be removed
+        for spline_data in reprojected_splines_data:
+            new_spline = curve_data_3d_ref.splines.new(type=spline_data["type"])
+            if spline_data["type"] == 'BEZIER':
+                if spline_data["points"]: 
+                    new_spline.bezier_points.add(len(spline_data["points"]) -1)
+                    for i, coord_3d in enumerate(spline_data["points"]):
+                        bp = new_spline.bezier_points[i]; bp.co = coord_3d; bp.handle_left_type = bp.handle_right_type = 'AUTO'
+                    new_spline.use_cyclic_u = spline_data["is_cyclic"]
+            else: 
+                if spline_data["points"]:
+                    new_spline.points.add(len(spline_data["points"]) -1)
+                    for i, coord_3d in enumerate(spline_data["points"]): new_spline.points[i].co = list(coord_3d) + [1.0]
+                    new_spline.use_cyclic = spline_data["is_cyclic"]
 
-        # --- Common Path: Name and add boundary_mesh_for_generator to collection ---
-        if not boundary_mesh_for_generator:
-            self.report({'ERROR'}, "Boundary mesh for panel generator was not created."); return {'CANCELLED'}
+        curve_obj_3d_ref = bpy.data.objects.new(base_curve_name, curve_data_3d_ref) 
+        intermediate_curve_obj_name = curve_obj_3d_ref.name 
+        context.collection.objects.link(curve_obj_3d_ref)
+        bpy.ops.object.select_all(action='DESELECT')
+        context.view_layer.objects.active = curve_obj_3d_ref
+        curve_obj_3d_ref.select_set(True)
+        if curve_obj_3d_ref.mode != 'EDIT': bpy.ops.object.mode_set(mode='EDIT')
+        bpy.ops.curve.select_all(action='SELECT'); bpy.ops.transform.translate(value=(0,0,0), snap=True, snap_elements={'FACE_NEAREST'}, snap_target='CLOSEST'); bpy.ops.object.mode_set(mode='OBJECT')
+        
+        bpy.ops.object.convert(target='MESH') 
+        boundary_mesh_obj_ref = context.active_object 
+        if boundary_mesh_obj_ref.type != 'MESH' : 
+            self.report({'ERROR'}, "Conversion to mesh failed.")
+            obj_curve_check = bpy.data.objects.get(intermediate_curve_obj_name)
+            if obj_curve_check: bpy.data.objects.remove(obj_curve_check, do_unlink=True)
+            if curve_data_3d_ref and curve_data_3d_ref.users == 0: bpy.data.curves.remove(curve_data_3d_ref)
+            return {'CANCELLED'}
 
-        intermediate_boundary_mesh_name = f"{panel_name_prop}_IntermediateBoundary_{panel_count}"
-        boundary_mesh_for_generator.name = intermediate_boundary_mesh_name
-        intermediate_boundary_mesh_data_ref = boundary_mesh_for_generator.data
-        intermediate_boundary_mesh_data_name_for_report = intermediate_boundary_mesh_data_ref.name
-        intermediate_boundary_mesh_data_ref.name = f"{intermediate_boundary_mesh_name}_Data"
-        add_object_to_panel_collection(boundary_mesh_for_generator, panel_count, f"{panel_name_prop}_Intermediates")
+        boundary_mesh_obj_name = f"{panel_name_prop}_BoundaryMesh_{panel_count}" if panel_name_prop and panel_name_prop.strip() else f"PanelBoundaryMesh_{panel_count}"
+        boundary_mesh_obj_ref.name = boundary_mesh_obj_name
+        mesh_data_boundary_ref = boundary_mesh_obj_ref.data 
+        mesh_data_boundary_name_for_report = mesh_data_boundary_ref.name # Store name
+        mesh_data_boundary_ref.name = f"{boundary_mesh_obj_name}_Data"
+        add_object_to_panel_collection(boundary_mesh_obj_ref, panel_count, panel_name_prop)
 
-
-        # --- Generate Panel using boundary_mesh_for_generator ---
         filled_obj_name = f"{panel_name_prop}_Panel_{panel_count}" if panel_name_prop and panel_name_prop.strip() else f"Panel_{panel_count}"
         grid_span = getattr(context.scene, "spp_grid_fill_span", 2)
-        created_panel_obj = generate_panel(
-            panel_obj=boundary_mesh_for_generator, # This is now consistently a mesh
-            shell_obj=shell_obj, 
-            filled_obj_name=filled_obj_name, 
-            grid_span=grid_span, 
-            uv_layer_name=source_uv_map_name
-        )
+        created_panel_obj = generate_panel(panel_obj=boundary_mesh_obj_ref, shell_obj=shell_obj, filled_obj_name=filled_obj_name, grid_span=grid_span, uv_layer_name=source_uv_map_name)
 
-        if not created_panel_obj: # Error handling and cleanup for generate_panel failure
+        if not created_panel_obj:
             self.report({'ERROR'}, "Panel generation (generate_panel function) failed.")
-            # Cleanup intermediate objects created so far
-            if intermediate_curve_obj_name: # If curve path was taken
-                obj_curve_check = bpy.data.objects.get(intermediate_curve_obj_name)
-                if obj_curve_check: bpy.data.objects.remove(obj_curve_check, do_unlink=True)
+            obj_curve_check = bpy.data.objects.get(intermediate_curve_obj_name)
+            if obj_curve_check: bpy.data.objects.remove(obj_curve_check, do_unlink=True)
             if curve_data_3d_ref and curve_data_3d_ref.users == 0: bpy.data.curves.remove(curve_data_3d_ref)
-            
-            # Cleanup the boundary_mesh_for_generator (whether from curve or mesh path)
-            obj_boundary_mesh_check = bpy.data.objects.get(intermediate_boundary_mesh_name)
+            obj_boundary_mesh_check = bpy.data.objects.get(boundary_mesh_obj_name)
             if obj_boundary_mesh_check:
                 data_b_mesh = obj_boundary_mesh_check.data
                 bpy.data.objects.remove(obj_boundary_mesh_check, do_unlink=True)
                 if data_b_mesh and data_b_mesh.users == 0: bpy.data.meshes.remove(data_b_mesh)
-            elif intermediate_boundary_mesh_data_ref and intermediate_boundary_mesh_data_ref.users == 0: 
-                bpy.data.meshes.remove(intermediate_boundary_mesh_data_ref)
+            elif mesh_data_boundary_ref and mesh_data_boundary_ref.users == 0: 
+                bpy.data.meshes.remove(mesh_data_boundary_ref)
             return {'CANCELLED'}
 
         # (Transform-based snap, optional subdivision/conform, and shade smooth on created_panel_obj as before)
@@ -282,39 +228,43 @@ class OBJECT_OT_ShellUVToPanel(bpy.types.Operator):
                     bpy.ops.object.shade_smooth(); self.report({'INFO'}, "Applied smooth shading.")
         except Exception as e: self.report({'WARNING'}, f"Post-processing error: {e}")
 
+
         # --- REVISED CLEANUP INTERMEDIATE OBJECTS ---
         self.report({'INFO'}, "Cleaning up intermediate objects.")
-        if design_obj and design_obj.name in bpy.data.objects: # Keep original design_obj, just hide it
+        if design_obj and design_obj.name in bpy.data.objects:
             design_obj.hide_viewport = True 
-            self.report({'INFO'}, f"Hid input design object: {design_obj.name}")
+            self.report({'INFO'}, f"Hid input design curve: {design_obj.name}")
 
-        # Cleanup intermediate 3D curve (if curve path was taken)
-        if intermediate_curve_obj_name:
-            obj_to_delete_curve = bpy.data.objects.get(intermediate_curve_obj_name)
-            if obj_to_delete_curve:
-                 bpy.data.objects.remove(obj_to_delete_curve, do_unlink=True)
-                 self.report({'INFO'}, f"Deleted intermediate 3D curve object: {intermediate_curve_obj_name}")
+        # Cleanup the intermediate 3D curve object (using its stored name)
+        obj_to_delete_curve = bpy.data.objects.get(intermediate_curve_obj_name)
+        if obj_to_delete_curve:
+            # Check if this object is not one of the later, important objects
+            if obj_to_delete_curve != boundary_mesh_obj_ref and obj_to_delete_curve != created_panel_obj :
+                bpy.data.objects.remove(obj_to_delete_curve, do_unlink=True)
+                self.report({'INFO'}, f"Deleted intermediate object that was curve: {intermediate_curve_obj_name}")
+        
+        # Remove the original curve_data_3d_ref if it's orphaned
+        # Use the stored name for reporting if data is removed.
         if curve_data_3d_ref and curve_data_3d_ref.users == 0:
-            bpy.data.curves.remove(curve_data_3d_ref)
+            bpy.data.curves.remove(curve_data_3d_ref) # Use the reference to the datablock
             self.report({'INFO'}, f"Deleted intermediate curve data: {curve_data_3d_name_for_report}")
 
-        # Cleanup intermediate boundary mesh (boundary_mesh_for_generator)
-        # This object was created either from the curve path or the mesh path.
-        if intermediate_boundary_mesh_name:
-            obj_to_delete_boundary = bpy.data.objects.get(intermediate_boundary_mesh_name)
-            if obj_to_delete_boundary and obj_to_delete_boundary != created_panel_obj:
-                data_ref = obj_to_delete_boundary.data # Get data before removing object
-                bpy.data.objects.remove(obj_to_delete_boundary, do_unlink=True)
-                self.report({'INFO'}, f"Deleted intermediate boundary mesh object: {intermediate_boundary_mesh_name}")
-                if data_ref and data_ref.users == 0: # Check if data is orphaned
-                    bpy.data.meshes.remove(data_ref)
-                    self.report({'INFO'}, f"Deleted its mesh data: {intermediate_boundary_mesh_data_name_for_report}")
-            elif intermediate_boundary_mesh_data_ref and intermediate_boundary_mesh_data_ref.users == 0:
-                # If object is gone or is the final panel, but data is orphaned
-                if (not obj_to_delete_boundary) or \
-                   (obj_to_delete_boundary == created_panel_obj and created_panel_obj.data != intermediate_boundary_mesh_data_ref):
-                    bpy.data.meshes.remove(intermediate_boundary_mesh_data_ref)
-                    self.report({'INFO'}, f"Cleaned up orphaned intermediate boundary mesh data: {intermediate_boundary_mesh_data_name_for_report}")
+
+        # Cleanup boundary_mesh_obj (using its stored name) if it's not the final panel
+        if boundary_mesh_obj_name:
+            obj_to_delete_boundary_mesh = bpy.data.objects.get(boundary_mesh_obj_name)
+            if obj_to_delete_boundary_mesh and obj_to_delete_boundary_mesh != created_panel_obj:
+                data_to_delete = obj_to_delete_boundary_mesh.data 
+                bpy.data.objects.remove(obj_to_delete_boundary_mesh, do_unlink=True)
+                self.report({'INFO'}, f"Deleted intermediate boundary mesh object: {boundary_mesh_obj_name}")
+                if data_to_delete and data_to_delete.users == 0:
+                    bpy.data.meshes.remove(data_to_delete)
+                    self.report({'INFO'}, f"Deleted its mesh data: {mesh_data_boundary_name_for_report}")
+            elif mesh_data_boundary_ref and mesh_data_boundary_ref.users == 0 and mesh_data_boundary_ref.name in bpy.data.meshes:
+                 if (not obj_to_delete_boundary_mesh) or \
+                    (obj_to_delete_boundary_mesh == created_panel_obj and created_panel_obj.data != mesh_data_boundary_ref):
+                    self.report({'INFO'}, f"Cleaning up orphaned boundary mesh data: {mesh_data_boundary_name_for_report}")
+                    bpy.data.meshes.remove(mesh_data_boundary_ref)
         # --- END OF REVISED CLEANUP ---
 
         bpy.ops.object.select_all(action='DESELECT'); created_panel_obj.select_set(True); context.view_layer.objects.active = created_panel_obj

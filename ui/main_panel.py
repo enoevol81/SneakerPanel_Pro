@@ -55,11 +55,7 @@ class OBJECT_PT_SneakerPanelProMain(bpy.types.Panel):
         box.label(text="2a. Optional - Decimate Curve")
         box.prop(context.scene, "spp_decimate_ratio", text="Ratio")
         box.operator("object.decimate_curve", text="Decimate Curve", icon='MOD_DECIM')
-        box.separator() # Add a separator for clarity
-        col = box.column(align=True)
-        col.label(text="Mirror Active Curve:")
-        col.operator("curve.mirror_at_cursor", text="Mirror at 3D Cursor", icon='MOD_MIRROR')
-
+     
 # Registration
 classes = [OBJECT_PT_SneakerPanelProMain]
 
