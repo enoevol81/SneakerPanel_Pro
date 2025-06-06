@@ -30,6 +30,7 @@ from . import unwrap_shell
 from . import define_toe
 from . import orient_uv_island
 from . import mirror_curve_points
+from . import sample_and_quad_fill
 
 # Register/unregister functions
 def register():
@@ -50,6 +51,7 @@ def register():
     define_toe.register()
     orient_uv_island.register()
     mirror_curve_points.register()
+    sample_and_quad_fill.register()
 
 def unregister():
     orient_uv_island.unregister()
@@ -69,3 +71,4 @@ def unregister():
     gp_to_curve.unregister()
     add_gp_draw.unregister()
     mirror_curve_points.unregister()
+    sample_and_quad_fill.unregister()

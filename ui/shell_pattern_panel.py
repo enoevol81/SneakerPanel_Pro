@@ -16,6 +16,18 @@ class OBJECT_PT_ShellPatternToOverlay(bpy.types.Panel):
         box.label(text="1. UV to Mesh:", icon='UV')
         row = box.row()
         op = row.operator("object.uv_to_mesh", icon='MESH_DATA')
+
+        # In a UI file like shell_pattern_panel.py, in the draw() method:
+        box = layout.box()
+        box.label(text="3. Create 2D Quad Panel from Curve:", icon='MESH_GRID')
+
+        # This button calls your new operator
+        op = box.operator("curve.sample_and_quad_fill", text="Create Quad Panel", icon='FILE_NEW')
+
+        # Its properties will appear in the Redo panel (F9), or you can expose them here
+        col_props = box.column(align=True)
+        col_props.prop(op, "desired_samples")
+        col_props.prop(op, "grid_fill_span")
         
         # Shell UV to Panel section
         box = layout.box()
