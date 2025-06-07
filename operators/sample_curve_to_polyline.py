@@ -14,7 +14,8 @@ def resample_polyline(points, num_samples):
         total_length += seg_length; lengths.append(total_length)
     if total_length < 1e-6: return [points[0]] * num_samples
     
-    spacing = total_length / (num_samples - 1) if num_samples > 1 else 0
+    # Using num_samples for spacing assumes a closed loop, which is appropriate for panels.
+    spacing = total_length / num_samples if num_samples > 0 else 0
     if spacing < 1e-9: return [points[0]] * num_samples
     
     target_distances = [i * spacing for i in range(num_samples)]
@@ -87,7 +88,13 @@ class CURVE_OT_SampleToPolyline(bpy.types.Operator):
 
         bpy.ops.ed.undo_push(message=self.bl_label)
         
+        # Get desired sample count from the scene property
         samples_per_spline = int(context.scene.spp_sampler_fidelity)
+        
+        # --- Enforce Even Number of Vertices for Grid Fill compatibility ---
+        if samples_per_spline % 2 != 0:
+            samples_per_spline += 1
+            self.report({'INFO'}, f"Sample count adjusted to {samples_per_spline} (must be even).")
         
         depsgraph = context.evaluated_depsgraph_get()
         eval_obj = original_curve_obj.evaluated_get(depsgraph)
@@ -136,7 +143,8 @@ class CURVE_OT_SampleToPolyline(bpy.types.Operator):
             new_mesh_data.update()
             
             context.collection.objects.link(new_obj)
-            add_object_to_panel_collection(new_obj, panel_count, f"{panel_name_prop}")
+            # Use the main panel collection, not an "Intermediates" sub-collection
+            add_object_to_panel_collection(new_obj, panel_count, panel_name_prop)
             created_objects.append(new_obj)
 
         if not created_objects:
