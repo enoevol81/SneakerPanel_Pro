@@ -149,11 +149,11 @@ def register_properties():
     )
 
     bpy.types.Scene.spp_sampler_fidelity = bpy.props.IntProperty(
-        name="Sampler Fidelity",
-        description="Number of samples to use when sampling the curve",
-        default=1,
-        min=1,
-        max=10
+        name="Fidelity (Samples)",
+        description="Number of evenly spaced samples to create on the curve outline",
+        default=64,
+        min=8,
+        max=512
     )
 
 def unregister_properties():

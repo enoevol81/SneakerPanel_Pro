@@ -1,5 +1,5 @@
 # File: SneakerPanel_Pro/operators/sample_curve_to_polyline.py
-# This operator implements the user's provided logic for creating an evenly sampled polyline from a curve.
+# This operator uses the user's provided logic to create an evenly sampled polyline from a curve.
 
 import bpy
 from ..utils.collections import add_object_to_panel_collection 
@@ -14,7 +14,7 @@ def resample_polyline(points, num_samples):
         total_length += seg_length; lengths.append(total_length)
     if total_length < 1e-6: return [points[0]] * num_samples
     
-    spacing = total_length / (num_samples -1) if num_samples > 1 else 0
+    spacing = total_length / (num_samples - 1) if num_samples > 1 else 0
     if spacing < 1e-9: return [points[0]] * num_samples
     
     target_distances = [i * spacing for i in range(num_samples)]
@@ -22,8 +22,7 @@ def resample_polyline(points, num_samples):
     for d in target_distances:
         while current_seg_index < len(lengths) - 2 and d > lengths[current_seg_index + 1]:
             current_seg_index += 1
-        seg_start_length = lengths[current_seg_index]
-        seg_end_length = lengths[current_seg_index + 1]
+        seg_start_length = lengths[current_seg_index]; seg_end_length = lengths[current_seg_index + 1]
         segment_length = seg_end_length - seg_start_length
         t = (d - seg_start_length) / segment_length if segment_length > 1e-6 else 0.0
         p0 = points[current_seg_index]; p1 = points[current_seg_index + 1]
@@ -33,44 +32,41 @@ def resample_polyline(points, num_samples):
 # --- Helper Function: Extract ordered points from a mesh outline ---
 def get_ordered_points_from_mesh(mesh_data):
     """Walks mesh edges to return a list of ordered vertex coordinate lists."""
-    if not mesh_data.edges: return []
+    if not mesh_data or not mesh_data.edges: return []
     
     edge_lookup = {v.index: [] for v in mesh_data.vertices}
     for e in mesh_data.edges:
-        edge_lookup[e.vertices[0]].append(e.vertices[1])
-        edge_lookup[e.vertices[1]].append(e.vertices[0])
+        edge_lookup[e.vertices[0]].append(e.vertices[1]); edge_lookup[e.vertices[1]].append(e.vertices[0])
     
-    all_polylines = []
-    visited_globally = set()
-    
+    all_polylines = []; visited_globally = set()
     for v_idx in edge_lookup:
         if v_idx not in visited_globally:
-            # Start of a new polyline (island)
-            current_polyline = []
-            visited_locally = set()
-            
+            current_polyline = []; visited_locally = set()
             start_node = v_idx
-            # Prefer to start at an endpoint if one exists in this island
-            for check_v_idx in edge_lookup:
-                if len(edge_lookup[check_v_idx]) == 1 and check_v_idx not in visited_globally:
-                    start_node = check_v_idx
-                    break
+            # Prefer to start at an endpoint (a vertex with only one edge connection) if one exists in this island
+            for check_v_idx, neighbors in edge_lookup.items():
+                if len(neighbors) == 1 and check_v_idx not in visited_globally:
+                    start_node = check_v_idx; break
             
             current_node = start_node
-            while current_node is not None and current_node not in visited_locally:
+            # Loop while the current node is valid and hasn't been visited in this local pass
+            while current_node != -1 and current_node not in visited_locally:
                 visited_locally.add(current_node)
                 visited_globally.add(current_node)
                 current_polyline.append(mesh_data.vertices[current_node].co.copy())
                 
-                next_node = -1
-                for neighbor_idx in edge_lookup[current_node]:
+                # Find the next unvisited neighbor
+                next_node = -1 # Default to -1 (not found)
+                # Use .get() for safety in case current_node somehow becomes an invalid key
+                for neighbor_idx in edge_lookup.get(current_node, []):
                     if neighbor_idx not in visited_locally:
                         next_node = neighbor_idx
                         break
+                
+                # Update current_node for the next iteration
                 current_node = next_node
-            
-            if current_polyline:
-                all_polylines.append(current_polyline)
+
+            if current_polyline: all_polylines.append(current_polyline)
     return all_polylines
 
 # --- Main Operator ---
@@ -87,37 +83,43 @@ class CURVE_OT_SampleToPolyline(bpy.types.Operator):
     def execute(self, context):
         original_curve_obj = context.active_object
         if not (original_curve_obj and original_curve_obj.type == 'CURVE'):
-            self.report({'WARNING'}, "Please select a Curve object.")
-            return {'CANCELLED'}
+            self.report({'WARNING'}, "Please select a Curve object."); return {'CANCELLED'}
 
         bpy.ops.ed.undo_push(message=self.bl_label)
         
-        # Get desired sample count from the scene property
         samples_per_spline = int(context.scene.spp_sampler_fidelity)
         
-        # Get evaluated version of the curve
         depsgraph = context.evaluated_depsgraph_get()
         eval_obj = original_curve_obj.evaluated_get(depsgraph)
         
+        polylines = []
         try:
             temp_mesh = eval_obj.to_mesh()
+            if not temp_mesh:
+                raise RuntimeError("Curve to mesh conversion yielded no mesh data.")
+            
+            # Extract polylines WHILE the temp_mesh is valid
+            polylines = get_ordered_points_from_mesh(temp_mesh)
+            
+        except Exception as e:
+            self.report({'ERROR'}, f"Failed to process curve geometry: {e}")
+            return {'CANCELLED'}
         finally:
-            # Important to clear the temp mesh from memory
+            # Clear the temporary mesh data AFTER we are done with it
             if hasattr(eval_obj, 'to_mesh_clear'):
                 eval_obj.to_mesh_clear()
 
-        # Extract one or more polylines (for each spline in the original curve)
-        polylines = get_ordered_points_from_mesh(temp_mesh)
         self.report({'INFO'}, f"Extracted {len(polylines)} polyline(s) from the curve.")
         
+        if not polylines:
+            self.report({'ERROR'}, "Could not extract any polylines from the curve object.")
+            return {'CANCELLED'}
+
         created_objects = []
         for idx, poly in enumerate(polylines):
             if len(poly) < 2: continue
-
-            # Resample each polyline
             resampled = resample_polyline(poly, samples_per_spline)
             
-            # Create a new mesh object from the resampled points
             panel_count = getattr(context.scene, "spp_panel_count", 1)
             panel_name_prop = getattr(context.scene, "spp_panel_name", "Panel")
             mesh_name = f"{panel_name_prop}_{panel_count}_SampledOutline_{idx}"
@@ -126,38 +128,31 @@ class CURVE_OT_SampleToPolyline(bpy.types.Operator):
             new_obj = bpy.data.objects.new(mesh_name, new_mesh_data)
             
             edges = [(i, (i + 1)) for i in range(len(resampled) - 1)]
-            # If the original spline was cyclic, close the loop
-            if original_curve_obj.data.splines[idx].use_cyclic_u:
+            # Check if original spline was cyclic to close the loop
+            if idx < len(original_curve_obj.data.splines) and original_curve_obj.data.splines[idx].use_cyclic_u:
                 edges.append((len(resampled) - 1, 0))
 
             new_mesh_data.from_pydata(resampled, edges, [])
             new_mesh_data.update()
             
             context.collection.objects.link(new_obj)
-            add_object_to_panel_collection(new_obj, panel_count, f"{panel_name_prop}_Intermediates")
+            add_object_to_panel_collection(new_obj, panel_count, f"{panel_name_prop}")
             created_objects.append(new_obj)
 
         if not created_objects:
-            self.report({'ERROR'}, "Failed to create any sampled polyline meshes.")
-            return {'CANCELLED'}
+            self.report({'ERROR'}, "Failed to create any sampled polyline meshes."); return {'CANCELLED'}
 
-        # Final selection state
         bpy.ops.object.select_all(action='DESELECT')
         for obj in created_objects:
             obj.select_set(True)
         context.view_layer.objects.active = created_objects[0]
-        
         original_curve_obj.hide_viewport = True
         self.report({'INFO'}, f"Sampling complete. Created {len(created_objects)} outline object(s).")
         return {'FINISHED'}
 
 # --- Registration ---
 classes = [CURVE_OT_SampleToPolyline]
-
 def register():
-    for cls in classes:
-        bpy.utils.register_class(cls)
-
+    for cls in classes: bpy.utils.register_class(cls)
 def unregister():
-    for cls in reversed(classes):
-        bpy.utils.unregister_class(cls)
+    for cls in reversed(classes): bpy.utils.unregister_class(cls)
