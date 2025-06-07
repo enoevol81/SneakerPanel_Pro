@@ -31,6 +31,7 @@ from . import define_toe
 from . import orient_uv_island
 from . import mirror_curve_points
 from . import create_quad_border
+from . import sample_curve_to_polyline
 
 # Register/unregister functions
 def register():
@@ -52,6 +53,7 @@ def register():
     orient_uv_island.register()
     mirror_curve_points.register()
     create_quad_border.register()
+    sample_curve_to_polyline.register()
 
 def unregister():
     orient_uv_island.unregister()
@@ -72,4 +74,5 @@ def unregister():
     add_gp_draw.unregister()
     mirror_curve_points.unregister()
     create_quad_border.unregister()
+    sample_curve_to_polyline.unregister()
 

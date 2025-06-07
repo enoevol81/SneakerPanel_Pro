@@ -148,6 +148,14 @@ def register_properties():
         default=True
     )
 
+    bpy.types.Scene.spp_sampler_fidelity = bpy.props.IntProperty(
+        name="Sampler Fidelity",
+        description="Number of samples to use when sampling the curve",
+        default=1,
+        min=1,
+        max=10
+    )
+
 def unregister_properties():
     props = [
         "spp_panel_count",
@@ -165,11 +173,12 @@ def unregister_properties():
         "spp_solidify_offset",
         "spp_solidify_even_thickness",
         "spp_solidify_rim",
-        "spp_solidify_rim_only"
+        "spp_solidify_rim_only",
         "spp_panel_add_subdivision",
         "spp_panel_subdivision_levels",
         "spp_panel_conform_after_subdivision",
-        "spp_panel_shade_smooth"
+        "spp_panel_shade_smooth",
+        "spp_sampler_fidelity"  
     ]
     
     for prop in props:
