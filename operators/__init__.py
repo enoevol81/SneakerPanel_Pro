@@ -32,6 +32,7 @@ from . import orient_uv_island
 from . import mirror_curve_points
 from . import sample_curve_to_polyline
 from . import create_quad_panel_from_outline
+from . import fill_quad_border
 
 # Register/unregister functions
 def register():
@@ -53,7 +54,8 @@ def register():
     orient_uv_island.register()
     mirror_curve_points.register()
     sample_curve_to_polyline.register()
-    create_quad_panel_from_outline.register()   
+    create_quad_panel_from_outline.register()
+    fill_quad_border.register()
 
 def unregister():
     orient_uv_island.unregister()
@@ -75,4 +77,5 @@ def unregister():
     mirror_curve_points.unregister()
     sample_curve_to_polyline.unregister()       
     create_quad_panel_from_outline.unregister()
+    fill_quad_border.unregister()
 
