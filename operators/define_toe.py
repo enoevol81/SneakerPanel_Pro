@@ -25,16 +25,20 @@ class OBJECT_OT_DefineToe(Operator):
     
     @classmethod
     def poll(cls, context):
-        """Check if there is an active mesh object."""
-        return context.active_object and context.active_object.type == 'MESH'
+        """Always available regardless of context."""
+        return True
     
     def execute(self, context):
+        # Add undo checkpoint
+        bpy.ops.ed.undo_push(message="Define Toe Marker")
+        
         # Get the active object (should be the shoe mesh)
         obj = context.active_object
         
-        if not obj or obj.type != 'MESH':
-            self.report({'ERROR'}, "Please select a mesh object")
-            return {'CANCELLED'}
+        # Check if there's an active object
+        if not obj:
+            self.report({'WARNING'}, "No active object. Creating toe marker at cursor position.")
+            # We'll still create the toe marker, just won't store direction on any object
         
         # Get the 3D cursor position
         cursor_location = context.scene.cursor.location.copy()
@@ -55,39 +59,55 @@ class OBJECT_OT_DefineToe(Operator):
             context.collection.objects.link(toe_empty)
             toe_empty.location = cursor_location
         
-        # Store the original selection and active object
+        # Store the original active object
         original_active = context.view_layer.objects.active
-        original_selected = context.selected_objects.copy()
         
-        # Deselect all objects
-        bpy.ops.object.select_all(action='DESELECT')
+        # We'll avoid using bpy.ops.object.select_all() as it's context-sensitive
+        # Instead, we'll store which objects were selected
+        original_selected_names = [o.name for o in context.view_layer.objects if o.select_get()]
         
-        # Select the shoe mesh and make it active
-        obj.select_set(True)
-        context.view_layer.objects.active = obj
+        # We'll also avoid using mode_set operators which are context-sensitive
+        original_mode = None
+        if obj:
+            original_mode = obj.mode
+            # Try to make the object active if possible
+            try:
+                context.view_layer.objects.active = obj
+            except:
+                pass
         
-        # Store the current mode and ensure we're in object mode
-        original_mode = obj.mode
-        bpy.ops.object.mode_set(mode='OBJECT')
+        # Store the toe direction as a custom property if we have a valid mesh object
+        if obj and obj.type == 'MESH':
+            # Calculate direction from object origin to toe empty
+            toe_direction = toe_empty.location - obj.location
+            toe_direction.normalize()
+            
+            # Store the normalized direction as a custom property
+            obj["toe_direction"] = toe_direction.to_tuple()
+            self.report({'INFO'}, f"Toe marker created at cursor and direction stored on {obj.name}")
+        else:
+            self.report({'INFO'}, "Toe marker created at cursor position")
         
-        # Store the toe direction as a custom property on the mesh
-        # Calculate direction from object origin to toe empty
-        toe_direction = toe_empty.location - obj.location
-        toe_direction.normalize()
+        # Restore original active object if possible
+        try:
+            if original_active:
+                context.view_layer.objects.active = original_active
+        except:
+            pass
+            
+        # Restore original selection state if possible
+        try:
+            # First deselect all objects directly
+            for obj in context.view_layer.objects:
+                obj.select_set(False)
+                
+            # Then select the originally selected objects
+            for name in original_selected_names:
+                if name in bpy.data.objects:
+                    bpy.data.objects[name].select_set(True)
+        except:
+            pass
         
-        # Store the normalized direction as a custom property
-        obj["toe_direction"] = toe_direction.to_tuple()
-        
-        # Restore original mode
-        bpy.ops.object.mode_set(mode=original_mode)
-        
-        # Restore original selection
-        bpy.ops.object.select_all(action='DESELECT')
-        for o in original_selected:
-            o.select_set(True)
-        context.view_layer.objects.active = original_active
-        
-        self.report({'INFO'}, "Toe direction defined at cursor location")
         return {'FINISHED'}
 
 # Registration
