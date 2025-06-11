@@ -15,10 +15,45 @@ class OBJECT_PT_ShellPatternToOverlay(Panel):
         layout = self.layout
         scene = context.scene
 
-        box_workflow = layout.box()
-        col = box_workflow.column(align=True)
-        col.label(text="Workflow:", icon='INFO')
-        col.label(text="1. Create a 2D Curve for your design.")
+        box = layout.box()
+        box.label(text="1. UV to Mesh(Auto Add GpDraw):", icon='UV')
+        row = box.row()
+        row.operator("object.uv_to_mesh", icon='MESH_DATA')
+
+
+        box_workflow_a = layout.box()
+        col = box_workflow_a.column(align=True)
+        col.label(text="Workflow A:", icon='INFO')
+        col.label(text="1. Use Grease Pencil Item to draw your design.")
+        col.label(text="2. Convert to Curve (Decimate_Less Control Points Easier to Edit)")
+        col.label(text="3. With Border active, run 'Fill Border with Grid'.")
+        col.label(text="4. (Next) Relax loops and project to shell.")
+
+        box = box_workflow_a.box()
+        box.label(text="2. Shell UV to Panel:", icon='MODIFIER')
+        row = box.row()
+        row.operator("object.shell_uv_to_panel", icon='MOD_SOLIDIFY')
+
+        box_postprocess = box_workflow_a.box()
+        box_postprocess.label(text="Panel Refinement Options:")
+        box_postprocess.prop(context.scene, "spp_grid_fill_span", text="Initial Grid Fill Span")
+
+        row = box_postprocess.row()
+        row.prop(context.scene, "spp_panel_add_subdivision", text="Add Subdivision")
+        row_sub = box_postprocess.row(align=True)
+        row_sub.enabled = context.scene.spp_panel_add_subdivision
+        row_sub.prop(context.scene, "spp_panel_subdivision_levels", text="Levels")
+        row_sub.prop(context.scene, "spp_panel_conform_after_subdivision", text="Re-Conform")
+        box_postprocess.prop(context.scene, "spp_panel_shade_smooth", text="Shade Smooth")
+
+        box_workflow_b = layout.box()
+        col = box_workflow_b.column(align=True)
+        col.label(text="Workflow B:", icon='INFO')
+        col.label(text="1. Add Grease Pencil Item and draw your design.")
+        col.label(text="1. Use Grease Pencil Item to draw your design.")
+        col.label(text="2. Convert to Curve (Decimate_Less Control Points Easier to Edit)")
+        col.label(text="3. With Border active, run 'Fill Border with Grid'.")
+        col.label(text="4. (Next) Relax loops and project to shell.")
         col.label(text="2. With Curve active, 'Sample to Polyline'.")
         col.label(text="3. With Outline active, 'Create Quad Border'.")
         col.label(text="4. With Border active, run 'Fill Border with Grid'.")
@@ -30,34 +65,6 @@ class OBJECT_PT_ShellPatternToOverlay(Panel):
             col_sample = box_sample.column(align=True)
             col_sample.prop(scene, "spp_sampler_fidelity", text="Boundary Samples")
             col_sample.operator("curve.sample_to_polyline", text="Sample Curve to Polyline")
-        
-
-        box = layout.box()
-        box.label(text="2. Shell UV to Panel:", icon='MODIFIER')
-        row = box.row()
-        row.operator("object.shell_uv_to_panel", icon='MOD_SOLIDIFY')
-
-        # In shell_pattern_panel.py, inside the draw method:
-        # ... after row.operator("object.shell_uv_to_panel"...)
-
-        box_postprocess = layout.box()
-        box_postprocess.label(text="Panel Refinement Options:")
-        box_postprocess.prop(context.scene, "spp_grid_fill_span", text="Initial Grid Fill Span") # Already exists, good to have here too
-
-        row = box_postprocess.row()
-        row.prop(context.scene, "spp_panel_add_subdivision", text="Add Subdivision")
-        row_sub = box_postprocess.row(align=True)
-        row_sub.enabled = context.scene.spp_panel_add_subdivision
-        row_sub.prop(context.scene, "spp_panel_subdivision_levels", text="Levels")
-        row_sub.prop(context.scene, "spp_panel_conform_after_subdivision", text="Re-Conform")
-        box_postprocess.prop(context.scene, "spp_panel_shade_smooth", text="Shade Smooth")
-
-         # UV to Mesh section
-        box = layout.box()
-        box.label(text="1. UV to Mesh:", icon='UV')
-        row = box.row()
-        op = row.operator("object.uv_to_mesh", icon='MESH_DATA')
-
 
         box_create_border = layout.box()
         box_create_border.label(text="Step 2: Create Quad Panel Border", icon='MESH_GRID')
