@@ -104,9 +104,8 @@ class OBJECT_PT_ShellPatternToOverlay(Panel):
             
             box_relax = box_workflow_b.box()
             box_relax.label(text="Step 8: Relax Loops & Project", icon='MOD_SMOOTH')
-            box_relax.label(text="(Operators for these steps to be built)")
-
-        
+            row_proj = box_relax.row()
+            row_proj.operator("mesh.overlay_panel_onto_shell", text="Project 2D Panel to 3D Shell", icon='UV_DATA')
 
 
 # Registration

@@ -34,6 +34,7 @@ from . import sample_curve_to_polyline
 from . import create_quad_panel_from_outline
 from . import fill_quad_border
 from . import fill_border_grid
+from . import overlay_panel_onto_shell
 
 # Register/unregister functions
 def register():
@@ -58,6 +59,7 @@ def register():
     create_quad_panel_from_outline.register()
     fill_quad_border.register()
     fill_border_grid.register()
+    overlay_panel_onto_shell.register()
 
 def unregister():
     orient_uv_island.unregister()
@@ -81,4 +83,4 @@ def unregister():
     create_quad_panel_from_outline.unregister()
     fill_quad_border.unregister()
     fill_border_grid.unregister()
-
+    overlay_panel_onto_shell.unregister()
