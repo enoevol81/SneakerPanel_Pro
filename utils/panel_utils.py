@@ -11,15 +11,50 @@ from mathutils import Vector
 def update_stabilizer(self, context):
     """Update Grease Pencil stabilizer settings based on scene properties.
     
+    This function ensures that just checking the radio box will enable the stabilizer
+    without requiring any additional input.
+    
     Args:
         self: The property owner
         context: The Blender context
     """
-    brush = bpy.context.tool_settings.gpencil_paint.brush
-    if brush:
-        brush.use_smooth_stroke = context.scene.spp_use_stabilizer
-        brush.smooth_stroke_factor = context.scene.spp_stabilizer_factor
-        brush.smooth_stroke_radius = context.scene.spp_stabilizer_radius
+    # Make sure we have access to the Grease Pencil paint settings
+    if not hasattr(bpy.context, 'tool_settings') or not hasattr(bpy.context.tool_settings, 'gpencil_paint'):
+        return
+        
+    # Get the active brush
+    ts = bpy.context.tool_settings
+    if not hasattr(ts.gpencil_paint, 'brush') or ts.gpencil_paint.brush is None:
+        # Try to get the default brush if no brush is active
+        if hasattr(bpy.data, 'brushes') and bpy.data.brushes:
+            gpencil_brushes = [b for b in bpy.data.brushes if b.gpencil_settings is not None]
+            if gpencil_brushes:
+                ts.gpencil_paint.brush = gpencil_brushes[0]
+            else:
+                return
+        else:
+            return
+    
+    # Now we should have a valid brush
+    brush = ts.gpencil_paint.brush
+    
+    # Apply the settings
+    brush.use_smooth_stroke = context.scene.spp_use_stabilizer
+    brush.smooth_stroke_factor = context.scene.spp_stabilizer_factor
+    brush.smooth_stroke_radius = context.scene.spp_stabilizer_radius
+    
+    # Force Blender to recognize the change by temporarily modifying and restoring a value
+    if context.scene.spp_use_stabilizer:
+        # Store original settings
+        orig_radius = brush.smooth_stroke_radius
+        
+        # Temporarily change a value to force an update
+        brush.smooth_stroke_radius = max(1, orig_radius + 1)
+        brush.smooth_stroke_radius = orig_radius
+    
+    # Make sure the UI updates
+    for area in bpy.context.screen.areas:
+        area.tag_redraw()
 
 def update_stabilizer_ui(self, context):
     """Map UI slider values to stabilizer factor and update stabilizer settings.
@@ -31,7 +66,7 @@ def update_stabilizer_ui(self, context):
         context: The Blender context
     """
     strength_ui = context.scene.spp_stabilizer_strength_ui
-    mapped_value = 0.5 + (strength_ui / 10) * 0.5  # Maps 1-10 to 0.6-1.0
+    mapped_value = 0.3 + (strength_ui / 10) * 0.7  # Maps 1-10 to 0.3-1.0
     context.scene.spp_stabilizer_factor = mapped_value
     update_stabilizer(self, context)
 

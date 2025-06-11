@@ -17,9 +17,9 @@ class OBJECT_PT_SurfaceWorkflow(bpy.types.Panel):
     
     This panel nests the Bezier to NURBS Surface and Boundary Mesh to Grid Fill workflows:
     1. Bezier to NURBS Surface
-    2. Boundary Mesh to Grid Fill
+    2. Boundary Mesh Surface
     """
-    bl_label = "Surface Workflow"
+    bl_label = "Surface Direct Workflow"
     bl_idname = "OBJECT_PT_surface_workflow"
     bl_space_type = 'VIEW_3D'
     bl_region_type = 'UI'
@@ -53,7 +53,7 @@ class OBJECT_PT_SurfaceWorkflow(bpy.types.Panel):
                           emboss=True)
         op_boundary.toggle_prop = "spp_boundary_workflow_expanded"
         op_boundary.other_prop = "spp_bezier_workflow_expanded"
-        row_boundary.label(text="Boundary Mesh to Grid Fill", icon='MESH_GRID')
+        row_boundary.label(text="Boundary Mesh to Surface", icon='MESH_GRID')
         
         if scene.spp_boundary_workflow_expanded:
             self.draw_boundary_workflow(box_boundary, context)
@@ -92,18 +92,18 @@ class OBJECT_PT_SurfaceWorkflow(bpy.types.Panel):
     def draw_boundary_workflow(self, layout, context):
         # Mesh Edit Section
         box = layout.box()
-        box.label(text="3. Convert Curve to Mesh - Edit", icon='OUTLINER_OB_MESH')
-        box.operator("object.convert_to_mesh", text="Convert to Mesh", icon='MESH_DATA')
+        box.label(text="3. Convert Curve to Boundary Mesh", icon='OUTLINER_OB_MESH')
+        box.operator("object.convert_to_mesh", text="Create Mesh", icon='MESH_DATA')
         
         # Show vertex count if we have a mesh
         obj = context.active_object
         vert_count = 0  # Initialize with default value
         if obj and obj.type == 'MESH':
             vert_count = len(obj.data.vertices)
-        box.label(text="3a. Optional - Smooth")
+        box.label(text="Mesh Edit")
         box.prop(context.scene, "spp_smooth_factor", text="Smooth Factor")
         box.operator("object.smooth_vertices", text="Apply Smoothing", icon='MOD_SMOOTH')
-        box.label(text="3b. Optional - Reduce Verts")
+        box.label(text="Reduce Vertices")
         box.label(text=f"Current Vertex Count: {vert_count}", icon='VERTEXSEL')
         box.prop(context.scene, "spp_reduce_verts", text="Reduce Verts")
         if context.scene.spp_reduce_verts and obj and obj.type == 'MESH':

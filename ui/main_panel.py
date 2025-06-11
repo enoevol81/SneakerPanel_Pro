@@ -63,7 +63,7 @@ class OBJECT_PT_SneakerPanelProMain(bpy.types.Panel):
         # Panel Creation Workflow - Step 1
         gp_box = layout.box()
         gp_header = gp_box.row()
-        gp_header.label(text="Step 1: Draw Panel", icon="GREASEPENCIL")
+        gp_header.label(text="1. Draw Panel", icon="GREASEPENCIL")
         
         # Grease pencil controls with better organization
         gp_col = gp_box.column(align=True)
@@ -76,6 +76,7 @@ class OBJECT_PT_SneakerPanelProMain(bpy.types.Panel):
         stab_row.prop(context.scene, "spp_use_stabilizer", text="")
         stab_row.label(text="Stabilizer Settings")
         
+        # Only show settings when stabilizer is enabled
         if context.scene.spp_use_stabilizer:
             stab_col = stab_box.column(align=True)
             stab_col.prop(context.scene, "spp_stabilizer_radius", text="Radius")
@@ -84,7 +85,7 @@ class OBJECT_PT_SneakerPanelProMain(bpy.types.Panel):
         # Panel Creation Workflow - Step 2
         curve_box = layout.box()
         curve_header = curve_box.row()
-        curve_header.label(text="Step 2: Create & Edit Curve", icon='OUTLINER_OB_CURVE')
+        curve_header.label(text="2. Create & Edit Curve", icon='OUTLINER_OB_CURVE')
         
         # Curve creation with better organization
         curve_col = curve_box.column(align=True)
