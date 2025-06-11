@@ -1,6 +1,21 @@
+"""Grease Pencil to Panel workflow UI panel for the Sneaker Panel Pro addon.
+
+This module defines the panel that provides a complete workflow for creating panels
+from Grease Pencil drawings, including conversion to curves, mesh editing, and panel generation.
+"""
+
 import bpy
 
+
 class OBJECT_PT_GPencilToPanel(bpy.types.Panel):
+    """Grease Pencil to Panel workflow panel.
+    
+    This panel provides a complete step-by-step workflow for creating panels from Grease Pencil drawings:
+    1. Drawing with Grease Pencil (with optional stabilizer settings)
+    2. Converting Grease Pencil to curves (with optional decimation)
+    3. Converting curves to mesh (with optional smoothing and vertex reduction)
+    4. Generating the final panel with grid fill
+    """
     bl_label = "Grease Pencil To Panel"
     bl_idname = "OBJECT_PT_gpencil_to_panel"
     bl_space_type = 'VIEW_3D'

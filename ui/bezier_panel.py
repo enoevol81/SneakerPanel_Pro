@@ -1,7 +1,22 @@
+"""Bezier to Panel workflow UI panel for the Sneaker Panel Pro addon.
+
+This module defines the panel that provides a workflow for creating panels
+from Bezier curves, including conversion to NURBS surfaces and mesh generation.
+"""
+
 import bpy
 from ..operators.surface_resolution import update_active_surface_resolution
 
+
 class OBJECT_PT_BezierToPanel(bpy.types.Panel):
+    """Bezier to Panel workflow panel.
+    
+    This panel provides a step-by-step workflow for creating panels from Bezier curves:
+    1. Drawing with Grease Pencil (with optional stabilizer settings)
+    2. Converting Grease Pencil to Bezier curves (with optional decimation)
+    3. Converting Bezier curves to NURBS surfaces with configurable resolution
+    4. Converting surfaces to mesh with optional settings
+    """
     bl_label = "Bezier to Panel"
     bl_idname = "OBJECT_PT_bezier_to_panel"
     bl_space_type = 'VIEW_3D'

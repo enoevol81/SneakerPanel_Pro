@@ -1,12 +1,33 @@
+"""Bezier to NURBS Surface workflow UI panel for the Sneaker Panel Pro addon.
+
+This module defines the panel that provides a workflow for converting Bezier curves to NURBS surfaces
+and subsequently to meshes, with configurable resolution and shading options.
+"""
+
 import bpy
 
+
 def update_active_surface_resolution(self, context):
+    """Update the resolution of the active NURBS surface.
+    
+    Args:
+        self: The property owner.
+        context: The Blender context.
+    """
     obj = context.active_object
     if obj and obj.type == 'SURFACE':
         obj.data.resolution_u = context.scene.spp_resolution_u
         obj.data.resolution_v = context.scene.spp_resolution_v
 
+
 class OBJECT_PT_BezierToNurbsSurface(bpy.types.Panel):
+    """Bezier to NURBS Surface workflow panel.
+    
+    This panel provides tools for converting Bezier curves to NURBS surfaces and then to meshes:
+    1. Converting Bezier curves to NURBS surfaces with configurable resolution
+    2. Live editing of NURBS surface resolution
+    3. Converting NURBS surfaces to meshes with options for preservation and shading
+    """
     bl_label = "Bezier To NURBS Surface"
     bl_idname = "OBJECT_PT_bezier_to_nurbs_surface"
     bl_space_type = 'VIEW_3D'

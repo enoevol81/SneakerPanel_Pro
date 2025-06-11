@@ -2,7 +2,19 @@
 Properties module for SneakerPanel Pro.
 
 This module defines all the properties used by the SneakerPanel Pro addon,
-organized by functionality categories.
+organized by functionality categories. The properties are grouped into logical sections:
+
+- Panel identification and naming properties
+- Target object properties
+- Grease Pencil stabilizer properties
+- Mesh processing properties
+- Curve processing properties
+- Panel generation properties
+- Solidify properties
+- UV unwrapping properties
+
+The module also provides helper functions for property registration, unregistration,
+and updating modifier properties.
 """
 
 import bpy
@@ -192,21 +204,31 @@ def register_properties():
 
 
 def _update_modifier_if_exists(context, modifier_name, property_name, value):
-    """Helper function to update modifier properties if they exist.
+    """
+    Helper function to update modifier properties if they exist.
+    
+    This function safely updates a property of a modifier on the active object,
+    checking first if the object exists, if it has the specified modifier,
+    and if the modifier has the specified property.
     
     Args:
-        context: Blender context
-        modifier_name: Name of the modifier to update
-        property_name: Name of the property to update
+        context (bpy.types.Context): Blender context
+        modifier_name (str): Name of the modifier to update
+        property_name (str): Name of the property to update
         value: New value for the property
         
     Returns:
         None
+        
+    Note:
+        This function is used by property update callbacks to modify
+        modifiers like Solidify, Shrinkwrap, etc. when UI controls change.
     """
-    if (context.active_object and 
-            context.active_object.modifiers.get(modifier_name)):
-        setattr(context.active_object.modifiers.get(modifier_name), 
-                property_name, value)
+    obj = context.active_object
+    if obj and modifier_name in obj.modifiers:
+        mod = obj.modifiers[modifier_name]
+        if hasattr(mod, property_name):
+            setattr(mod, property_name, value)
     return None
 
 

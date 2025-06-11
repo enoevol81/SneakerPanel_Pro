@@ -1,3 +1,9 @@
+"""Collection management utilities for SneakerPanel Pro addon.
+
+This module provides functions for managing Blender collections for the SneakerPanel Pro addon,
+including creating and organizing collections for panels and adding objects to them.
+"""
+
 import bpy
 
 def get_sneaker_panels_collection():

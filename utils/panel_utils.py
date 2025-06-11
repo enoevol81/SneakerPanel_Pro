@@ -1,7 +1,20 @@
+"""Panel utility functions for SneakerPanel Pro addon.
+
+This module provides utility functions for panel creation, editing, and manipulation,
+including stabilizer settings, surface snapping, mesh reduction, and curvature calculation.
+"""
+
 import bpy
 from mathutils import Vector
 
+
 def update_stabilizer(self, context):
+    """Update Grease Pencil stabilizer settings based on scene properties.
+    
+    Args:
+        self: The property owner
+        context: The Blender context
+    """
     brush = bpy.context.tool_settings.gpencil_paint.brush
     if brush:
         brush.use_smooth_stroke = context.scene.spp_use_stabilizer
@@ -9,16 +22,31 @@ def update_stabilizer(self, context):
         brush.smooth_stroke_radius = context.scene.spp_stabilizer_radius
 
 def update_stabilizer_ui(self, context):
+    """Map UI slider values to stabilizer factor and update stabilizer settings.
+    
+    Maps a 1-10 slider value to a 0.5-1.0 factor range for more intuitive UI control.
+    
+    Args:
+        self: The property owner
+        context: The Blender context
+    """
     strength_ui = context.scene.spp_stabilizer_strength_ui
     mapped_value = 0.5 + (strength_ui / 10) * 0.5  # Maps 1-10 to 0.6-1.0
     context.scene.spp_stabilizer_factor = mapped_value
     update_stabilizer(self, context)
 
-# In SneakerPanel_Pro/utils/panel_utils.py
-import bpy # Make sure bpy is imported if not already
-
 def apply_surface_snap():
-    """Apply a fake transform to snap vertices to the nearest surface"""
+    """Apply a fake transform to snap vertices to the nearest surface.
+    
+    This function performs a zero-distance transform operation with snapping enabled
+    to project selected vertices onto the nearest surface. It's used for ensuring
+    panels conform precisely to the target shell mesh surface.
+    
+    Note:
+        - Requires vertices to be selected in Edit Mode
+        - Target surface should be visible but not necessarily selected
+        - The use_snap_self parameter is set to False to prevent self-snapping
+    """
     bpy.ops.transform.translate(
         value=(0, 0, 0),
         orient_type='GLOBAL',
@@ -42,6 +70,22 @@ def apply_surface_snap():
     )
 
 def reduce_mesh_verts(context, percentage):
+    """Reduce the number of vertices in the active mesh object.
+    
+    Uses the decimate operator to reduce vertex count while preserving shape.
+    
+    Args:
+        context (bpy.types.Context): The Blender context
+        percentage (float): Percentage of vertices to remove (0.0 to 1.0)
+        
+    Returns:
+        bool: True if vertices were reduced, False if operation failed
+        
+    Note:
+        - This function temporarily switches to Edit Mode to perform the operation
+        - The active object must be a mesh
+        - The decimate ratio is calculated as (1 - percentage)
+    """
     obj = context.active_object
     if obj and obj.type == 'MESH':
         if obj.mode != 'EDIT':
@@ -53,7 +97,18 @@ def reduce_mesh_verts(context, percentage):
     return False
 
 def compute_curvature(bm, vert):
-    """Compute approximate curvature at a BMVert using connected faces."""
+    """Compute approximate curvature at a BMVert using connected faces.
+    
+    Calculates the approximate curvature by measuring the difference between
+    the vertex normal and the normals of connected faces.
+    
+    Args:
+        bm (bmesh.BMesh): The BMesh containing the vertex
+        vert (bmesh.BMVert): The vertex to compute curvature for
+        
+    Returns:
+        float: Approximate curvature value (higher values indicate sharper curvature)
+    """
     normal = vert.normal
     curvature = 0.0
     count = 0
@@ -70,7 +125,23 @@ def compute_curvature(bm, vert):
     return curvature / max(count, 1)
 
 def create_flow_based_quads(bm, target_quad_length=0.1):
-    """Create a quad-dominant mesh with good edge flow."""
+    """Create a quad-dominant mesh with good edge flow.
+    
+    This function creates a clean quad mesh with good edge flow from a boundary mesh.
+    It preserves the boundary edges while creating a new interior quad grid that follows
+    the natural flow of the boundary shape.
+    
+    Args:
+        bm (bmesh.BMesh): The BMesh to operate on
+        target_quad_length (float, optional): Target edge length for quads. Defaults to 0.1.
+        
+    Returns:
+        None: Modifies the BMesh in-place
+        
+    Note:
+        - The BMesh should have a clean boundary before calling this function
+        - Interior faces will be deleted and replaced with flow-based quads
+    """
     # First, create a clean boundary
     boundary_edges = [e for e in bm.edges if len(e.link_faces) < 2]
     bmesh.ops.dissolve_degenerate(bm, edges=bm.edges, dist=0.001)

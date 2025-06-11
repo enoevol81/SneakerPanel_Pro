@@ -1,7 +1,12 @@
-# File: SneakerPanel_Pro/ui/shell_pattern_panel.py
+"""2D Panel Generation UI panel for the Sneaker Panel Pro addon.
+
+This module defines the panel that provides tools for generating 2D panels from UV space,
+including UV to mesh conversion and shell UV to panel projection workflows.
+"""
 
 import bpy
 from bpy.types import Panel
+
 
 # Properties for collapsible sections
 def register_properties():
@@ -21,6 +26,14 @@ def unregister_properties():
     del bpy.types.Scene.spp_workflow_b_expanded
 
 class OBJECT_PT_ShellPatternToOverlay(Panel):
+    """2D Panel Generation workflow panel.
+    
+    This panel provides tools for generating 2D panels from UV space with two workflow options:
+    - Workflow A: UV to mesh, Grease Pencil drawing, curve conversion, and shell UV to panel projection
+    - Workflow B: UV to mesh, Grease Pencil drawing, curve conversion, sampling to polyline, and quad border creation
+    
+    Both workflows support panel refinement options including grid fill span and subdivision.
+    """
     bl_label = "2D Panel Generation"
     bl_idname = "OBJECT_PT_shell_pattern_to_overlay"
     bl_space_type = 'VIEW_3D'

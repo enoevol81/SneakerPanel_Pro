@@ -1,6 +1,18 @@
+"""Main panel for the Sneaker Panel Pro addon.
+
+This module defines the main panel that appears in the 3D View sidebar under the 'Sneaker Panel' category.
+It provides access to common tools and settings used across the addon's workflow.
+"""
+
 import bpy
 
+
 class OBJECT_PT_SneakerPanelProMain(bpy.types.Panel):
+    """Main panel for Sneaker Panel Pro addon.
+    
+    This panel provides access to common tools and settings used in the panel creation workflow,
+    including shell UV generation, panel settings, and the initial steps of the panel creation process.
+    """
     bl_label = "Sneaker Panel Pro - Common Tools"
     bl_idname = "OBJECT_PT_sneaker_panel_pro_main"
     bl_space_type = 'VIEW_3D'

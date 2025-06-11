@@ -1,6 +1,20 @@
+"""Boundary Mesh to Grid Fill workflow UI panel for the Sneaker Panel Pro addon.
+
+This module defines the panel that provides tools for converting boundary meshes to grid-filled panels,
+including mesh editing operations and grid fill generation.
+"""
+
 import bpy
 
+
 class OBJECT_PT_BoundaryMeshToGridFill(bpy.types.Panel):
+    """Boundary Mesh to Grid Fill workflow panel.
+    
+    This panel provides tools for converting boundary meshes to grid-filled panels:
+    1. Converting curves to meshes
+    2. Optional mesh smoothing and vertex reduction
+    3. Generating grid-filled panels with configurable span settings
+    """
     bl_label = "Boundary Mesh To Grid Based Fill"
     bl_idname = "OBJECT_PT_boundary_mesh_to_grid_fill"
     bl_space_type = 'VIEW_3D'

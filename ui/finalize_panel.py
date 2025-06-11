@@ -1,6 +1,20 @@
+"""Finalize panel UI for the Sneaker Panel Pro addon.
+
+This module defines the panel that provides tools for finalizing panels,
+including solidification and other finishing operations.
+"""
+
 import bpy
 
+
 class OBJECT_PT_SolidifyPanel(bpy.types.Panel):
+    """Finalize panel for solidifying and finishing panels.
+    
+    This panel provides tools for finalizing panels with solidify operations:
+    1. Adding solidify modifiers to panels
+    2. Configuring solidify parameters (thickness, offset, etc.)
+    3. Applying solidify modifiers
+    """
     bl_label = "Finalize"
     bl_idname = "OBJECT_PT_solidify_panel"
     bl_space_type = 'VIEW_3D'
