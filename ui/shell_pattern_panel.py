@@ -51,10 +51,9 @@ class OBJECT_PT_ShellPatternToOverlay(Panel):
             col.label(text="2. Use Grease Pencil Item to draw your design.")
             col.label(text="3. Convert to Curve / Decimate (Fewer Control Points Preferred)")
             col.label(text="4. Refine Curve (Edit Mode) - Subdivide Spans in Regions of Higher Tension.")
-            col.label(text="5. Project to Shell below.")
-
+            
             box = box_workflow_a.box()
-            box.label(text="2a. Shell UV to Panel:", icon='MODIFIER')
+            box.label(text=" Step 5. Shell UV to Panel:", icon='MODIFIER')
             row = box.row()
             row.operator("object.shell_uv_to_panel", icon='MOD_SOLIDIFY')
 
