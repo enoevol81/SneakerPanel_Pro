@@ -1,16 +1,14 @@
 import bpy
 from . import main_panel
-from . import boundary_mesh_panel
-from . import bezier_surface_panel
 from . import finalize_panel
+from . import workflow_operators
 from . import uv_workflow_panel
 from . import surface_workflow_panel
 
 modules = [
     main_panel,
-    boundary_mesh_panel,
-    bezier_surface_panel,
     finalize_panel,
+    workflow_operators,
     uv_workflow_panel,
     surface_workflow_panel,
     ]

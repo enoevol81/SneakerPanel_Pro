@@ -1,4 +1,4 @@
-"""2D Panel Generation UI panel for the Sneaker Panel Pro addon.
+"""UV Workflow UI panel for the Sneaker Panel Pro addon.
 
 This module defines the panel that provides tools for generating 2D panels from UV space,
 including UV to mesh conversion and shell UV to panel projection workflows.
@@ -25,8 +25,8 @@ def unregister_properties():
     del bpy.types.Scene.spp_workflow_a_expanded
     del bpy.types.Scene.spp_workflow_b_expanded
 
-class OBJECT_PT_ShellPatternToOverlay(Panel):
-    """2D Panel Generation workflow panel.
+class OBJECT_PT_UVWorkflow(Panel):
+    """UV Workflow panel.
     
     This panel provides tools for generating 2D panels from UV space with two workflow options:
     - Workflow A: UV to mesh, Grease Pencil drawing, curve conversion, and shell UV to panel projection
@@ -34,8 +34,8 @@ class OBJECT_PT_ShellPatternToOverlay(Panel):
     
     Both workflows support panel refinement options including grid fill span and subdivision.
     """
-    bl_label = "2D Panel Generation"
-    bl_idname = "OBJECT_PT_shell_pattern_to_overlay"
+    bl_label = "UV Workflow"
+    bl_idname = "OBJECT_PT_uv_workflow"
     bl_space_type = 'VIEW_3D'
     bl_region_type = 'UI'
     bl_category = 'Sneaker Panel' 
@@ -53,9 +53,12 @@ class OBJECT_PT_ShellPatternToOverlay(Panel):
         # Workflow A - Collapsible section
         box_workflow_a = layout.box()
         row = box_workflow_a.row()
-        row.prop(scene, "spp_workflow_a_expanded", 
+        # Custom operator to handle both toggling this workflow and closing the other
+        op_workflow_a = row.operator("wm.context_toggle_workflow", text="", 
                  icon="TRIA_DOWN" if scene.spp_workflow_a_expanded else "TRIA_RIGHT",
-                 icon_only=True, emboss=True)
+                 emboss=True)
+        op_workflow_a.toggle_prop = "spp_workflow_a_expanded"
+        op_workflow_a.other_prop = "spp_workflow_b_expanded"
         row.label(text="Workflow A", icon='INFO')
         
         # Only show content if expanded
@@ -85,9 +88,12 @@ class OBJECT_PT_ShellPatternToOverlay(Panel):
         # Workflow B - Collapsible section
         box_workflow_b = layout.box()
         row = box_workflow_b.row()
-        row.prop(scene, "spp_workflow_b_expanded", 
+        # Custom operator to handle both toggling this workflow and closing the other
+        op_workflow_b = row.operator("wm.context_toggle_workflow", text="", 
                  icon="TRIA_DOWN" if scene.spp_workflow_b_expanded else "TRIA_RIGHT",
-                 icon_only=True, emboss=True)
+                 emboss=True)
+        op_workflow_b.toggle_prop = "spp_workflow_b_expanded"
+        op_workflow_b.other_prop = "spp_workflow_a_expanded"
         row.label(text="Workflow B", icon='INFO')
         
         # Only show content if expanded
@@ -121,8 +127,11 @@ class OBJECT_PT_ShellPatternToOverlay(Panel):
             row_proj.operator("mesh.overlay_panel_onto_shell", text="Project 2D Panel to 3D Shell", icon='UV_DATA')
 
 
+# Import the shared operator from workflow_operators
+from . import workflow_operators
+
 # Registration
-classes = [OBJECT_PT_ShellPatternToOverlay]
+classes = [OBJECT_PT_UVWorkflow]
 def register():
     register_properties()
     for cls in classes:
