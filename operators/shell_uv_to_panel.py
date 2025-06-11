@@ -1,13 +1,32 @@
+"""
+Shell UV to Panel conversion operator for SneakerPanel Pro.
+
+This module provides functionality to reproject a 2D design (curve) from UV space onto
+the 3D shell and creates a panel. This is a critical part of the workflow for creating
+3D panels from 2D designs drawn on UV maps, allowing for accurate pattern creation
+from flat designs.
+"""
+
 import bpy
 import bmesh
 from mathutils import Vector, geometry
 from ..utils.collections import add_object_to_panel_collection
-from .panel_generator import generate_panel # Import the utility function
-from ..utils.panel_utils import apply_surface_snap # For transform-based snap
+from .panel_generator import generate_panel
+from ..utils.panel_utils import apply_surface_snap
 
-# (get_3d_point_from_uv function remains as previously corrected - ensure it's here)
 def get_3d_point_from_uv(shell_obj, uv_layer_name, uv_coord_target_2d, context):
-    # Ensure this function is the fully corrected version from previous steps
+    """
+    Retrieves the 3D point on the shell object corresponding to the given 2D UV coordinate.
+
+    Args:
+        shell_obj (bpy.types.Object): The shell object.
+        uv_layer_name (str): The name of the UV layer.
+        uv_coord_target_2d (Vector): The 2D UV coordinate.
+        context (bpy.types.Context): The Blender context.
+
+    Returns:
+        Vector or None: The 3D point on the shell object, or None if not found.
+    """
     if not shell_obj or shell_obj.type != 'MESH': return None
     if not shell_obj.data.uv_layers: return None
     uv_layer = shell_obj.data.uv_layers.get(uv_layer_name)
@@ -56,6 +75,18 @@ def get_3d_point_from_uv(shell_obj, uv_layer_name, uv_coord_target_2d, context):
     bm.free(); return found_point_3d
 
 class OBJECT_OT_ShellUVToPanel(bpy.types.Operator):
+    """Shell UV Design to 3D Panel Operator.
+    
+    Reprojects a 2D design (curve) from UV space onto the 3D shell and creates a panel.
+    This operator takes a curve drawn on a UV mesh (created from the shell UV map) and
+    projects it back onto the 3D shell object, then creates a filled panel with proper
+    surface conformity. The workflow typically follows:
+    
+    1. Create a UV mesh from the shell (using uv_to_mesh operator)
+    2. Draw a design on the UV mesh using Grease Pencil
+    3. Convert the Grease Pencil to a curve
+    4. Use this operator to project the curve back to 3D and create a panel
+    """
     bl_idname = "object.shell_uv_to_panel"
     bl_label = "Shell UV Design to 3D Panel"
     bl_description = "Reprojects a 2D design (curve) from UV space onto the 3D shell and creates a panel"
@@ -63,12 +94,36 @@ class OBJECT_OT_ShellUVToPanel(bpy.types.Operator):
 
     @classmethod
     def poll(cls, context):
+        """Check if the operator can be executed.
+        
+        Args:
+            context (bpy.types.Context): The Blender context.
+            
+        Returns:
+            bool: True if the operator can be executed, False otherwise.
+        """
         active_obj = context.active_object
-        return (active_obj and active_obj.type == 'CURVE' and
-                hasattr(context.scene, 'spp_shell_object') and context.scene.spp_shell_object and
-                context.scene.spp_shell_object.type == 'MESH')
+        if not active_obj or active_obj.type != 'CURVE':
+            cls.poll_message_set("Active object must be a curve.")
+            return False
+        if not hasattr(context.scene, 'spp_shell_object') or not context.scene.spp_shell_object:
+            cls.poll_message_set("No shell object selected. Please select a shell object in the panel settings.")
+            return False
+        if context.scene.spp_shell_object.type != 'MESH':
+            cls.poll_message_set("Selected shell object must be a mesh.")
+            return False
+        return True
 
     def find_uv_reference_mesh(self, context, shell_obj_name):
+        """Find the UV reference mesh that was created from the shell object.
+        
+        Args:
+            context (bpy.types.Context): The Blender context.
+            shell_obj_name (str): The name of the shell object.
+            
+        Returns:
+            bpy.types.Object or None: The UV reference mesh object or None if not found.
+        """
         for obj in context.scene.objects:
             if obj.type == 'MESH' and "spp_original_3d_mesh_name" in obj:
                 if obj["spp_original_3d_mesh_name"] == shell_obj_name:
@@ -273,8 +328,20 @@ class OBJECT_OT_ShellUVToPanel(bpy.types.Operator):
         self.report({'INFO'}, f"Successfully created panel: {created_panel_obj.name}")
         return {'FINISHED'}
 
+
+# Registration
+classes = [
+    OBJECT_OT_ShellUVToPanel,
+]
+
+
 def register():
-    bpy.utils.register_class(OBJECT_OT_ShellUVToPanel)
+    """Register the operator."""
+    for cls in classes:
+        bpy.utils.register_class(cls)
+
 
 def unregister():
-    bpy.utils.unregister_class(OBJECT_OT_ShellUVToPanel)
+    """Unregister the operator."""
+    for cls in reversed(classes):
+        bpy.utils.unregister_class(cls)

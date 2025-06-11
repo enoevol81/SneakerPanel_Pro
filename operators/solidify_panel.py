@@ -1,63 +1,174 @@
+"""
+Panel solidification operators for SneakerPanel Pro.
+
+This module provides operators for adding and applying solidify modifiers to
+panel meshes. It includes functionality to add a properly configured solidify
+modifier for shoe panel thickness and to apply the modifier when needed.
+"""
+
 import bpy
+from bpy.types import Operator
+from bpy.props import FloatProperty
 from ..utils.collections import get_panel_collection
 
-class OBJECT_OT_SolidifyPanel(bpy.types.Operator):
+
+class OBJECT_OT_SolidifyPanel(Operator):
+    """Add a solidify modifier to the selected panel mesh.
+    
+    This operator adds a properly configured solidify modifier to the active
+    mesh object. The modifier includes settings optimized for shoe panel
+    thickness and edge handling.
+    
+    If a solidify modifier already exists, this operator will not create
+    a duplicate but will instead report that one already exists.
+    """
+    
     bl_idname = "object.solidify_panel"
     bl_label = "Solidify Panel"
     bl_description = "Add solidify modifier to the selected panel"
     bl_options = {'REGISTER', 'UNDO'}
 
-    def execute(self, context):
-        obj = context.active_object
-        if not obj or obj.type != 'MESH':
-            self.report({'ERROR'}, "Please select a mesh object")
-            return {'CANCELLED'}
+    thickness: FloatProperty(
+        name="Thickness",
+        description="Thickness of the panel in meters",
+        default=0.002,  # 2mm default thickness
+        min=0.0001,
+        max=1.0,
+        step=0.001,
+        precision=4,
+        unit='LENGTH'
+    )
 
-        # Check if solidify modifier already exists
-        solidify = obj.modifiers.get('Solidify')
-        if not solidify:
+    @classmethod
+    def poll(cls, context):
+        """Check if the operator can be executed.
+        
+        Args:
+            context: Blender context
+            
+        Returns:
+            bool: True if active object is a mesh
+        """
+        obj = context.active_object
+        return obj is not None and obj.type == 'MESH'
+
+    def execute(self, context):
+        """Execute the solidify operation.
+        
+        Args:
+            context: Blender context
+            
+        Returns:
+            set: {'FINISHED'} on success, {'CANCELLED'} on error
+        """
+        # Add undo checkpoint
+        bpy.ops.ed.undo_push(message="Add Solidify Modifier")
+        
+        try:
+            obj = context.active_object
+            if not obj or obj.type != 'MESH':
+                self.report({'ERROR'}, "Please select a mesh object")
+                return {'CANCELLED'}
+
+            # Check if solidify modifier already exists
+            solidify = obj.modifiers.get('Solidify')
+            if solidify:
+                self.report({'INFO'}, "Solidify modifier already exists")
+                return {'CANCELLED'}
+
+            # Create new solidify modifier with optimized settings
             solidify = obj.modifiers.new(name='Solidify', type='SOLIDIFY')
-            # Set some reasonable defaults for shoe panels
-            solidify.thickness = 0.002  # 2mm default thickness
+            solidify.thickness = self.thickness
             solidify.offset = 0.0      # Centered offset
             solidify.use_even_offset = True  # Even thickness distribution
             solidify.use_rim = True    # Create rim faces
+            solidify.use_quality_normals = True  # Better normal calculation
 
-        return {'FINISHED'}
+            self.report({'INFO'}, 
+                       f"Added solidify modifier with thickness: {self.thickness:.4f}m")
+            return {'FINISHED'}
+            
+        except Exception as e:
+            self.report({'ERROR'}, f"Error adding solidify modifier: {str(e)}")
+            return {'CANCELLED'}
 
-class OBJECT_OT_ApplySolidify(bpy.types.Operator):
+
+class OBJECT_OT_ApplySolidify(Operator):
+    """Apply the solidify modifier to the mesh.
+    
+    This operator applies the solidify modifier to the active mesh object,
+    making the thickness permanent. This is useful when you need to perform
+    further mesh operations that require the actual geometry.
+    """
+    
     bl_idname = "object.apply_solidify"
     bl_label = "Apply Solidify"
-    bl_description = "Apply the solidify modifier to the mesh"
+    bl_description = "Apply the solidify modifier to make thickness permanent"
     bl_options = {'REGISTER', 'UNDO'}
 
-    def execute(self, context):
+    @classmethod
+    def poll(cls, context):
+        """Check if the operator can be executed.
+        
+        Args:
+            context: Blender context
+            
+        Returns:
+            bool: True if active object is a mesh with a solidify modifier
+        """
         obj = context.active_object
-        if not obj or obj.type != 'MESH':
-            self.report({'ERROR'}, "Please select a mesh object")
+        return (obj is not None and 
+                obj.type == 'MESH' and 
+                'Solidify' in obj.modifiers)
+
+    def execute(self, context):
+        """Execute the apply solidify operation.
+        
+        Args:
+            context: Blender context
+            
+        Returns:
+            set: {'FINISHED'} on success, {'CANCELLED'} on error
+        """
+        # Add undo checkpoint
+        bpy.ops.ed.undo_push(message="Apply Solidify Modifier")
+        
+        try:
+            obj = context.active_object
+            solidify = obj.modifiers.get('Solidify')
+            
+            if not solidify:
+                self.report({'ERROR'}, "No solidify modifier found")
+                return {'CANCELLED'}
+
+            # Apply the modifier
+            bpy.ops.object.modifier_apply(modifier=solidify.name)
+            self.report({'INFO'}, "Solidify modifier applied successfully")
+            return {'FINISHED'}
+            
+        except Exception as e:
+            self.report({'ERROR'}, f"Error applying solidify modifier: {str(e)}")
             return {'CANCELLED'}
 
-        solidify = obj.modifiers.get('Solidify')
-        if not solidify:
-            self.report({'ERROR'}, "No solidify modifier found")
-            return {'CANCELLED'}
-
-        # Apply the modifier
-        bpy.ops.object.modifier_apply(modifier=solidify.name)
-        self.report({'INFO'}, "Solidify modifier applied successfully")
-
-        return {'FINISHED'}
 
 # Registration
-classes = [OBJECT_OT_SolidifyPanel, OBJECT_OT_ApplySolidify]
+classes = [
+    OBJECT_OT_SolidifyPanel,
+    OBJECT_OT_ApplySolidify
+]
+
 
 def register():
+    """Register the operators."""
     for cls in classes:
         bpy.utils.register_class(cls)
 
+
 def unregister():
+    """Unregister the operators."""
     for cls in reversed(classes):
         bpy.utils.unregister_class(cls)
+
 
 if __name__ == "__main__":
     register()

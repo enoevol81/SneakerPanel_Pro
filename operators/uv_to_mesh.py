@@ -1,15 +1,40 @@
+"""
+UV to Mesh conversion operator for SneakerPanel Pro.
+
+This module provides functionality to convert a UV map from a 3D shell object into
+a 2D mesh representation. It creates a flat mesh based on the UV coordinates and
+sets up a Grease Pencil object for drawing on this UV mesh. This is a critical part
+of the workflow for creating 2D panel patterns from 3D shoe surfaces.
+"""
+
 import bpy
 import bmesh
 import math
 from bpy.types import Operator
 from bpy.props import BoolProperty
 from mathutils import Vector
-from ..utils.collections import add_object_to_panel_collection # Import for collection management
+from ..utils.collections import add_object_to_panel_collection
 
-# (Keep the convert_object_to_mesh helper function as is)
+
 def convert_object_to_mesh(obj, apply_modifiers=True, preserve_status=True):
+    """Convert any object to a mesh object.
+    
+    Creates a duplicate of the input object and converts it to a mesh,
+    optionally applying modifiers. Preserves the original selection state
+    if requested.
+    
+    Args:
+        obj: The source object to convert
+        apply_modifiers: Whether to apply modifiers during conversion
+        preserve_status: Whether to preserve original selection and active object
+        
+    Returns:
+        The new mesh object
+    """
     original_active = None
     original_selected = []
+    
+    # Store original selection state if requested
     if preserve_status:
         original_active = bpy.context.view_layer.objects.active
         original_selected = [o for o in bpy.context.selected_objects]
@@ -17,24 +42,46 @@ def convert_object_to_mesh(obj, apply_modifiers=True, preserve_status=True):
             bpy.ops.object.mode_set(mode='OBJECT')
         for o_sel in bpy.context.selected_objects:
             o_sel.select_set(False)
+            
+    # Select and duplicate the object
     obj.select_set(True)
     bpy.context.view_layer.objects.active = obj
     bpy.ops.object.duplicate()
     new_obj = bpy.context.view_layer.objects.active
+    
+    # Convert to mesh
     if new_obj.type != 'MESH': 
-        if apply_modifiers: bpy.ops.object.convert(target='MESH')
-        else: bpy.ops.object.convert(target='MESH', keep_original=False) 
+        if apply_modifiers: 
+            bpy.ops.object.convert(target='MESH')
+        else: 
+            bpy.ops.object.convert(target='MESH', keep_original=False) 
     elif apply_modifiers and new_obj.type == 'MESH': 
         bpy.ops.object.convert(target='MESH')
+        
+    # Restore original selection state if requested
     if preserve_status:
-        if new_obj not in original_selected: new_obj.select_set(False)
+        if new_obj not in original_selected: 
+            new_obj.select_set(False)
         for o_sel in original_selected:
-            if o_sel and o_sel.name in bpy.data.objects: o_sel.select_set(True)
+            if o_sel and o_sel.name in bpy.data.objects: 
+                o_sel.select_set(True)
         if original_active and original_active.name in bpy.data.objects: 
             bpy.context.view_layer.objects.active = original_active
+            
     return new_obj
 
+
 class OBJECT_OT_UVToMesh(Operator):
+    """UV to Mesh and Prep for Drawing Operator
+    
+    Creates a UV Mesh, adds Grease Pencil, isolates, frames, and sets view for drawing.
+    
+    Properties:
+        apply_modifiers (BoolProperty): Apply object's modifiers from the Shell Object
+        vertex_groups (BoolProperty): Keep Vertex Groups
+        materials (BoolProperty): Keep Materials
+        auto_scale (BoolProperty): Resize (Preserve Area)
+    """
     bl_idname = "object.uv_to_mesh"
     bl_label = "UV to Mesh and Prep for Drawing"
     bl_description = "Creates UV Mesh, adds Grease Pencil, isolates, frames, and sets view for drawing."
@@ -254,12 +301,18 @@ class OBJECT_OT_UVToMesh(Operator):
         self.report({'INFO'}, f"Created UV Mesh '{ob_uv.name}' and GP Layer '{gp_obj_uv_draw.name}'. Ready for UV drawing.")
         return {'FINISHED'}
 
-# (Keep existing classes tuple, register, and unregister functions)
-classes = (OBJECT_OT_UVToMesh,)
+# Registration
+classes = [
+    OBJECT_OT_UVToMesh,
+]
+
 def register():
+    """Register the operator."""
     for cls in classes:
         bpy.utils.register_class(cls)
+
 def unregister():
+    """Unregister the operator."""
     for cls in reversed(classes):
         bpy.utils.unregister_class(cls)
 
