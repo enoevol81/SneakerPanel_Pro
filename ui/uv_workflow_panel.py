@@ -8,7 +8,7 @@ import bpy
 from bpy.types import Panel
 
 
-# Properties for collapsible sections
+# Properties for collapsible sections and tooltips
 def register_properties():
     bpy.types.Scene.spp_workflow_a_expanded = bpy.props.BoolProperty(
         name="Expand Workflow A",
@@ -20,10 +20,22 @@ def register_properties():
         description="Expand or collapse Workflow B section",
         default=True
     )
+    bpy.types.Scene.spp_show_workflow_a_tooltip = bpy.props.BoolProperty(
+        name="Show Workflow A Tooltip",
+        description="Show or hide the tooltip for Workflow A",
+        default=False
+    )
+    bpy.types.Scene.spp_show_workflow_b_tooltip = bpy.props.BoolProperty(
+        name="Show Workflow B Tooltip",
+        description="Show or hide the tooltip for Workflow B",
+        default=False
+    )
 
 def unregister_properties():
     del bpy.types.Scene.spp_workflow_a_expanded
     del bpy.types.Scene.spp_workflow_b_expanded
+    del bpy.types.Scene.spp_show_workflow_a_tooltip
+    del bpy.types.Scene.spp_show_workflow_b_tooltip
 
 class OBJECT_PT_UVWorkflow(Panel):
     """UV Workflow panel.
@@ -34,7 +46,7 @@ class OBJECT_PT_UVWorkflow(Panel):
     
     Both workflows support panel refinement options including grid fill span and subdivision.
     """
-    bl_label = "UV Workflow"
+    bl_label = "UV Workflow [2D]"
     bl_idname = "OBJECT_PT_uv_workflow"
     bl_space_type = 'VIEW_3D'
     bl_region_type = 'UI'
@@ -46,7 +58,7 @@ class OBJECT_PT_UVWorkflow(Panel):
         scene = context.scene
 
         box = layout.box()
-        box.label(text="1. UV to Mesh(Auto Add GpDraw):", icon='UV')
+        box.label(text="UV to Mesh (Auto Add Grease Pencil Object):", icon='UV')
         row = box.row()
         row.operator("object.uv_to_mesh", icon='MESH_DATA')
 
@@ -59,14 +71,39 @@ class OBJECT_PT_UVWorkflow(Panel):
                  emboss=True)
         op_workflow_a.toggle_prop = "spp_workflow_a_expanded"
         op_workflow_a.other_prop = "spp_workflow_b_expanded"
-        row.label(text="Workflow A", icon='INFO')
+        row.label(text="UV Curve to Panel - Quick & Dirty", icon='UV_VERTEXSEL')
         
         # Only show content if expanded
         if scene.spp_workflow_a_expanded:
-            col = box_workflow_a.column(align=True)
-            col.label(text="2. Use Grease Pencil Item to draw your design.")
-            col.label(text="3. Convert to Curve / Decimate (Fewer Control Points Preferred)")
-            col.label(text="4. Refine Curve (Edit Mode) - Subdivide Spans in Regions of Higher Tension.")
+            intro_box = box_workflow_a.box()
+            
+            # Header row with info icon and light bulb toggle
+            header_row = intro_box.row()
+            header_row.label(text="Workflow Overview:", icon='INFO')
+            
+            # Add light bulb icon that toggles tooltip visibility
+            tooltip_icon = 'LIGHT_SUN' if scene.spp_show_workflow_a_tooltip else 'LIGHT'
+            header_row.prop(scene, "spp_show_workflow_a_tooltip", text="", icon=tooltip_icon, emboss=False)
+            
+            # Standard workflow steps
+            col = intro_box.column(align=True)
+            col.label(text="Step 2: Use Grease Pencil to draw your design outline")            
+            col.label(text="Step 3: Convert to Curve")
+            col.label(text="Step 4: Refine in Edit Mode")
+            
+            # Show tooltip box if enabled
+            if scene.spp_show_workflow_a_tooltip:
+                tip_box = intro_box.box()
+                tip_box.alert = True  # Makes the box stand out with a different color
+                tip_col = tip_box.column(align=True)
+                tip_col.scale_y = 0.9  # Slightly smaller text
+                tip_col.label(text="Quick & Dirty Workflow Tips:", icon='HELP')
+                tip_col.label(text="• Draw your design directly on the UV mesh")
+                tip_col.label(text="• Keep curves simple with minimal control points")
+                tip_col.label(text="• Add more detail in high-curvature areas")
+                tip_col.label(text="• This method works best for simple panel shapes")
+                tip_col.label(text="• Use subdivision for smoother results")
+                tip_col.operator("wm.url_open", text="View Tutorial", icon='URL').url = "https://example.com/tutorial"
             
             box = box_workflow_a.box()
             box.label(text=" Step 5. Shell UV to Panel:", icon='MODIFIER')
@@ -85,45 +122,101 @@ class OBJECT_PT_UVWorkflow(Panel):
             row_sub.prop(context.scene, "spp_panel_conform_after_subdivision", text="Re-Conform")
             box_postprocess.prop(context.scene, "spp_panel_shade_smooth", text="Shade Smooth")
 
-        # Workflow B - Collapsible section
+        # Workflow B - Collapsible section with enhanced styling
         box_workflow_b = layout.box()
-        row = box_workflow_b.row()
+        header_row = box_workflow_b.row(align=True)
         # Custom operator to handle both toggling this workflow and closing the other
-        op_workflow_b = row.operator("wm.context_toggle_workflow", text="", 
+        op_workflow_b = header_row.operator("wm.context_toggle_workflow", text="", 
                  icon="TRIA_DOWN" if scene.spp_workflow_b_expanded else "TRIA_RIGHT",
                  emboss=True)
         op_workflow_b.toggle_prop = "spp_workflow_b_expanded"
         op_workflow_b.other_prop = "spp_workflow_a_expanded"
-        row.label(text="Workflow B", icon='INFO')
+        header_row.label(text="2D Quad Mesh to Panel - Advanced", icon='MOD_LATTICE')
         
         # Only show content if expanded
         if scene.spp_workflow_b_expanded:
-            col = box_workflow_b.column(align=True)
-            col.label(text="2. Use Grease Pencil Item to draw your design.")
-            col.label(text="3. Convert to Curve - Decimate (Fewer Control Points Preferred)")
-            col.label(text="4. Refine Curve (Edit Mode).")
+            intro_box = box_workflow_b.box()
+            
+            # Header row with info icon and light bulb toggle
+            header_row = intro_box.row()
+            header_row.label(text="Workflow Overview:", icon='INFO')
+            
+            # Add light bulb icon that toggles tooltip visibility
+            tooltip_icon = 'LIGHT_SUN' if scene.spp_show_workflow_b_tooltip else 'LIGHT'
+            header_row.prop(scene, "spp_show_workflow_b_tooltip", text="", icon=tooltip_icon, emboss=False)
+            
+            # Standard workflow steps
+            col = intro_box.column(align=True)
+            col.label(text="Step 2: Use Grease Pencil to draw your design outline")            
+            col.label(text="Step 3: Convert to Curve")
+            col.label(text="Step 4: Refine in Edit Mode")
+            
+            # Show tooltip box if enabled
+            if scene.spp_show_workflow_b_tooltip:
+                tip_box = intro_box.box()
+                tip_box.alert = True  # Makes the box stand out with a different color
+                tip_col = tip_box.column(align=True)
+                tip_col.scale_y = 0.9  # Slightly smaller text
+                tip_col.label(text="Advanced Workflow Tips:", icon='HELP')
+                tip_col.label(text="• This method gives more precise control over topology")
+                tip_col.label(text="• Sample curve with appropriate density for your design")
+                tip_col.label(text="• Create quad border first, then fill with grid")
+                tip_col.label(text="• Select edge loops to create flow lines")
+                tip_col.label(text="• Best for complex panels requiring precise edge flow")
+                tip_col.operator("wm.url_open", text="View Advanced Tutorial", icon='URL').url = "https://example.com/advanced-tutorial"
 
+            # Step 5 with enhanced styling
             box_sample = box_workflow_b.box()
-            box_sample.label(text="Step 5: Sample Curve to Polyline", icon='CURVE_DATA')
+            sample_header = box_sample.row()
+            sample_header.label(text="Step 5: Sample Curve to Polyline", icon='CURVE_DATA')
             if hasattr(scene, "spp_sampler_fidelity"):
                 col_sample = box_sample.column(align=True)
                 col_sample.prop(scene, "spp_sampler_fidelity", text="Boundary Samples")
-                col_sample.operator("curve.sample_to_polyline", text="Sample Curve to Polyline")
+                sample_row = col_sample.row(align=True)
+                sample_row.scale_y = 1.2
+                sample_row.operator("curve.sample_to_polyline", text="Sample Curve to Polyline", icon='CURVE_BEZCURVE')
 
+            # Step 6 with enhanced styling
             box_create_border = box_workflow_b.box()
-            box_create_border.label(text="Step 6: Create Quad Panel Border", icon='MESH_GRID')
-            op_quad_border = box_create_border.operator("mesh.create_quad_panel_from_outline", text="Create Quad Border from Outline")
-            props_col_border = box_create_border.column(align=True)
+            border_header = box_create_border.row()
+            border_header.label(text="Step 6: Create Quad Panel Border", icon='MESH_GRID')
+            border_row = box_create_border.row(align=True)
+            border_row.scale_y = 1.2
+            border_row.operator("mesh.create_quad_panel_from_outline", text="Create Quad Border from Outline", icon='OUTLINER_OB_MESH')
             
-        
+            # Step 7 with enhanced styling
             box_fill = box_workflow_b.box()
-            box_fill.label(text="Step 7: Fill Border with Grid", icon='FILE_NEW')            
-            op_fill = box_fill.operator("mesh.fill_border_grid", text="Fill Panel Border")
-            props_col_fill = box_fill.column(align=True)
+            fill_header = box_fill.row()
+            fill_header.label(text="Step 7: Fill Border with Grid", icon='GRID')            
+            fill_row = box_fill.row(align=True)
+            fill_row.scale_y = 1.2
+            fill_row.operator("mesh.fill_border_grid", text="Fill Panel Border", icon='MOD_TRIANGULATE')
             
+            # Add grid fill options if needed
+            if hasattr(scene, "spp_grid_fill_density"):
+                grid_options = box_fill.column(align=True)
+                grid_options.prop(scene, "spp_grid_fill_density", text="Grid Density")
+                grid_options.prop(scene, "spp_grid_fill_smooth", text="Smooth Grid")
+                
+            # New Step 8 for edge loop selection
+            box_edge_loop = box_workflow_b.box()
+            edge_loop_header = box_edge_loop.row()
+            edge_loop_header.label(text="Step 8: Select Edge Loops", icon='EDGESEL')
+            edge_loop_row = box_edge_loop.row(align=True)
+            edge_loop_row.scale_y = 1.2
+            edge_loop_row.operator("mesh.loop_multi_select", text="Select Edge Loop", icon='SELECT_SET')
+            
+            # Tips for edge loop selection
+            tips_col = box_edge_loop.column(align=True)
+            tips_col.label(text="Tip: Alt+Click on edges to select loops")
+            tips_col.label(text="Shift+Alt+Click to select multiple loops")
+            
+            # Rename the relax step to Step 9
             box_relax = box_workflow_b.box()
-            box_relax.label(text="Step 8: Relax Loops & Project", icon='MOD_SMOOTH')
-            row_proj = box_relax.row()
+            relax_header = box_relax.row()
+            relax_header.label(text="Step 9: Relax Loops & Project", icon='MOD_SMOOTH')
+            row_proj = box_relax.row(align=True)
+            row_proj.scale_y = 1.2
             row_proj.operator("mesh.overlay_panel_onto_shell", text="Project 2D Panel to 3D Shell", icon='UV_DATA')
 
 

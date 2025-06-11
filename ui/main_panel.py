@@ -46,8 +46,26 @@ class OBJECT_PT_SneakerPanelProMain(bpy.types.Panel):
         uv_header.prop(context.scene, "spp_show_uv_section", text="", icon=expand_icon, emboss=False)
         uv_header.label(text="Shell UV Generation", icon="OUTLINER_OB_LIGHTPROBE")
         
+        # Add light bulb icon for tooltip
+        tooltip_icon = 'LIGHT_SUN' if context.scene.spp_show_uv_gen_tooltip else 'LIGHT'
+        uv_header.prop(context.scene, "spp_show_uv_gen_tooltip", text="", icon=tooltip_icon, emboss=False)
+        
         # Only show content if expanded
         if context.scene.spp_show_uv_section:
+            # Show tooltip if enabled
+            if context.scene.spp_show_uv_gen_tooltip:
+                tip_box = uv_box.box()
+                tip_box.alert = True  # Makes the box stand out with a different color
+                tip_col = tip_box.column(align=True)
+                tip_col.scale_y = 0.9  # Slightly smaller text
+                tip_col.label(text="Shell UV Generation Tips:", icon='HELP')
+                tip_col.label(text="• Mark seams at heel counter and toe areas")
+                tip_col.label(text="• Use the Smart UV Project first if needed")
+                tip_col.label(text="• Proper orientation ensures accurate panel creation")
+                tip_col.label(text="• The toe definition helps with panel alignment")
+                tip_col.label(text="• Orient UV island for consistent panel direction")
+                tip_col.operator("wm.url_open", text="View UV Setup Tutorial", icon='URL').url = "https://example.com/uv-setup-tutorial"
+            
             # Important note with better formatting
             note_col = uv_box.column(align=True)
             note_col.label(text="Before starting:", icon="INFO")
@@ -63,7 +81,7 @@ class OBJECT_PT_SneakerPanelProMain(bpy.types.Panel):
         # Panel Creation Workflow - Step 1
         gp_box = layout.box()
         gp_header = gp_box.row()
-        gp_header.label(text="1. Draw Panel", icon="GREASEPENCIL")
+        gp_header.label(text="Step 1: Draw Panel", icon="GREASEPENCIL")
         
         # Grease pencil controls with better organization
         gp_col = gp_box.column(align=True)
@@ -85,7 +103,7 @@ class OBJECT_PT_SneakerPanelProMain(bpy.types.Panel):
         # Panel Creation Workflow - Step 2
         curve_box = layout.box()
         curve_header = curve_box.row()
-        curve_header.label(text="2. Create & Edit Curve", icon='OUTLINER_OB_CURVE')
+        curve_header.label(text="Step 2: Create & Edit Curve", icon='OUTLINER_OB_CURVE')
         
         # Curve creation with better organization
         curve_col = curve_box.column(align=True)
@@ -107,8 +125,30 @@ class OBJECT_PT_SneakerPanelProMain(bpy.types.Panel):
         # Mirror section
         curve_tools_box.separator()
         mirror_col = curve_tools_box.column(align=True)
-        mirror_col.label(text="Mirror Tools (Edit Mode):", icon="MOD_MIRROR")
+        
+        # Mirror header with tooltip toggle
+        mirror_header = mirror_col.row(align=True)
+        mirror_header.label(text="Mirror Tools (Edit Mode):", icon="MOD_MIRROR")
+        
+        # Add light bulb icon for tooltip
+        tooltip_icon = 'LIGHT_SUN' if context.scene.spp_show_mirror_tooltip else 'LIGHT'
+        mirror_header.prop(context.scene, "spp_show_mirror_tooltip", text="", icon=tooltip_icon, emboss=False)
+        
+        # Mirror operator
         mirror_col.operator("curve.mirror_selected_points_at_cursor", text="Mirror at Cursor", icon="CURVE_BEZCIRCLE")
+        
+        # Show tooltip if enabled
+        if context.scene.spp_show_mirror_tooltip:
+            tip_box = mirror_col.box()
+            tip_box.alert = True  # Makes the box stand out with a different color
+            tip_col = tip_box.column(align=True)
+            tip_col.scale_y = 0.9  # Slightly smaller text
+            tip_col.label(text="Mirror at Cursor Tips:", icon='HELP')
+            tip_col.label(text="• Position 3D cursor at desired mirror axis")
+            tip_col.label(text="• Select points to mirror in Edit Mode")
+            tip_col.label(text="• Creates symmetrical curves quickly")
+            tip_col.label(text="• Great for creating matching left/right panels")
+            tip_col.label(text="• Use front/side view for precise placement")
      
 # Registration
 classes = [OBJECT_PT_SneakerPanelProMain]
@@ -118,6 +158,19 @@ def register():
     bpy.types.Scene.spp_show_uv_section = BoolProperty(
         name="Show UV Generation Section",
         description="Expand or collapse the UV Generation section",
+        default=False
+    )
+    
+    # Register tooltip properties
+    bpy.types.Scene.spp_show_mirror_tooltip = BoolProperty(
+        name="Show Mirror at Cursor Tooltip",
+        description="Show or hide the tooltip for Mirror at Cursor function",
+        default=False
+    )
+    
+    bpy.types.Scene.spp_show_uv_gen_tooltip = BoolProperty(
+        name="Show UV Generation Tooltip",
+        description="Show or hide the tooltip for Shell UV Generation",
         default=False
     )
     
@@ -131,6 +184,13 @@ def unregister():
     # Remove custom properties
     if hasattr(bpy.types.Scene, "spp_show_uv_section"):
         del bpy.types.Scene.spp_show_uv_section
+    
+    # Remove tooltip properties
+    if hasattr(bpy.types.Scene, "spp_show_mirror_tooltip"):
+        del bpy.types.Scene.spp_show_mirror_tooltip
+    
+    if hasattr(bpy.types.Scene, "spp_show_uv_gen_tooltip"):
+        del bpy.types.Scene.spp_show_uv_gen_tooltip
 
 if __name__ == "__main__":
     register()

@@ -60,8 +60,11 @@ class OBJECT_OT_ReduceVerts(bpy.types.Operator):
             bpy.ops.object.mode_set(mode='OBJECT')
             original_verts = len(obj.data.vertices)
 
-            # Calculate target vertex count
+            # Calculate target vertex count and ensure it's even
             target_verts = int(original_verts * (1.0 - self.factor))
+            # Make sure target_verts is even
+            if target_verts % 2 != 0:
+                target_verts -= 1  # Subtract 1 to make it even
             
             if target_verts >= original_verts:
                 self.report({'WARNING'}, "Reduction factor too small to make any changes")
