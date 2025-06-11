@@ -5,6 +5,7 @@ It provides access to common tools and settings used across the addon's workflow
 """
 
 import bpy
+from bpy.props import BoolProperty
 
 
 class OBJECT_PT_SneakerPanelProMain(bpy.types.Panel):
@@ -13,7 +14,7 @@ class OBJECT_PT_SneakerPanelProMain(bpy.types.Panel):
     This panel provides access to common tools and settings used in the panel creation workflow,
     including shell UV generation, panel settings, and the initial steps of the panel creation process.
     """
-    bl_label = "Sneaker Panel Pro - Common Tools"
+    bl_label = "Sneaker Panel Pro"
     bl_idname = "OBJECT_PT_sneaker_panel_pro_main"
     bl_space_type = 'VIEW_3D'
     bl_region_type = 'UI'
@@ -22,68 +23,113 @@ class OBJECT_PT_SneakerPanelProMain(bpy.types.Panel):
     def draw(self, context):
         layout = self.layout
         
-        # Shell UV Generation Section
-        box = layout.box()
-        row = box.row()
-        row.label(text="Generate Shell UV", icon="OUTLINER_OB_LIGHTPROBE")
+        # Panel Settings Section - Moved to top for better workflow
+        main_box = layout.box()
+        header_row = main_box.row()
+        header_row.label(text="Panel Configuration", icon="SETTINGS")
         
-        box.label(text="** First Mark Seams At Heel And Boundary Edges**")
+        # Create a collapsible section using a row with a prop
+        row = main_box.row()
+        row.prop(context.scene, "spp_panel_count", text="Panel #")
+        row.prop(context.scene, "spp_panel_name", text="Name")
         
-        # Unwrap Shell button
-        box.operator("object.unwrap_shell", text="1. Unwrap Shell", icon="MOD_UVPROJECT")
+        # Shell object selection with better formatting
+        shell_row = main_box.row()
+        shell_row.prop_search(context.scene, "spp_shell_object", bpy.data, "objects", text="Shell Object", icon="OUTLINER_OB_MESH")
         
-        # Define Toe button
-        box.operator("object.define_toe", text="2. Define Toe", icon="CURVE_PATH")
+        # Shell UV Generation Section - Collapsible box with better visual hierarchy
+        uv_box = layout.box()
+        uv_header = uv_box.row(align=True)
         
-        # Orient UV Island button
-        box.operator("object.orient_uv_island", text="3. Orient UV Island", icon="ORIENTATION_LOCAL")
+        # Add expand/collapse toggle with arrow icon
+        expand_icon = "TRIA_DOWN" if context.scene.spp_show_uv_section else "TRIA_RIGHT"
+        uv_header.prop(context.scene, "spp_show_uv_section", text="", icon=expand_icon, emboss=False)
+        uv_header.label(text="Shell UV Generation", icon="OUTLINER_OB_LIGHTPROBE")
         
-        # Panel Settings Section
-        box = layout.box()
-        box.label(text="Panel Settings", icon="SETTINGS")
+        # Only show content if expanded
+        if context.scene.spp_show_uv_section:
+            # Important note with better formatting
+            note_col = uv_box.column(align=True)
+            note_col.label(text="Before starting:", icon="INFO")
+            note_col.label(text="Mark seams at heel and boundary edges")
+            
+            # Steps with better visual flow
+            steps_col = uv_box.column(align=True)
+            steps_col.scale_y = 1.1
+            steps_col.operator("object.unwrap_shell", text="1. Unwrap Shell", icon="MOD_UVPROJECT")
+            steps_col.operator("object.define_toe", text="2. Define Toe", icon="CURVE_PATH")
+            steps_col.operator("object.orient_uv_island", text="3. Orient UV Island", icon="ORIENTATION_LOCAL")
         
-        row = box.row()
-        row.label(text="Panel Number:")
-        row.prop(context.scene, "spp_panel_count", text="")
+        # Panel Creation Workflow - Step 1
+        gp_box = layout.box()
+        gp_header = gp_box.row()
+        gp_header.label(text="Step 1: Draw Panel", icon="GREASEPENCIL")
         
-        row = box.row()
-        row.label(text="Panel Name:")
-        row.prop(context.scene, "spp_panel_name", text="")
+        # Grease pencil controls with better organization
+        gp_col = gp_box.column(align=True)
+        gp_col.scale_y = 1.1
+        gp_col.operator("object.add_gp_draw", text="Create Grease Pencil", icon='OUTLINER_OB_GREASEPENCIL')
         
-        box.prop_search(context.scene, "spp_shell_object", bpy.data, "objects", text="Shell Object")
-
-        # Common Panel Creation Tools Section
-        box = layout.box()
-        box.label(text="1. Draw Panel Using Grease Pencil", icon="GREASEPENCIL")
-        box.operator("object.add_gp_draw", text="Add Grease Pencil Item", icon='OUTLINER_OB_GREASEPENCIL')
-        box.prop(context.scene, "spp_use_stabilizer", text="Use Stabilizer")
+        # Stabilizer settings in a nested box for better visual hierarchy
+        stab_box = gp_box.box()
+        stab_row = stab_box.row()
+        stab_row.prop(context.scene, "spp_use_stabilizer", text="")
+        stab_row.label(text="Stabilizer Settings")
+        
         if context.scene.spp_use_stabilizer:
-            box.prop(context.scene, "spp_stabilizer_radius", text="Stabilizer Radius")
-            box.prop(context.scene, "spp_stabilizer_strength_ui", text="Stabilizer Strength")
+            stab_col = stab_box.column(align=True)
+            stab_col.prop(context.scene, "spp_stabilizer_radius", text="Radius")
+            stab_col.prop(context.scene, "spp_stabilizer_strength_ui", text="Strength")
 
-        box = layout.box()
-        box.label(text="2. Convert Grease Pencil to Curve - Edit", icon='OUTLINER_OB_CURVE')
-        box.operator("object.gp_to_curve", text="Create Curve", icon='IPO_BEZIER')
-        box.label(text="2a. Optional - Decimate Curve")
-        box.prop(context.scene, "spp_decimate_ratio", text="Ratio")
-        box.operator("object.decimate_curve", text="Decimate Curve", icon='MOD_DECIM')
-        # In main_panel.py, draw() method, within a curve tools section:
-        box.separator()
-        col = box.column(align=True)
-        col.label(text="Mirror Curve (Edit Mode):")
-        col.operator("curve.mirror_selected_points_at_cursor", text="Mirror Selected Points at Cursor")
-        # Its 'axis' property will appear in the Redo Last panel (F9)
+        # Panel Creation Workflow - Step 2
+        curve_box = layout.box()
+        curve_header = curve_box.row()
+        curve_header.label(text="Step 2: Create & Edit Curve", icon='OUTLINER_OB_CURVE')
+        
+        # Curve creation with better organization
+        curve_col = curve_box.column(align=True)
+        curve_col.scale_y = 1.1
+        curve_col.operator("object.gp_to_curve", text="Convert to Curve", icon='IPO_BEZIER')
+        
+        # Optional curve tools in a nested box
+        curve_tools_box = curve_box.box()
+        curve_tools_header = curve_tools_box.row()
+        curve_tools_header.label(text="Curve Editing Tools", icon="TOOL_SETTINGS")
+        
+        # Decimate section
+        decimate_col = curve_tools_box.column(align=True)
+        decimate_col.label(text="Decimate Curve:", icon="MOD_DECIM")
+        decimate_row = decimate_col.row(align=True)
+        decimate_row.prop(context.scene, "spp_decimate_ratio", text="Ratio")
+        decimate_row.operator("object.decimate_curve", text="Apply", icon='CHECKMARK')
+        
+        # Mirror section
+        curve_tools_box.separator()
+        mirror_col = curve_tools_box.column(align=True)
+        mirror_col.label(text="Mirror Tools (Edit Mode):", icon="MOD_MIRROR")
+        mirror_col.operator("curve.mirror_selected_points_at_cursor", text="Mirror at Cursor", icon="CURVE_BEZCIRCLE")
      
 # Registration
 classes = [OBJECT_PT_SneakerPanelProMain]
 
 def register():
+    # Register collapsible section properties
+    bpy.types.Scene.spp_show_uv_section = BoolProperty(
+        name="Show UV Generation Section",
+        description="Expand or collapse the UV Generation section",
+        default=False
+    )
+    
     for cls in classes:
         bpy.utils.register_class(cls)
 
 def unregister():
     for cls in reversed(classes):
         bpy.utils.unregister_class(cls)
+        
+    # Remove custom properties
+    if hasattr(bpy.types.Scene, "spp_show_uv_section"):
+        del bpy.types.Scene.spp_show_uv_section
 
 if __name__ == "__main__":
     register()
