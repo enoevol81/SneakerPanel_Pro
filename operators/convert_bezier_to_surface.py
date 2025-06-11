@@ -1,3 +1,10 @@
+"""
+Converts Bezier curves to NURBS surfaces.
+
+This operator takes a Bezier curve object and converts it to a NURBS surface
+by subdividing the curve and creating a surface from the resulting points.
+The surface is then added to the appropriate collection.
+"""
 import bpy
 from bpy.props import BoolProperty, IntProperty
 from mathutils import Vector
@@ -145,9 +152,15 @@ def surface_from_bezier(context_ref, surfacedata, points, center):
 
 # --- Operator Definition ---
 class SP_OT_ConvertBezierToSurface(bpy.types.Operator):
+    """Convert Bezier curve to NURBS surface.
+    
+    This operator takes the active Bezier curve object and converts it to a
+    NURBS surface by subdividing the curve and creating a surface from the
+    resulting points. The surface is then added to the appropriate collection.
+    """
     bl_idname = "spp.convert_bezier_to_surface"
     bl_label = "Convert Bezier to Surface"
-    bl_description = "Convert selected Bezier curve to a NURBS surface"
+    bl_description = "Convert selected Bezier curve to NURBS surface"
     bl_options = {'REGISTER', 'UNDO'}
     
     center: BoolProperty(
@@ -166,108 +179,101 @@ class SP_OT_ConvertBezierToSurface(bpy.types.Operator):
         default=4, min=1, soft_max=64
     )
     
-    def draw(self, context):
-        layout = self.layout
-        col = layout.column()
-        col.prop(self, 'center')
-        col.prop(self, 'Resolution_U')
-        col.prop(self, 'Resolution_V')
-    
     @classmethod
     def poll(cls, context):
-        return selected_1_or_more_curves()
+        """Check if the active object is a curve."""
+        obj = context.active_object
+        return obj and obj.type == 'CURVE' and obj.mode == 'OBJECT'
     
     def execute(self, context):
+        # Add undo checkpoint
+        bpy.ops.ed.undo_push(message="Convert Bezier to Surface")
+        
         if context.mode != 'OBJECT':
             bpy.ops.object.mode_set(mode='OBJECT')
-        
+            
         input_bezier_obj = context.active_object
+        
         if not input_bezier_obj or input_bezier_obj.type != 'CURVE':
-            self.report({'ERROR'}, "Active object is not a Bezier curve.")
+            self.report({'ERROR'}, "Please select a Bezier curve object")
             return {'CANCELLED'}
-        if not input_bezier_obj.data.splines or input_bezier_obj.data.splines[0].type != 'BEZIER':
-             self.report({'ERROR'}, "Active curve object does not contain Bezier splines.")
-             return {'CANCELLED'}
-        original_bezier_curvedata = input_bezier_obj.data
-
-        panel_count_temp = getattr(context.scene, "spp_panel_count", 1)
-        panel_name_temp = getattr(context.scene, "spp_panel_name", "Panel")
-        base_name = f"{panel_name_temp}_Surface_{panel_count_temp}" if panel_name_temp and panel_name_temp.strip() else f"PanelSurface_{panel_count_temp}"
         
-        surfacedata = bpy.data.curves.new(f"{base_name}_DataInit", type='SURFACE')
+        # Check if there are any splines
+        if not input_bezier_obj.data.splines:
+            self.report({'ERROR'}, "Selected curve has no splines")
+            return {'CANCELLED'}
         
-        from bpy_extras import object_utils
-        surfaceobject = object_utils.object_data_add(context, surfacedata)
-        surfaceobject.name = base_name
-
-        surfaceobject.matrix_world = input_bezier_obj.matrix_world
-        surfaceobject.rotation_euler = input_bezier_obj.rotation_euler
+        # Get panel count and name for naming
+        panel_count = context.scene.spp_panel_count if hasattr(context.scene, "spp_panel_count") else 1
+        panel_name = context.scene.spp_panel_name if hasattr(context.scene, "spp_panel_name") else "Panel"
         
-        surfacedata.dimensions = '3D'
-        surfaceobject.show_wire = True
-        surfaceobject.show_in_front = True
+        # Create a new collection for the surface
+        # Duplicate the input object
+        bpy.ops.object.select_all(action='DESELECT')
+        input_bezier_obj.select_set(True)
+        context.view_layer.objects.active = input_bezier_obj
         
-        # Ensure surfaceobject is active for surface_from_bezier operations
-        bpy.context.view_layer.objects.active = surfaceobject
+        # Get the transformation of the input object
+        input_matrix = input_bezier_obj.matrix_world.copy()
         
-        for spline in original_bezier_curvedata.splines:
+        # Create a surface for each spline
+        surfaces = []
+        for i, spline in enumerate(input_bezier_obj.data.splines):
             if spline.type == 'BEZIER':
+                surfacedata = bpy.data.curves.new(f"{input_bezier_obj.name}_Surface_{i}", type='SURFACE')
+                surfacedata.dimensions = '3D'
+                surfaceobject = bpy.data.objects.new(f"{input_bezier_obj.name}_Surface_{i}", surfacedata)
+                surfaceobject.matrix_world = input_matrix
+                surfaceobject.rotation_euler = input_bezier_obj.rotation_euler
+                surfaceobject.show_wire = True
+                surfaceobject.show_in_front = True
+                bpy.context.collection.objects.link(surfaceobject)
                 surface_from_bezier(context, surfacedata, spline.bezier_points, self.center)
+                surfaces.append(surfaceobject)
         
-        # After loop, surfaceobject should be active. Set overall resolution.
-        bpy.context.view_layer.objects.active = surfaceobject # Re-ensure
-        if context.active_object.mode != 'OBJECT': # surface_from_bezier should leave it as it found it
-             bpy.ops.object.mode_set(mode='OBJECT')
-
-        surfacedata.resolution_u = self.Resolution_U # Set overall resolution from operator props
-        surfacedata.resolution_v = self.Resolution_V
-
-        # --- Snap surface to shell ---
-        # self.report({'INFO'}, f"Snapping {surfaceobject.name} to nearest surface.") # Report at the end
-        bpy.ops.object.select_all(action='DESELECT')
-        surfaceobject.select_set(True)
-        bpy.context.view_layer.objects.active = surfaceobject
-
-        bpy.ops.object.mode_set(mode='EDIT')
-        bpy.ops.curve.select_all(action='SELECT')
-        bpy.ops.transform.translate(
-            value=(0, 0, 0), orient_type='GLOBAL',
-            orient_matrix=((1, 0, 0), (0, 1, 0), (0, 0, 1)), orient_matrix_type='GLOBAL',
-            mirror=False, use_proportional_edit=False, proportional_edit_falloff='SMOOTH',
-            proportional_size=1, use_proportional_connected=False, use_proportional_projected=False,
-            snap=True, snap_elements={'FACE_NEAREST'}, snap_target='CLOSEST',
-            use_snap_project=False, use_snap_self=True, use_snap_edit=True, 
-            use_snap_nonedit=True, use_snap_selectable=False
-        )
-        bpy.ops.object.mode_set(mode='OBJECT')
-        # --- End of Snap surface to shell ---
-
-        # --- Finalizing object: Naming, Collection, Hiding Input ---
-        bpy.context.view_layer.objects.active = surfaceobject # Ensure active
-        if context.mode != 'OBJECT': bpy.ops.object.mode_set(mode='OBJECT')
+        if not surfaces:
+            self.report({'ERROR'}, "Failed to create surface from Bezier curve")
+            return {'CANCELLED'}
         
+        # Join the surfaces if there are multiple
+        if len(surfaces) > 1:
+            bpy.ops.object.select_all(action='DESELECT')
+            for surf in surfaces:
+                surf.select_set(True)
+            context.view_layer.objects.active = surfaces[0]
+            bpy.ops.object.join()
+            final_surface = context.active_object
+        else:
+            final_surface = surfaces[0]
+        
+        # Name the surface
+        if panel_name and panel_name.strip():
+            final_surface.name = f"{panel_name}_Surface_{panel_count}"
+        else:
+            final_surface.name = f"Surface_{panel_count}"
+        
+        # Add to proper collection
+        add_object_to_panel_collection(final_surface, panel_count, panel_name)
+        
+        # Select the new surface
         bpy.ops.object.select_all(action='DESELECT')
-        surfaceobject.select_set(True)
-
-        panel_count = getattr(context.scene, "spp_panel_count", 1)
-        panel_name_str = getattr(context.scene, "spp_panel_name", "Panel")
-        if not (panel_name_str and panel_name_str.strip()): # Ensure panel_name_str is not empty or just whitespace
-            panel_name_str = "Panel" 
-            
-        final_surface_name = f"{panel_name_str}_Surface_{panel_count}"
-        surfaceobject.name = final_surface_name
-        surfacedata.name = f"{final_surface_name}_Data"
-            
-        add_object_to_panel_collection(surfaceobject, panel_count, panel_name_str)
-            
-        if input_bezier_obj and input_bezier_obj.name in bpy.data.objects:
-            if input_bezier_obj != surfaceobject :
-                input_bezier_obj.hide_viewport = True
-
-        self.report({'INFO'}, f"Converted '{input_bezier_obj.name}' to '{surfaceobject.name}', snapped, and added to collection.")
+        final_surface.select_set(True)
+        context.view_layer.objects.active = final_surface
+        
+        # Try to make segments
+        try:
+            bpy.ops.curve.make_segment()
+        except Exception as e:
+            self.report({'WARNING'}, f"Could not make segments: {str(e)}")
+        
+        # Set overall resolution
+        final_surface.data.resolution_u = self.Resolution_U
+        final_surface.data.resolution_v = self.Resolution_V
+        
+        self.report({'INFO'}, f"Created NURBS surface: {final_surface.name}")
         return {'FINISHED'}
 
-# --- Registration ---
+# Registration
 classes = [SP_OT_ConvertBezierToSurface]
 
 def register():

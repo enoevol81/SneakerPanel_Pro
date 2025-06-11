@@ -1,10 +1,27 @@
+"""
+Converts curves to meshes with surface snapping and proper collection management.
+
+This operator takes a curve object and converts it to a mesh, applies surface
+snapping, and adds it to the appropriate collection based on the panel count.
+"""
 import bpy
 from ..utils.panel_utils import apply_surface_snap
 from ..utils.collections import add_object_to_panel_collection
 
 class OBJECT_OT_ConvertToMesh(bpy.types.Operator):
+    """Convert selected curve to mesh and apply surface snapping.
+    
+    Converts the active curve object to a mesh, applies surface snapping,
+    and organizes it into the appropriate panel collection.
+    """
     bl_idname = "object.convert_to_mesh"
     bl_label = "Convert to Mesh"
+    bl_options = {'REGISTER', 'UNDO'}
+    
+    @classmethod
+    def poll(cls, context):
+        """Check if the active object is valid for this operator."""
+        return context.active_object and context.active_object.type == 'CURVE'
 
     def execute(self, context):
         # Add undo checkpoint
@@ -61,8 +78,16 @@ class OBJECT_OT_ConvertToMesh(bpy.types.Operator):
         self.report({'INFO'}, f"Curve converted to Mesh and renamed to '{mesh_obj.name}'.")
         return {'FINISHED'}
 
+# Registration
+classes = [OBJECT_OT_ConvertToMesh]
+
 def register():
-    bpy.utils.register_class(OBJECT_OT_ConvertToMesh)
+    for cls in classes:
+        bpy.utils.register_class(cls)
 
 def unregister():
-    bpy.utils.unregister_class(OBJECT_OT_ConvertToMesh)
+    for cls in reversed(classes):
+        bpy.utils.unregister_class(cls)
+
+if __name__ == "__main__":
+    register()

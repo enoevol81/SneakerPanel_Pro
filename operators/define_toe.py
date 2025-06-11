@@ -1,13 +1,32 @@
+"""
+Defines the toe area of the shoe by placing an empty at the 3D cursor position.
+
+This operator creates or updates an empty object at the 3D cursor position
+to mark the toe area of the shoe. It also stores the toe direction as a
+custom property on the active mesh object.
+"""
 import bpy
 import bmesh
 from bpy.types import Operator
 from mathutils import Vector
 
 class OBJECT_OT_DefineToe(Operator):
-    """Define the toe area of the shoe by placing an empty at the 3D cursor position"""
+    """Define the toe area of the shoe by placing an empty at the 3D cursor position.
+    
+    Creates or updates an empty object at the 3D cursor position to mark the toe
+    area of the shoe. The toe direction (from object origin to toe marker) is
+    stored as a custom property on the active mesh object.
+    
+    This information can be used for orientation-aware operations on the shoe.
+    """
     bl_idname = "object.define_toe"
     bl_label = "Define Toe"
     bl_options = {'REGISTER', 'UNDO'}
+    
+    @classmethod
+    def poll(cls, context):
+        """Check if there is an active mesh object."""
+        return context.active_object and context.active_object.type == 'MESH'
     
     def execute(self, context):
         # Get the active object (should be the shoe mesh)
@@ -71,11 +90,16 @@ class OBJECT_OT_DefineToe(Operator):
         self.report({'INFO'}, "Toe direction defined at cursor location")
         return {'FINISHED'}
 
+# Registration
+classes = [OBJECT_OT_DefineToe]
+
 def register():
-    bpy.utils.register_class(OBJECT_OT_DefineToe)
+    for cls in classes:
+        bpy.utils.register_class(cls)
 
 def unregister():
-    bpy.utils.unregister_class(OBJECT_OT_DefineToe)
+    for cls in reversed(classes):
+        bpy.utils.unregister_class(cls)
 
 if __name__ == "__main__":
     register()

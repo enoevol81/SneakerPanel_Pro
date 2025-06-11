@@ -1,11 +1,29 @@
+"""
+Creates a Grease Pencil object for drawing panels on the shoe shell.
+
+This operator creates a new Grease Pencil object, sets up proper naming
+based on the panel count, and adds it to the appropriate collection.
+"""
 import bpy
 from ..utils.panel_utils import update_stabilizer
 from ..utils.collections import get_panel_collection, add_object_to_panel_collection
 
 class OBJECT_OT_AddGPDraw(bpy.types.Operator):
+    """Add a Grease Pencil object for drawing panel outlines.
+    
+    Creates a new Grease Pencil object with appropriate settings for
+    drawing panel outlines on the shoe shell. The object is named based
+    on the current panel count and added to the appropriate collection.
+    """
     bl_idname = "object.add_gp_draw"
     bl_label = "Add GPDraw Grease Pencil"
-
+    bl_options = {'REGISTER', 'UNDO'}
+    
+    @classmethod
+    def poll(cls, context):
+        """Check if the operator can be executed in the current context."""
+        return context.mode == 'OBJECT'
+    
     def execute(self, context):
         # Add undo checkpoint
         bpy.ops.ed.undo_push(message="Add Grease Pencil")
@@ -42,8 +60,16 @@ class OBJECT_OT_AddGPDraw(bpy.types.Operator):
         self.report({'INFO'}, f"Grease Pencil object '{gp_obj.name}' created and ready to draw on surface.")
         return {'FINISHED'}
 
+# Registration
+classes = [OBJECT_OT_AddGPDraw]
+
 def register():
-    bpy.utils.register_class(OBJECT_OT_AddGPDraw)
+    for cls in classes:
+        bpy.utils.register_class(cls)
 
 def unregister():
-    bpy.utils.unregister_class(OBJECT_OT_AddGPDraw)
+    for cls in reversed(classes):
+        bpy.utils.unregister_class(cls)
+
+if __name__ == "__main__":
+    register()

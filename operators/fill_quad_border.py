@@ -1,134 +1,157 @@
-# File: SneakerPanel_Pro/operators/fill_quad_border.py
-# This operator fills the inner hole of a mesh border using a robust separate-and-join method.
+"""
+Fills interior hole of mesh border with quad topology.
 
+This operator takes a mesh with a border edge loop and fills the interior
+with clean quad topology using inset, separation, triangulation, and joining
+techniques. The resulting mesh is organized into the appropriate collection.
+"""
 import bpy
 import bmesh
-from bpy.props import BoolProperty
-from bpy.types import Operator
-from ..utils.collections import add_object_to_panel_collection 
-from mathutils import Vector 
+from bpy.props import FloatProperty, BoolProperty
+from mathutils import Vector
+from ..utils.collections import add_object_to_panel_collection
 
-class MESH_OT_FillQuadPanelBorder(Operator):
-    """Fills the interior hole of the active panel border mesh with quad topology."""
-    bl_idname = "mesh.fill_quad_panel_border"
-    bl_label = "Fill Panel Border"
+class MESH_OT_FillQuadBorder(bpy.types.Operator):
+    """Fill interior hole of mesh border with quad topology.
+    
+    Takes a mesh with a border edge loop and fills it with clean quad topology
+    using a combination of techniques:
+    1. Creating an N-gon face from the boundary
+    2. Applying inset with configurable thickness
+    3. Using triangulation and quad conversion for clean topology
+    
+    The resulting mesh is named based on the current panel count and
+    added to the appropriate collection.
+    """
+    bl_idname = "mesh.fill_quad_border"
+    bl_label = "Fill Quad Border"
     bl_options = {'REGISTER', 'UNDO'}
     
-    keep_original_border: BoolProperty(
-        name="Keep Original Border",
-        default=False, 
-        description="Keep the input mesh border object after creating the filled panel"
+    inset_thickness: FloatProperty(
+        name="Border Inset Thickness",
+        description="Thickness of the inset border",
+        default=0.05,
+        min=0.001,
+        max=1.0
     )
-
+    
+    keep_original: BoolProperty(
+        name="Keep Original Border",
+        description="Keep the original border mesh after creating the filled panel",
+        default=False
+    )
+    
     @classmethod
     def poll(cls, context):
+        """Check if the active object is a mesh in edit mode."""
         obj = context.active_object
-        return (obj and obj.type == 'MESH')
-
+        return obj and obj.type == 'MESH' and obj.mode == 'EDIT'
+    
     def execute(self, context):
-        original_border_obj = context.active_object
-        if not (original_border_obj and original_border_obj.type == 'MESH'):
-            self.report({'ERROR'}, "An active Mesh Border object is required."); return {'CANCELLED'}
-
-        bpy.ops.ed.undo_push(message=self.bl_label)
-
-        # --- 1. Duplicate the border object to work on ---
-        bpy.ops.object.select_all(action='DESELECT')
-        original_border_obj.select_set(True)
-        context.view_layer.objects.active = original_border_obj
-        bpy.ops.object.duplicate()
-        working_obj = context.active_object 
-
-        panel_count = getattr(context.scene, "spp_panel_count", 1)
-        panel_name_prop = getattr(context.scene, "spp_panel_name", "Panel")
-        working_obj.name = f"{panel_name_prop}_{panel_count}_FilledPanel"
-
-        # --- 2. Create Quad Border and Isolate Center for Filling ---
-        self.report({'INFO'}, "Creating border and preparing to fill center.")
+        # Add undo checkpoint
+        bpy.ops.ed.undo_push(message="Fill Quad Border")
         
-        bpy.ops.object.select_all(action='DESELECT'); working_obj.select_set(True); context.view_layer.objects.active = working_obj
-        if working_obj.mode != 'EDIT': bpy.ops.object.mode_set(mode='EDIT')
+        # Store original mode and ensure we're in edit mode
+        original_mode = context.active_object.mode
+        if original_mode != 'EDIT':
+            bpy.ops.object.mode_set(mode='EDIT')
         
-        center_fill_obj = None
-        try:
-            # Step A: Create single N-gon from boundary
-            bpy.ops.mesh.select_all(action='SELECT')
-            bpy.ops.mesh.edge_face_add() 
-            self.report({'INFO'}, "Created initial N-gon face.")
-
-            # Step B: Inset the N-gon face to create the border
-            bpy.ops.mesh.select_mode(type="FACE")
-            bpy.ops.mesh.inset(thickness=0.0189804, use_even_offset=True, depth=0) # Using your specific inset value
-            self.report({'INFO'}, "Applied inset to create quad border.")
-            
-            # Step C: Separate the inner face for isolated processing
-            # The inset op leaves the inner face selected.
-            if any(f.select for f in bmesh.from_edit_mesh(working_obj.data).faces):
-                bpy.ops.mesh.separate(type='SELECTED')
-                # The separated part becomes a new object and is selected
-                center_fill_obj = context.selected_objects[0]
-                self.report({'INFO'}, f"Separated center face to new object: {center_fill_obj.name}")
-            else:
-                raise RuntimeError("Inset did not leave an inner face selected to separate.")
-            
-            # --- 3. Refine the Separated Center Piece ---
-            bpy.ops.object.mode_set(mode='OBJECT')
-            bpy.ops.object.select_all(action='DESELECT')
-            center_fill_obj.select_set(True)
-            context.view_layer.objects.active = center_fill_obj
-            bpy.ops.object.mode_set(mode='EDIT')
-            
-            bpy.ops.mesh.select_all(action='SELECT')
-            bpy.ops.mesh.triangulate_faces()
-            self.report({'INFO'}, "Triangulated center piece.")
-            bpy.ops.mesh.tris_convert_to_quads()
-            self.report({'INFO'}, "Converted center piece to quads.")
-            
-            bpy.ops.object.mode_set(mode='OBJECT')
-            
-            # --- 4. Join back and Merge ---
-            self.report({'INFO'}, "Joining quad-filled center back to border.")
-            bpy.ops.object.select_all(action='DESELECT')
-            working_obj.select_set(True)
-            center_fill_obj.select_set(True)
-            context.view_layer.objects.active = working_obj # The target for the join
-            
-            bpy.ops.object.join()
-            # 'working_obj' is now the combined mesh
-            
-            self.report({'INFO'}, "Merging vertices at seam.")
-            bpy.ops.object.mode_set(mode='EDIT')
-            bpy.ops.mesh.select_all(action='SELECT')
-            bpy.ops.mesh.remove_doubles() # Merge by distance
-            bpy.ops.object.mode_set(mode='OBJECT')
-
-
-        except RuntimeError as e:
-            self.report({'ERROR'}, f"Fill operation failed: {e}.")
-            bpy.ops.object.mode_set(mode='OBJECT')
-            if working_obj and working_obj.name in bpy.data.objects: bpy.data.objects.remove(working_obj, do_unlink=True)
-            if center_fill_obj and center_fill_obj.name in bpy.data.objects: bpy.data.objects.remove(center_fill_obj, do_unlink=True)
+        # Get the active object
+        obj = context.active_object
+        if not obj or obj.type != 'MESH':
+            self.report({'ERROR'}, "Active object is not a mesh")
             return {'CANCELLED'}
         
-        # --- 5. Finalize ---
-        add_object_to_panel_collection(working_obj, panel_count, panel_name_prop)
+        # Duplicate the object to work on
+        bpy.ops.object.mode_set(mode='OBJECT')
+        bpy.ops.object.duplicate()
+        working_obj = context.active_object
         
-        if not self.keep_original_border:
-            obj_to_remove = bpy.data.objects.get(original_border_obj.name)
-            if obj_to_remove:
-                bpy.data.objects.remove(obj_to_remove, do_unlink=True)
+        # Get panel count and name for naming
+        panel_count = context.scene.spp_panel_count if hasattr(context.scene, "spp_panel_count") else 1
+        panel_name = context.scene.spp_panel_name if hasattr(context.scene, "spp_panel_name") else "Panel"
+        
+        # Name the working object
+        if panel_name and panel_name.strip():
+            working_obj.name = f"{panel_name}_FilledQuad_{panel_count}"
         else:
-            original_border_obj.hide_viewport = True 
+            working_obj.name = f"FilledQuad_{panel_count}"
         
-        bpy.ops.object.select_all(action='DESELECT')
-        working_obj.select_set(True)
-        context.view_layer.objects.active = working_obj
-        self.report({'INFO'}, f"Successfully created filled panel: '{working_obj.name}'.")
-        return {'FINISHED'}
+        # Switch to edit mode
+        bpy.ops.object.mode_set(mode='EDIT')
+        
+        # Select all vertices
+        bpy.ops.mesh.select_all(action='SELECT')
+        
+        try:
+            # Create a face from the border edges
+            bpy.ops.mesh.edge_face_add()
+            
+            # Switch to face selection mode
+            bpy.ops.mesh.select_mode(type='FACE')
+            
+            # Inset the face
+            bpy.ops.mesh.inset(thickness=self.inset_thickness, depth=0)
+            
+            # Delete the inner face
+            bpy.ops.mesh.delete(type='FACE')
+            
+            # Switch back to vertex selection mode
+            bpy.ops.mesh.select_mode(type='VERT')
+            
+            # Select all vertices
+            bpy.ops.mesh.select_all(action='SELECT')
+            
+            # Triangulate the face
+            bpy.ops.mesh.quads_convert_to_tris(quad_method='BEAUTY', ngon_method='BEAUTY')
+            
+            # Convert triangles back to quads for cleaner topology
+            bpy.ops.mesh.tris_convert_to_quads()
+            
+            # Return to object mode
+            bpy.ops.object.mode_set(mode='OBJECT')
+            
+            # Add to proper collection
+            add_object_to_panel_collection(working_obj, panel_count, panel_name)
+            
+            # Handle the original object
+            if not self.keep_original:
+                # Delete the original object
+                bpy.data.objects.remove(obj, do_unlink=True)
+            else:
+                # Hide the original object
+                obj.hide_viewport = True
+            
+            # Select the new object
+            bpy.ops.object.select_all(action='DESELECT')
+            working_obj.select_set(True)
+            context.view_layer.objects.active = working_obj
+            
+            self.report({'INFO'}, f"Successfully created filled quad panel: {working_obj.name}")
+            return {'FINISHED'}
+            
+        except Exception as e:
+            self.report({'ERROR'}, f"Failed to create quad fill: {str(e)}")
+            # Clean up the working object if operation failed
+            bpy.ops.object.mode_set(mode='OBJECT')
+            bpy.data.objects.remove(working_obj, do_unlink=True)
+            # Restore original selection
+            obj.select_set(True)
+            context.view_layer.objects.active = obj
+            # Restore original mode
+            bpy.ops.object.mode_set(mode=original_mode)
+            return {'CANCELLED'}
 
+# Registration
+classes = [MESH_OT_FillQuadBorder]
 
-classes = [MESH_OT_FillQuadPanelBorder]
 def register():
-    for cls in classes: bpy.utils.register_class(cls)
+    for cls in classes:
+        bpy.utils.register_class(cls)
+
 def unregister():
-    for cls in reversed(classes): bpy.utils.unregister_class(cls)
+    for cls in reversed(classes):
+        bpy.utils.unregister_class(cls)
+
+if __name__ == "__main__":
+    register()
