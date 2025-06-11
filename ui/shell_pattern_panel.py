@@ -86,36 +86,28 @@ class OBJECT_PT_ShellPatternToOverlay(Panel):
             col.label(text="4. Refine Curve (Edit Mode).")
 
             box_sample = box_workflow_b.box()
-            col = box_sample.column(align=True)
-            box_sample.label(text="5. (Next) Relax loops and project to shell.")
-            col.label(text="6. With Curve active, 'Sample to Polyline'.")
-            col.label(text="7. With Outline active, 'Create Quad Border'.")
-            col.label(text="8. With Border active, run 'Fill Border with Grid'.")
-            col.label(text="9. (Next) Relax loops and project to shell.")
-
-            box_sample = box_workflow_b.box()
-            box_sample.label(text="Step 1: Sample Curve to Polyline", icon='CURVE_DATA')
+            box_sample.label(text="Step 5: Sample Curve to Polyline", icon='CURVE_DATA')
             if hasattr(scene, "spp_sampler_fidelity"):
                 col_sample = box_sample.column(align=True)
                 col_sample.prop(scene, "spp_sampler_fidelity", text="Boundary Samples")
                 col_sample.operator("curve.sample_to_polyline", text="Sample Curve to Polyline")
 
             box_create_border = box_workflow_b.box()
-            box_create_border.label(text="Step 2: Create Quad Panel Border", icon='MESH_GRID')
+            box_create_border.label(text="Step 6: Create Quad Panel Border", icon='MESH_GRID')
             op_quad_border = box_create_border.operator("mesh.create_quad_panel_from_outline", text="Create Quad Border from Outline")
             props_col_border = box_create_border.column(align=True)
-            props_col_border.prop(op_quad_border, "inset_thickness")
-            props_col_border.prop(op_quad_border, "keep_original_outline")
+            
         
             box_fill = box_workflow_b.box()
-            box_fill.label(text="Step 3: Fill Border with Grid", icon='FILE_NEW')
-            
+            box_fill.label(text="Step 7: Fill Border with Grid", icon='FILE_NEW')            
             op_fill = box_fill.operator("mesh.fill_border_grid", text="Fill Panel Border")
             props_col_fill = box_fill.column(align=True)
+            
+            box_relax = box_workflow_b.box()
+            box_relax.label(text="Step 8: Relax Loops & Project", icon='MOD_SMOOTH')
+            box_relax.label(text="(Operators for these steps to be built)")
 
-        box_relax = layout.box()
-        box_relax.label(text="Step 4: Relax Loops & Project", icon='MOD_SMOOTH')
-        box_relax.label(text="(Operators for these steps to be built)")
+        
 
 
 # Registration

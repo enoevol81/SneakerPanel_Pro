@@ -1,7 +1,7 @@
 import bpy
 
 class OBJECT_PT_SneakerPanelProMain(bpy.types.Panel):
-    bl_label = "Sneaker Panel Pro"
+    bl_label = "Sneaker Panel Pro - Common Tools"
     bl_idname = "OBJECT_PT_sneaker_panel_pro_main"
     bl_space_type = 'VIEW_3D'
     bl_region_type = 'UI'
