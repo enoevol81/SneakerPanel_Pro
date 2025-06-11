@@ -15,7 +15,7 @@ class OBJECT_PT_SolidifyPanel(bpy.types.Panel):
     2. Configuring solidify parameters (thickness, offset, etc.)
     3. Applying solidify modifiers
     """
-    bl_label = "Finalize"
+    bl_label = "Thicken"
     bl_idname = "OBJECT_PT_solidify_panel"
     bl_space_type = 'VIEW_3D'
     bl_region_type = 'UI'
@@ -61,15 +61,15 @@ class OBJECT_PT_SolidifyPanel(bpy.types.Panel):
 
         # Even thickness
         row = box.row()
-        row.prop(scene, "spp_solidify_even_thickness", text="Even Thickness")
+        row.prop(context.scene, "spp_solidify_even_thickness", text="Even Thickness")
 
         # Rim options
         col = box.column()
         row = col.row()
-        row.prop(scene, "spp_solidify_rim", text="Fill Rim")
-        if scene.spp_solidify_rim:
+        row.prop(context.scene, "spp_solidify_rim", text="Fill Rim")
+        if  context.scene.spp_solidify_rim:
             row = col.row()
-            row.prop(scene, "spp_solidify_rim_only", text="Only Rim")
+            row.prop(context.scene, "spp_solidify_rim_only", text="Only Rim")
 
         # Apply button
         layout.operator("object.apply_solidify", text="Apply", icon='CHECKMARK')
