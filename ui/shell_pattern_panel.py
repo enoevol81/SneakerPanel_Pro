@@ -25,7 +25,7 @@ class OBJECT_PT_ShellPatternToOverlay(Panel):
         col = box_workflow_a.column(align=True)
         col.label(text="Workflow A:", icon='INFO')
         col.label(text="1. Use Grease Pencil Item to draw your design.")
-        col.label(text="2. Convert to Curve (Decimate_Less Control Points Easier to Edit)")
+        col.label(text="2. Convert to Curve (Decimate - Fewer Control Points Easier to Edit).")
         col.label(text="3. With Border active, run 'Fill Border with Grid'.")
         col.label(text="4. (Next) Relax loops and project to shell.")
 
@@ -51,7 +51,7 @@ class OBJECT_PT_ShellPatternToOverlay(Panel):
         col.label(text="Workflow B:", icon='INFO')
         col.label(text="1. Add Grease Pencil Item and draw your design.")
         col.label(text="1. Use Grease Pencil Item to draw your design.")
-        col.label(text="2. Convert to Curve (Decimate_Less Control Points Easier to Edit)")
+        col.label(text="2. Convert to Curve - Decimate (Fewer Control PointsEasier to Edit)")
         col.label(text="3. With Border active, run 'Fill Border with Grid'.")
         col.label(text="4. (Next) Relax loops and project to shell.")
         col.label(text="2. With Curve active, 'Sample to Polyline'.")
