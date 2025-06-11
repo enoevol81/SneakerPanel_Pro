@@ -18,13 +18,13 @@ class OBJECT_PT_SneakerPanelProMain(bpy.types.Panel):
         box.label(text="** First Mark Seams At Heel And Boundary Edges**")
         
         # Unwrap Shell button
-        box.operator("object.unwrap_shell", text="Unwrap Shell", icon="MOD_UVPROJECT")
+        box.operator("object.unwrap_shell", text="1. Unwrap Shell", icon="MOD_UVPROJECT")
         
         # Define Toe button
-        box.operator("object.define_toe", text="Define Toe", icon="CURVE_PATH")
+        box.operator("object.define_toe", text="2. Define Toe", icon="CURVE_PATH")
         
         # Orient UV Island button
-        box.operator("object.orient_uv_island", text="Orient UV Island", icon="ORIENTATION_LOCAL")
+        box.operator("object.orient_uv_island", text="3. Orient UV Island", icon="ORIENTATION_LOCAL")
         
         # Panel Settings Section
         box = layout.box()
