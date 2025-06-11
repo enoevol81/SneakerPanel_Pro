@@ -45,10 +45,7 @@ class OBJECT_PT_ShellPatternToOverlay(Panel):
         
         op_fill = box_fill.operator("mesh.fill_border_grid", text="Fill Panel Border")
         props_col_fill = box_fill.column(align=True)
-        props_col_fill.prop(op_fill, "span")
-        props_col_fill.prop(op_fill, "offset")
-        props_col_fill.prop(op_fill, "keep_original_border")
-        
+
         box_relax = layout.box()
         box_relax.label(text="Step 4: Relax Loops & Project", icon='MOD_SMOOTH')
         box_relax.label(text="(Operators for these steps to be built)")
