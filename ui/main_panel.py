@@ -68,8 +68,7 @@ class OBJECT_PT_SneakerPanelProMain(bpy.types.Panel):
             
             # Important note with better formatting
             note_col = uv_box.column(align=True)
-            note_col.label(text="Before starting:", icon="INFO")
-            note_col.label(text="Mark seams at heel and boundary edges")
+            note_col.label(text="Before Starting: Mark Seams at Heel and Boundary Edges", icon="INFO")
             
             # Steps with better visual flow
             steps_col = uv_box.column(align=True)
@@ -81,7 +80,27 @@ class OBJECT_PT_SneakerPanelProMain(bpy.types.Panel):
         # Panel Creation Workflow - Step 1
         gp_box = layout.box()
         gp_header = gp_box.row()
-        gp_header.label(text="Step 1: Draw Panel", icon="GREASEPENCIL")
+        gp_header.label(text="Step 1: Create Grease Pencil Object - Design Your Panel", icon="GREASEPENCIL")
+        
+        # Add tooltip toggle button
+        tooltip_icon = "LIGHT_SUN" if context.scene.spp_show_gp_tooltip else "LIGHT"
+        gp_header.prop(context.scene, "spp_show_gp_tooltip", text="", icon=tooltip_icon, emboss=False)
+        
+        # Show tooltip if enabled
+        if context.scene.spp_show_gp_tooltip:
+            tip_box = gp_box.box()
+            tip_box.alert = True  # Makes the box stand out with a different color
+            tip_col = tip_box.column(align=True)
+            tip_col.scale_y = 0.9  # Slightly smaller text
+            tip_col.label(text="Grease Pencil Drawing Tips:", icon='HELP')
+            tip_col.label(text="• Draw directly on the 3D shell surface")
+            tip_col.label(text="• Use the stabilizer for smoother lines")
+            tip_col.label(text="• Creation of grease pencil is step 1 of panel creation workflow")
+            tip_col.label(text="• New panel group automatically generated")
+            tip_col.label(text="• Be sure to assign panel name and # before creating grease pencil")
+            tip_col.label(text="• Use Undo (Ctrl+Z) to correct mistakes")
+            tip_col.label(text="• Keep panel shapes simple and clean")
+            tip_col.operator("wm.url_open", text="View Drawing Tutorial", icon='URL').url = "https://example.com/drawing-tutorial"
         
         # Grease pencil controls with better organization
         gp_col = gp_box.column(align=True)
@@ -154,30 +173,35 @@ class OBJECT_PT_SneakerPanelProMain(bpy.types.Panel):
 classes = [OBJECT_PT_SneakerPanelProMain]
 
 def register():
-    # Register collapsible section properties
-    bpy.types.Scene.spp_show_uv_section = BoolProperty(
+    """Register the panel and properties."""
+    bpy.utils.register_class(OBJECT_PT_SneakerPanelProMain)
+    
+    # Register UI section toggle properties
+    bpy.types.Scene.spp_show_uv_section = bpy.props.BoolProperty(
         name="Show UV Generation Section",
-        description="Expand or collapse the UV Generation section",
-        default=False
+        default=False,
+        description="Expand or collapse the UV Generation section"
     )
     
     # Register tooltip properties
-    bpy.types.Scene.spp_show_mirror_tooltip = BoolProperty(
+    bpy.types.Scene.spp_show_mirror_tooltip = bpy.props.BoolProperty(
         name="Show Mirror at Cursor Tooltip",
-        description="Show or hide the tooltip for Mirror at Cursor function",
-        default=False
+        default=False,
+        description="Show helpful tips for the Mirror at Cursor function"
     )
-    
-    bpy.types.Scene.spp_show_uv_gen_tooltip = BoolProperty(
+    bpy.types.Scene.spp_show_uv_gen_tooltip = bpy.props.BoolProperty(
         name="Show UV Generation Tooltip",
-        description="Show or hide the tooltip for Shell UV Generation",
-        default=False
+        default=False,
+        description="Show helpful tips for the Shell UV Generation workflow"
     )
-    
-    for cls in classes:
-        bpy.utils.register_class(cls)
+    bpy.types.Scene.spp_show_gp_tooltip = bpy.props.BoolProperty(
+        name="Show Grease Pencil Drawing Tooltip",
+        default=False,
+        description="Show helpful tips for drawing panels with Grease Pencil"
+    )
 
 def unregister():
+    """Unregister the panel and properties."""
     for cls in reversed(classes):
         bpy.utils.unregister_class(cls)
         
@@ -191,6 +215,9 @@ def unregister():
     
     if hasattr(bpy.types.Scene, "spp_show_uv_gen_tooltip"):
         del bpy.types.Scene.spp_show_uv_gen_tooltip
+        
+    if hasattr(bpy.types.Scene, "spp_show_gp_tooltip"):
+        del bpy.types.Scene.spp_show_gp_tooltip
 
 if __name__ == "__main__":
     register()
