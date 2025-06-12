@@ -210,6 +210,16 @@ class OBJECT_OT_UVToMesh(Operator):
         add_object_to_panel_collection(ob_uv, panel_count, panel_name_prop)
         self.report({'INFO'}, f"UV Mesh '{ob_uv.name}' added to collection for '{panel_name_prop} {panel_count}'.")
 
+        # --- SET UV MESH TO WIREFRAME DISPLAY ---
+        # Set the display type to wireframe for better visibility when drawing
+        ob_uv.display_type = 'WIRE'  # Options: 'BOUNDS', 'WIRE', 'SOLID', 'TEXTURED'
+        # Also set the viewport display settings
+        if hasattr(ob_uv, "show_wire"):
+            ob_uv.show_wire = True  # Show wireframe on top of solid/textured
+        if hasattr(ob_uv, "show_all_edges"):
+            ob_uv.show_all_edges = True  # Show all edges for better visibility
+
+        
         # --- CREATE AND SETUP NEW GREASE PENCIL OBJECT ---
         self.report({'INFO'}, "Creating Grease Pencil object for UV drawing.")
         # Ensure ob_uv is at a known location if GP is parented or aligned (it should be at origin after scale apply)
