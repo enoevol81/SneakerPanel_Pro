@@ -35,6 +35,7 @@ from . import create_quad_panel_from_outline
 from . import fill_quad_border
 from . import fill_border_grid
 from . import overlay_panel_onto_shell
+from . import shoelace_generator
 
 # Register/unregister functions
 def register():
@@ -60,8 +61,10 @@ def register():
     fill_quad_border.register()
     fill_border_grid.register()
     overlay_panel_onto_shell.register()
+    shoelace_generator.register()
 
 def unregister():
+    shoelace_generator.unregister()
     orient_uv_island.unregister()
     define_toe.unregister()
     unwrap_shell.unregister()
