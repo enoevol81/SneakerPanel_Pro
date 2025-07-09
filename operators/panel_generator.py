@@ -230,8 +230,21 @@ def create_flow_based_quads(bm):
     """
     try:
         bmesh.ops.recalc_face_normals(bm, faces=bm.faces)
+        
+        # Identify boundary vertices to preserve shape
+        boundary_edges = [e for e in bm.edges if len(e.link_faces) < 2]
+        boundary_verts = set()
+        for edge in boundary_edges:
+            boundary_verts.add(edge.verts[0])
+            boundary_verts.add(edge.verts[1])
+        
+        # Only smooth interior vertices to maintain boundary shape
+        interior_verts = [v for v in bm.verts if v not in boundary_verts]
+        
+        # Apply controlled smoothing to interior vertices only
         for _ in range(3):
-            bmesh.ops.smooth_vert(bm, verts=bm.verts, factor=0.5)
+            bmesh.ops.smooth_vert(bm, verts=interior_verts, factor=0.5)
+            
     except Exception as e:
         error(f"Flow-based quad op failed: {e}")
     return bm
@@ -305,7 +318,42 @@ def generate_panel(panel_obj, shell_obj, filled_obj_name=None, grid_span=4, uv_l
         bpy.ops.object.mode_set(mode='EDIT')
         bpy.ops.mesh.select_all(action='SELECT')
         try:
-            bpy.ops.mesh.fill_grid(span=grid_span if grid_span > 0 else 1)
+            # Calculate balanced grid span based on shape
+            if grid_span <= 0:
+                bm_calc = bmesh.from_edit_mesh(filled_obj.data)
+                min_co = Vector((float('inf'), float('inf'), float('inf')))
+                max_co = Vector((float('-inf'), float('-inf'), float('-inf')))
+                for v in bm_calc.verts:
+                    min_co.x = min(min_co.x, v.co.x)
+                    min_co.y = min(min_co.y, v.co.y)
+                    min_co.z = min(min_co.z, v.co.z)
+                    max_co.x = max(max_co.x, v.co.x)
+                    max_co.y = max(max_co.y, v.co.y)
+                    max_co.z = max(max_co.z, v.co.z)
+                
+                # Get dimensions to calculate appropriate span
+                width = max_co.x - min_co.x
+                height = max_co.y - min_co.y
+                
+                if width > 0 and height > 0:
+                    # Set span to create roughly square quads
+                    # A higher value gives more resolution
+                    base_span = 4  # Default value
+                    if width > height:
+                        grid_span = max(4, round(base_span * width / height))
+                    else:
+                        grid_span = max(4, round(base_span * height / width))
+                    
+                    # Cap at reasonable values to avoid too many polygons
+                    grid_span = min(12, grid_span)
+                
+                info(f"Calculated grid span: {grid_span}")
+            
+            # Ensure valid span
+            grid_span = max(1, grid_span)
+            
+            # Apply grid fill operation
+            bpy.ops.mesh.fill_grid(span=grid_span)
             info(f"Grid fill succeeded with span={grid_span}.")
         except Exception as e:
             error(f"Grid fill failed: {e}")
