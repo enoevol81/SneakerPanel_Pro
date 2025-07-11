@@ -10,6 +10,7 @@ import math
 from bpy.props import (
     EnumProperty,
     FloatProperty,
+    IntProperty,
     StringProperty,
     BoolProperty,
     FloatVectorProperty,
@@ -96,7 +97,7 @@ class SPP_OT_CreateShoelaceGeoNodes(bpy.types.Operator):
         unit='LENGTH'
     )
     
-    resolution: FloatProperty(
+    resolution: IntProperty(
         name="Resolution",
         description="Resolution of the profile curve",
         default=16,
