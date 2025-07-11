@@ -5,6 +5,7 @@ including stabilizer settings, surface snapping, mesh reduction, and curvature c
 """
 
 import bpy
+import bmesh
 from mathutils import Vector
 
 
