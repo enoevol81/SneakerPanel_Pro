@@ -248,7 +248,7 @@ class SPP_OT_CreateShoelaceGeoNodes(bpy.types.Operator):
             
             # Connect the UV node
             node_group.links.new(curve_to_mesh.outputs["Mesh"], uv_node.inputs["Mesh"])
-            node_group.links.new(uv_node.outputs["UV"], group_out.inputs["Geometry"])
+            node_group.links.new(uv_node.outputs["Mesh"], group_out.inputs["Geometry"])
 
         # Connect the input curve to the geometry nodes modifier
         gn_mod["Input_2"] = curve_obj
