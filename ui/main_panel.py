@@ -168,6 +168,35 @@ class OBJECT_PT_SneakerPanelProMain(bpy.types.Panel):
             tip_col.label(text="• Creates symmetrical curves quickly")
             tip_col.label(text="• Great for creating matching left/right panels")
             tip_col.label(text="• Use front/side view for precise placement")
+        
+        # Lace Generator Section
+        lace_box = layout.box()
+        lace_header = lace_box.row(align=True)
+        
+        # Add expand/collapse toggle with arrow icon
+        expand_icon = "TRIA_DOWN" if context.scene.spp_show_lace_options else "TRIA_RIGHT"
+        lace_header.prop(context.scene, "spp_show_lace_options", text="", icon=expand_icon, emboss=False)
+        lace_header.label(text="Lace Generator", icon="OUTLINER_OB_CURVE")
+        
+        # Only show content if expanded
+        if context.scene.spp_show_lace_options:
+            # Lace controls
+            lace_col = lace_box.column(align=True)
+            lace_col.prop(context.scene, "spp_lace_profile", text="Profile Type")
+            lace_col.prop(context.scene, "spp_lace_scale", text="Scale")
+            lace_col.prop(context.scene, "spp_lace_resample", text="Resample Points")
+            lace_col.prop(context.scene, "spp_lace_tilt", text="Tilt")
+            lace_col.prop(context.scene, "spp_lace_normal_mode", text="Normal Mode")
+            lace_col.prop(context.scene, "spp_lace_shade_smooth", text="Shade Smooth")
+            
+            # Only show custom profile field when profile type is "Custom"
+            if context.scene.spp_lace_profile == '2':
+                lace_col.prop(context.scene, "spp_lace_custom_profile", text="Custom Profile")
+            
+            # Apply button
+            op_col = lace_box.column(align=True)
+            op_col.scale_y = 1.2
+            op_col.operator("object.add_lace_modifier", text="Apply Lace Geometry", icon="MOD_CURVE")
      
 # Registration
 classes = [OBJECT_PT_SneakerPanelProMain]
