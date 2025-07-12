@@ -23,7 +23,7 @@ from .utils.panel_utils import update_stabilizer, update_stabilizer_ui
 
 # Group properties by functionality for better organization
 def register_properties():
-    """Register all properties used by the SneakerPanel Pro addon."""
+    """Register core properties used by the SneakerPanel Pro addon."""
     
     # -------------------------------------------------------------------------
     # Panel identification and naming properties
@@ -203,6 +203,92 @@ def register_properties():
     )
 
 
+def register_lace_properties():
+    """Register properties used by the lace generator."""
+    bpy.types.Scene.spp_lace_profile = bpy.props.EnumProperty(
+        name="Lace Profile",
+        description="Shape profile to use for the lace",
+        items=[
+            ('0', "Circle", "Circular lace profile"),
+            ('1', "Flat", "Flat rectangular lace profile"),
+            ('2', "Custom", "Custom profile from another object")
+        ],
+        default='0'
+    )
+
+    bpy.types.Scene.spp_lace_scale = bpy.props.FloatProperty(
+        name="Scale",
+        description="Size of the lace profile",
+        default=0.005,
+        min=0.0001,
+        max=0.1,
+        precision=4,
+        subtype='DISTANCE'
+    )
+
+    bpy.types.Scene.spp_lace_resample = bpy.props.IntProperty(
+        name="Resample",
+        description="Number of points to resample the curve with",
+        default=110,
+        min=1,
+        max=1000
+    )
+
+    bpy.types.Scene.spp_lace_tilt = bpy.props.FloatProperty(
+        name="Tilt",
+        description="Rotation around the curve tangent",
+        default=-0.11344639211893082,
+        subtype='ANGLE'
+    )
+
+    bpy.types.Scene.spp_lace_normal_mode = bpy.props.EnumProperty(
+        name="Normal Mode",
+        description="Method to calculate normals along the curve",
+        items=[
+            ('0', "Minimum Twist", "Use minimum twist for curve normals"),
+            ('1', "Z Up", "Align normals with Z-up direction"),
+            ('2', "Free", "Free normal direction")
+        ],
+        default='0'
+    )
+
+    bpy.types.Scene.spp_lace_custom_profile = bpy.props.PointerProperty(
+        name="Custom Profile",
+        description="Object to use as custom profile (only used when Lace Profile is set to Custom)",
+        type=bpy.types.Object
+    )
+
+    bpy.types.Scene.spp_lace_shade_smooth = bpy.props.BoolProperty(
+        name="Shade Smooth",
+        description="Apply smooth shading to the generated mesh",
+        default=True
+    )
+
+    bpy.types.Scene.spp_show_lace_options = bpy.props.BoolProperty(
+        name="Show Lace Options",
+        description="Show or hide lace generation options",
+        default=False
+    )
+
+
+def unregister_lace_properties():
+    """Unregister lace generator properties."""
+    props = [
+        "spp_lace_profile",
+        "spp_lace_scale",
+        "spp_lace_resample",
+        "spp_lace_tilt",
+        "spp_lace_normal_mode",
+        "spp_lace_custom_profile",
+        "spp_lace_shade_smooth",
+        "spp_show_lace_options",
+    ]
+
+    for prop in props:
+        if hasattr(bpy.types.Scene, prop):
+            delattr(bpy.types.Scene, prop)
+
+
 def _update_modifier_if_exists(context, modifier_name, property_name, value):
     """
     Helper function to update modifier properties if they exist.
@@ -277,10 +363,12 @@ def unregister_properties():
 def register():
     """Register all properties."""
     register_properties()
+    register_lace_properties()
 
 
 def unregister():
     """Unregister all properties."""
+    unregister_lace_properties()
     unregister_properties()
 
 
