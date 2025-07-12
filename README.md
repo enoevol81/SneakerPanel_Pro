@@ -19,5 +19,12 @@ Current development priorities include completing the "Bezier to Surface", "Shel
 2. In Blender, go to Edit > Preferences > Add-ons > Install
 3. Select the ZIP file
 
+## Lace Generator
+1. Enable **Show Lace Options** in the sidebar to reveal lace settings.
+2. Tweak the profile type, scale, resample count and other parameters to shape the lace.
+3. With a curve object selected, click **Apply Lace Geometry** to add the modifier.
+
+*Note: The Lace Generator only works on curve objects.*
+
 ## Author
 Created by [Your Name]
