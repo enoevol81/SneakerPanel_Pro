@@ -21,3 +21,6 @@ Current development priorities include completing the "Bezier to Surface", "Shel
 
 ## Author
 Created by [Your Name]
+
+## License
+This project is licensed under the [MIT License](LICENSE).
