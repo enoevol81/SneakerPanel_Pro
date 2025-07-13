@@ -56,22 +56,6 @@ class OBJECT_PT_SolidifyPanel(bpy.types.Panel):
         row.prop(solidify, "use_rim", text="Fill Rim")
 
         # Apply button
-        box.separator()
-        box.operator("object.apply_solidify", text="Apply Solidify", icon='CHECKMARK')
-
-        # Even thickness
-        row = box.row()
-        row.prop(context.scene, "spp_solidify_even_thickness", text="Even Thickness")
-
-        # Rim options
-        col = box.column()
-        row = col.row()
-        row.prop(context.scene, "spp_solidify_rim", text="Fill Rim")
-        if  context.scene.spp_solidify_rim:
-            row = col.row()
-            row.prop(context.scene, "spp_solidify_rim_only", text="Only Rim")
-
-        # Apply button
         layout.operator("object.apply_solidify", text="Apply", icon='CHECKMARK')
 
 # Registration
