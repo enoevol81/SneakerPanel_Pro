@@ -24,6 +24,81 @@ from .utils.panel_utils import update_stabilizer, update_stabilizer_ui
 # Group properties by functionality for better organization
 def register_properties():
     """Register all properties used by the SneakerPanel Pro addon."""
+    # -------------------------------------------------------------------------
+    # Lace generator properties
+    # -------------------------------------------------------------------------
+    bpy.types.Scene.spp_lace_profile = bpy.props.EnumProperty(
+        name="Lace Profile",
+        description="Shape profile to use for the lace",
+        items=[
+            ('0', "Circle", "Circular lace profile"),
+            ('1', "Flat", "Flat rectangular lace profile"),
+            ('2', "Custom", "Custom profile from another object")
+        ],
+        default='0',
+        update=_update_lace_modifier
+    )
+    
+    bpy.types.Scene.spp_lace_scale = bpy.props.FloatProperty(
+        name="Scale",
+        description="Size of the lace profile",
+        default=0.005,
+        min=0.0001,
+        max=0.1,
+        precision=4,
+        subtype='DISTANCE',
+        update=_update_lace_modifier
+    )
+    
+    bpy.types.Scene.spp_lace_resample = bpy.props.IntProperty(
+        name="Resample",
+        description="Number of points to resample the curve with",
+        default=110,
+        min=1,
+        max=1000,
+        update=_update_lace_modifier
+    )
+    
+    bpy.types.Scene.spp_lace_tilt = bpy.props.FloatProperty(
+        name="Tilt",
+        description="Rotation around the curve tangent",
+        default=0.0,
+        subtype='ANGLE',
+        update=_update_lace_modifier
+    )
+    
+    bpy.types.Scene.spp_lace_normal_mode = bpy.props.EnumProperty(
+        name="Normal Mode",
+        description="Method to calculate normals along the curve",
+        items=[
+            ('0', "Minimum Twist", "Use minimum twist for curve normals"),
+            ('1', "Z Up", "Align normals with Z-up direction"),
+            ('2', "Free", "Free normal direction")
+        ],
+        default='0',
+        update=_update_lace_modifier
+    )
+    
+    bpy.types.Scene.spp_lace_custom_profile = bpy.props.PointerProperty(
+        name="Custom Profile",
+        description="Object to use as custom profile (only used when Lace Profile is set to Custom)",
+        type=bpy.types.Object,
+        update=_update_lace_modifier
+    )
+    
+    bpy.types.Scene.spp_lace_material = bpy.props.PointerProperty(
+        name="Material",
+        description="Material to apply to the lace",
+        type=bpy.types.Material,
+        update=_update_lace_modifier
+    )
+    
+    bpy.types.Scene.spp_lace_shade_smooth = bpy.props.BoolProperty(
+        name="Shade Smooth",
+        description="Apply smooth shading to the generated mesh",
+        default=True,
+        update=_update_lace_modifier
+    )
     
     # -------------------------------------------------------------------------
     # Panel identification and naming properties
@@ -230,6 +305,47 @@ def _update_modifier_if_exists(context, modifier_name, property_name, value):
         if hasattr(mod, property_name):
             setattr(mod, property_name, value)
     return None
+
+
+def _update_lace_modifier(self, context):
+    """Callback to update Lace modifier inputs when scene properties change."""
+    obj = context.active_object
+    if not obj or obj.type != 'CURVE':
+        return
+
+    modifier = None
+    for mod in obj.modifiers:
+        if mod.type == 'NODES' and mod.name.startswith("Lace"):
+            modifier = mod
+            break
+
+    if modifier:
+        try:
+            scene = context.scene
+            if hasattr(scene, 'spp_lace_profile'):
+                modifier["Socket_2"] = int(scene.spp_lace_profile)
+            if hasattr(scene, 'spp_lace_scale'):
+                modifier["Socket_3"] = scene.spp_lace_scale
+            if hasattr(scene, 'spp_lace_resample'):
+                modifier["Socket_4"] = scene.spp_lace_resample
+            if hasattr(scene, 'spp_lace_tilt'):
+                modifier["Socket_5"] = scene.spp_lace_tilt
+            if hasattr(scene, 'spp_lace_normal_mode'):
+                modifier["Socket_6"] = int(scene.spp_lace_normal_mode)
+            if hasattr(scene, 'spp_lace_custom_profile'):
+                modifier["Socket_7"] = scene.spp_lace_custom_profile
+            if hasattr(scene, 'spp_lace_material'):
+                modifier["Socket_8"] = scene.spp_lace_material
+            if hasattr(scene, 'spp_lace_shade_smooth'):
+                modifier["Socket_9"] = scene.spp_lace_shade_smooth
+
+            # Force refresh
+            modifier.show_viewport = False
+            modifier.show_viewport = True
+
+        except Exception as e:
+            print(f"Error updating Lace modifier: {e}")
+
 
 
 def unregister_properties():

@@ -19,19 +19,59 @@ class OBJECT_PT_SneakerPanelLace(bpy.types.Panel):
     bl_category = 'Sneaker Panel'
     
     def draw(self, context):
-        box = self.layout
+        layout = self.layout
+        scene = context.scene
         obj = context.active_object
         
-        # Parameters box
-        lace_box = box.box()
-        lace_box.label(text="Lace Setup:", icon='MODIFIER')
-
-        # Only show button if a curve is selected
-        if obj and obj.type == 'CURVE':
-            lace_box.operator("object.apply_lace_nodegroup", text="Apply Lace Geometry")
-        else:
-            lace_box.alert = True
-            lace_box.label(text="Select a curve object to apply lace geometry", icon="ERROR")
+        # Check if object has a lace modifier
+        has_lace_modifier = False
+        for mod in obj.modifiers:
+            if mod.type == 'NODES' and mod.name.startswith('Lace'):
+                has_lace_modifier = True
+                break
+        
+        # Main box
+        main_box = layout.box()
+        main_box.label(text="Lace Generator", icon='CURVE_DATA')
+        
+        if not has_lace_modifier:
+            # Show apply button if no lace modifier exists
+            main_box.operator("object.apply_lace_nodegroup", text="Apply Lace Geometry")
+            return
+        
+        # Parameters section - only shown if the modifier exists
+        # Profile type selection
+        row = main_box.row()
+        row.prop(scene, "spp_lace_profile", text="Profile")
+        
+        # Scale control
+        row = main_box.row()
+        row.prop(scene, "spp_lace_scale", text="Scale")
+        
+        # Resolution control
+        row = main_box.row()
+        row.prop(scene, "spp_lace_resample", text="Resolution")
+        
+        # Tilt control
+        row = main_box.row()
+        row.prop(scene, "spp_lace_tilt", text="Tilt")
+        
+        # Normal mode selection
+        row = main_box.row()
+        row.prop(scene, "spp_lace_normal_mode", text="Normal Mode")
+        
+        # Custom profile object - only show if profile type is Custom
+        if scene.spp_lace_profile == '2':
+            row = main_box.row()
+            row.prop(scene, "spp_lace_custom_profile", text="Custom Profile")
+        
+        # Material assignment
+        row = main_box.row()
+        row.prop(scene, "spp_lace_material", text="Material")
+        
+        # Shade smooth toggle
+        row = main_box.row()
+        row.prop(scene, "spp_lace_shade_smooth", text="Shade Smooth")
 
 # Registration
 classes = [OBJECT_PT_SneakerPanelLace]
