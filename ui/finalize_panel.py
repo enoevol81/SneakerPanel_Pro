@@ -56,7 +56,7 @@ class OBJECT_PT_SolidifyPanel(bpy.types.Panel):
         row.prop(solidify, "use_rim", text="Fill Rim")
 
         # Apply button
-        layout.operator("object.apply_solidify", text="Apply", icon='CHECKMARK')
+        layout.operator("object.apply_solidify", text="Finalize", icon='CHECKMARK')
 
 # Registration
 classes = [OBJECT_PT_SolidifyPanel]

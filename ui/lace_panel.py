@@ -19,14 +19,19 @@ class OBJECT_PT_SneakerPanelLace(bpy.types.Panel):
     bl_category = 'Sneaker Panel'
     
     def draw(self, context):
-        layout = self.layout
+        box = self.layout
+        obj = context.active_object
         
+        # Parameters box
+        lace_box = box.box()
+        lace_box.label(text="Lace Setup:", icon='MODIFIER')
+
         # Only show button if a curve is selected
-        if context.active_object and context.active_object.type == 'CURVE':
-            layout.operator("object.apply_lace_nodegroup", text="Apply Lace Geometry")
+        if obj and obj.type == 'CURVE':
+            lace_box.operator("object.apply_lace_nodegroup", text="Apply Lace Geometry")
         else:
-            layout.label(text="Select a curve object")
-            layout.label(text="to apply lace geometry")
+            lace_box.alert = True
+            lace_box.label(text="Select a curve object to apply lace geometry", icon="ERROR")
 
 # Registration
 classes = [OBJECT_PT_SneakerPanelLace]
