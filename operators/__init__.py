@@ -35,6 +35,7 @@ from . import create_quad_panel_from_outline
 from . import fill_quad_border
 from . import fill_border_grid
 from . import overlay_panel_onto_shell
+from . import lace_from_curves
 
 # Register/unregister functions
 def register():
@@ -60,6 +61,7 @@ def register():
     fill_quad_border.register()
     fill_border_grid.register()
     overlay_panel_onto_shell.register()
+    lace_from_curves.register()
 
 def unregister():
     orient_uv_island.unregister()
@@ -84,3 +86,4 @@ def unregister():
     fill_quad_border.unregister()
     fill_border_grid.unregister()
     overlay_panel_onto_shell.unregister()
+    lace_from_curves.unregister()

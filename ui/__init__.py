@@ -4,6 +4,7 @@ from . import finalize_panel
 from . import workflow_operators
 from . import uv_workflow_panel
 from . import surface_workflow_panel
+from . import lace_panel
 
 modules = [
     main_panel,
@@ -11,6 +12,7 @@ modules = [
     workflow_operators,
     uv_workflow_panel,
     surface_workflow_panel,
+    lace_panel,
     ]
 
 def register():
