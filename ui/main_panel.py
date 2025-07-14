@@ -128,6 +128,7 @@ class OBJECT_PT_SneakerPanelProMain(bpy.types.Panel):
             tip_col.label(text="• Creates symmetrical curves quickly")
             tip_col.label(text="• Great for creating matching left/right panels")
             tip_col.label(text="• Use front/side view for precise placement")
+            tip_col.operator("wm.url_open", text="View Mirror Tutorial", icon='URL').url = "https://example.com/tutorial"
      
 # Registration
 classes = [OBJECT_PT_SneakerPanelProMain]

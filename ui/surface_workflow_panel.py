@@ -58,6 +58,7 @@ class OBJECT_PT_SurfaceWorkflow(bpy.types.Panel):
                 tip_col.label(text="• Adjust resolution for smoother surfaces")
                 tip_col.label(text="• Use Live Surface Editing for real-time adjustments")
                 tip_col.label(text="• Convert to mesh when ready for further editing")
+                tip_col.operator("wm.url_open", text="View Tutorial", icon='URL').url = "https://example.com/tutorial"
             
             self.draw_bezier_workflow(box_bezier, context)
 
@@ -90,6 +91,7 @@ class OBJECT_PT_SurfaceWorkflow(bpy.types.Panel):
                 tip_col.label(text="• Ensure vertex count is even for grid fill")
                 tip_col.label(text="• Adjust grid fill span based on panel complexity")
                 tip_col.label(text="• Smooth vertices before grid fill for better results")
+                tip_col.operator("wm.url_open", text="View Tutorial", icon='URL').url = "https://example.com/tutorial"
             
             self.draw_boundary_workflow(box_boundary, context)
 
