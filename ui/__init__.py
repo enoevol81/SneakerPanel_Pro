@@ -5,6 +5,7 @@ from . import workflow_operators
 from . import uv_workflow_panel
 from . import surface_workflow_panel
 from . import lace_panel
+from . import autu_uv
 
 modules = [
     main_panel,
@@ -13,6 +14,7 @@ modules = [
     uv_workflow_panel,
     surface_workflow_panel,
     lace_panel,
+    autu_uv,
     ]
 
 def register():

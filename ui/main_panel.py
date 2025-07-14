@@ -37,46 +37,6 @@ class OBJECT_PT_SneakerPanelProMain(bpy.types.Panel):
         shell_row = main_box.row()
         shell_row.prop_search(context.scene, "spp_shell_object", bpy.data, "objects", text="Shell Object", icon="OUTLINER_OB_MESH")
         
-        # Shell UV Generation Section - Collapsible box with better visual hierarchy
-        uv_box = layout.box()
-        uv_header = uv_box.row(align=True)
-        
-        # Add expand/collapse toggle with arrow icon
-        expand_icon = "TRIA_DOWN" if context.scene.spp_show_uv_section else "TRIA_RIGHT"
-        uv_header.prop(context.scene, "spp_show_uv_section", text="", icon=expand_icon, emboss=False)
-        uv_header.label(text="Shell UV Generation", icon="OUTLINER_OB_LIGHTPROBE")
-        
-        # Add light bulb icon for tooltip
-        tooltip_icon = 'LIGHT_SUN' if context.scene.spp_show_uv_gen_tooltip else 'LIGHT'
-        uv_header.prop(context.scene, "spp_show_uv_gen_tooltip", text="", icon=tooltip_icon, emboss=False)
-        
-        # Only show content if expanded
-        if context.scene.spp_show_uv_section:
-            # Show tooltip if enabled
-            if context.scene.spp_show_uv_gen_tooltip:
-                tip_box = uv_box.box()
-                tip_box.alert = True  # Makes the box stand out with a different color
-                tip_col = tip_box.column(align=True)
-                tip_col.scale_y = 0.9  # Slightly smaller text
-                tip_col.label(text="Shell UV Generation Tips:", icon='HELP')
-                tip_col.label(text="• Mark seams at heel counter and toe areas")
-                tip_col.label(text="• Use the Smart UV Project first if needed")
-                tip_col.label(text="• Proper orientation ensures accurate panel creation")
-                tip_col.label(text="• The toe definition helps with panel alignment")
-                tip_col.label(text="• Orient UV island for consistent panel direction")
-                tip_col.operator("wm.url_open", text="View UV Setup Tutorial", icon='URL').url = "https://example.com/uv-setup-tutorial"
-            
-            # Important note with better formatting
-            note_col = uv_box.column(align=True)
-            note_col.label(text="Before Starting: Mark Seams at Heel and Boundary Edges", icon="INFO")
-            
-            # Steps with better visual flow
-            steps_col = uv_box.column(align=True)
-            steps_col.scale_y = 1.1
-            steps_col.operator("object.unwrap_shell", text="1. Unwrap Shell", icon="MOD_UVPROJECT")
-            steps_col.operator("object.define_toe", text="2. Define Toe", icon="CURVE_PATH")
-            steps_col.operator("object.orient_uv_island", text="3. Orient UV Island", icon="ORIENTATION_LOCAL")
-        
         # Panel Creation Workflow - Step 1
         gp_box = layout.box()
         gp_header = gp_box.row()
@@ -176,12 +136,7 @@ def register():
     """Register the panel and properties."""
     bpy.utils.register_class(OBJECT_PT_SneakerPanelProMain)
     
-    # Register UI section toggle properties
-    bpy.types.Scene.spp_show_uv_section = bpy.props.BoolProperty(
-        name="Show UV Generation Section",
-        default=False,
-        description="Expand or collapse the UV Generation section"
-    )
+    
     
     # Register tooltip properties
     bpy.types.Scene.spp_show_mirror_tooltip = bpy.props.BoolProperty(
@@ -205,10 +160,6 @@ def unregister():
     for cls in reversed(classes):
         bpy.utils.unregister_class(cls)
         
-    # Remove custom properties
-    if hasattr(bpy.types.Scene, "spp_show_uv_section"):
-        del bpy.types.Scene.spp_show_uv_section
-    
     # Remove tooltip properties
     if hasattr(bpy.types.Scene, "spp_show_mirror_tooltip"):
         del bpy.types.Scene.spp_show_mirror_tooltip
