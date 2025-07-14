@@ -60,6 +60,7 @@ class OBJECT_PT_SneakerPanelProMain(bpy.types.Panel):
             tip_col.label(text="• Be sure to assign panel name and # before creating grease pencil")
             tip_col.label(text="• Use Undo (Ctrl+Z) to correct mistakes")
             tip_col.label(text="• Keep panel shapes simple and clean")
+            tip_col.label(text="• Utilize eraser brush to clean up gp lines")
             tip_col.operator("wm.url_open", text="View Drawing Tutorial", icon='URL').url = "https://example.com/drawing-tutorial"
         
         # Grease pencil controls with better organization

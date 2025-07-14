@@ -53,11 +53,11 @@ class OBJECT_PT_SurfaceWorkflow(bpy.types.Panel):
                 tip_col = tip_box.column(align=True)
                 tip_col.scale_y = 0.9  # Slightly smaller text
                 tip_col.label(text="Bezier to Surface Tips:", icon='HELP')
-                tip_col.label(text="• Start with a clean Bezier curve with 4 control points")
+                tip_col.label(text="• Reduce the number of control points for manageable surfaces")
                 tip_col.label(text="• Ensure curve has proper tangent handles")
                 tip_col.label(text="• Adjust resolution for smoother surfaces")
-                tip_col.label(text="• Use Live Surface Editing for real-time adjustments")
-                tip_col.label(text="• Convert to mesh when ready for further editing")
+                tip_col.label(text="• Use Live Surface Editing to adjust mesh density")
+                tip_col.label(text="• Convert to mesh when satisfied")
                 tip_col.operator("wm.url_open", text="View Tutorial", icon='URL').url = "https://example.com/tutorial"
             
             self.draw_bezier_workflow(box_bezier, context)
