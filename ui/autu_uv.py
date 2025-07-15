@@ -34,11 +34,12 @@ class OBJECT_PT_autu_uv(bpy.types.Panel):
             tip_col = tip_box.column(align=True)
             tip_col.scale_y = 0.9  # Slightly smaller text
             tip_col.label(text="Shell UV Generation Tips:", icon='HELP')
-            tip_col.label(text="• Mark seams at heel counter and toe areas")
-            tip_col.label(text="• Use the Smart UV Project first if needed")
-            tip_col.label(text="• Proper orientation ensures accurate panel creation")
-            tip_col.label(text="• The toe definition helps with panel alignment")
-            tip_col.label(text="• Orient UV island for consistent panel direction")
+            tip_col.label(text="• Mark seams at Boundary and Heel Counter Edges")
+            tip_col.label(text="• Run Unwrap Shell")
+            tip_col.label(text="• Place 3D Cursor at Toe")
+            tip_col.label(text="• Run Define Toe")
+            tip_col.label(text="• Run Orient UV Island for consistent panel direction")
+            tip_col.label(text="• Can be used for any object with seams marked")
             tip_col.operator("wm.url_open", text="View UV Setup Tutorial", icon='URL').url = "https://example.com/uv-setup-tutorial"
         
         # Important note with better formatting
