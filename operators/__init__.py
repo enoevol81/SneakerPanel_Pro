@@ -38,6 +38,8 @@ from . import overlay_panel_onto_shell
 from . import lace_from_curves
 from . import edge_flow
 from . import mirror_panel
+from . import edge_relax
+from . import apply_shrinkwrap
 
 # Register/unregister functions
 def register():
@@ -66,6 +68,8 @@ def register():
     lace_from_curves.register()
     edge_flow.register()
     mirror_panel.register()
+    edge_relax.register()
+    apply_shrinkwrap.register()
 
 def unregister():
     orient_uv_island.unregister()
@@ -93,3 +97,5 @@ def unregister():
     lace_from_curves.unregister()
     edge_flow.unregister()
     mirror_panel.unregister()
+    edge_relax.unregister()
+    apply_shrinkwrap.unregister()

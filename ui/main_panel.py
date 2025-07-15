@@ -48,18 +48,18 @@ class OBJECT_PT_SneakerPanelProMain(bpy.types.Panel):
         
         # Row 1: Edge Flow and Select Edge Loops
         tools_grid_edgeflow.operator("mesh.set_edge_flow", text="Set Edge Flow", icon="MOD_SMOOTH")
-        tools_grid_edgeflow.operator("mesh.loop_multi_select", text="Select Edge Loops", icon="EDGESEL")
-        
+        tools_grid_edgeflow.operator("mesh.edge_relax", text="Edge Relax", icon="MOD_SMOOTH")
+                
         # Row 2: Additional helper buttons (placeholders for now)
         tools_grid_edgeflow.operator("mesh.select_all", text="Select All", icon="SELECT_SET").action = 'SELECT'
-        tools_grid_edgeflow.operator("mesh.select_all", text="Deselect All", icon="SELECT_SUBTRACT").action = 'DESELECT'
+        tools_grid_edgeflow.operator("mesh.loop_multi_select", text="Select Edge Loops", icon="EDGESEL")
 
         # Create a grid layout for the four buttons
         tools_grid_mod = tools_box.grid_flow(columns=2, align=True)
         tools_grid_mod.scale_y = 1.1
 
         tools_grid_mod.operator("mesh.mirror_panel", text="Mirror Panel", icon="MOD_MIRROR")
-        tools_grid_mod.operator("mesh.select_all", text="Deselect All", icon="SELECT_SUBTRACT").action = 'DESELECT'
+        tools_grid_mod.operator("mesh.apply_shrinkwrap", text="Apply Shrinkwrap", icon="MOD_SHRINKWRAP")
         
         # Panel Creation Workflow - Step 1
         gp_box = layout.box()
