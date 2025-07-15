@@ -37,6 +37,23 @@ class OBJECT_PT_SneakerPanelProMain(bpy.types.Panel):
         shell_row = main_box.row()
         shell_row.prop_search(context.scene, "spp_shell_object", bpy.data, "objects", text="Shell Object", icon="OUTLINER_OB_MESH")
         
+        # Edge Flow and Helper Tools Section
+        tools_box = layout.box()
+        tools_header = tools_box.row()
+        tools_header.label(text="Mesh Helper Tools", icon="TOOL_SETTINGS")
+        
+        # Create a grid layout for the four buttons
+        tools_grid = tools_box.grid_flow(columns=2, align=True)
+        tools_grid.scale_y = 1.1
+        
+        # Row 1: Edge Flow and Select Edge Loops
+        tools_grid.operator("mesh.set_edge_flow", text="Set Edge Flow", icon="MOD_SMOOTH")
+        tools_grid.operator("mesh.loop_multi_select", text="Select Edge Loops", icon="EDGESEL")
+        
+        # Row 2: Additional helper buttons (placeholders for now)
+        tools_grid.operator("mesh.select_all", text="Select All", icon="SELECT_SET").action = 'SELECT'
+        tools_grid.operator("mesh.select_all", text="Deselect All", icon="SELECT_SUBTRACT").action = 'DESELECT'
+        
         # Panel Creation Workflow - Step 1
         gp_box = layout.box()
         gp_header = gp_box.row()
@@ -136,7 +153,8 @@ classes = [OBJECT_PT_SneakerPanelProMain]
 
 def register():
     """Register the panel and properties."""
-    bpy.utils.register_class(OBJECT_PT_SneakerPanelProMain)
+    for cls in classes:
+        bpy.utils.register_class(cls)
     
     
     
@@ -160,7 +178,8 @@ def register():
 def unregister():
     """Unregister the panel and properties."""
     for cls in reversed(classes):
-        bpy.utils.unregister_class(cls)
+        if hasattr(cls, 'bl_rna'):
+            bpy.utils.unregister_class(cls)
         
     # Remove tooltip properties
     if hasattr(bpy.types.Scene, "spp_show_mirror_tooltip"):
