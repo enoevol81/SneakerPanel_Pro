@@ -37,6 +37,7 @@ from . import fill_border_grid
 from . import overlay_panel_onto_shell
 from . import lace_from_curves
 from . import edge_flow
+from . import mirror_panel
 
 # Register/unregister functions
 def register():
@@ -64,6 +65,7 @@ def register():
     overlay_panel_onto_shell.register()
     lace_from_curves.register()
     edge_flow.register()
+    mirror_panel.register()
 
 def unregister():
     orient_uv_island.unregister()
@@ -90,3 +92,4 @@ def unregister():
     overlay_panel_onto_shell.unregister()
     lace_from_curves.unregister()
     edge_flow.unregister()
+    mirror_panel.unregister()
