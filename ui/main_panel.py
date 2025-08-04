@@ -61,6 +61,11 @@ class OBJECT_PT_SneakerPanelProMain(bpy.types.Panel):
         tools_grid_mod.operator("mesh.mirror_panel", text="Mirror Panel", icon="MOD_MIRROR")
         tools_grid_mod.operator("mesh.apply_shrinkwrap", text="Apply Shrinkwrap", icon="MOD_SHRINKWRAP")
         
+        # Row 3: Quick Conform and placeholder
+        tools_grid_mod.operator("mesh.quick_conform", text="Quick Conform", icon="SNAP_ON")
+        # Placeholder for future tool
+        tools_grid_mod.label(text="")
+        
         # Panel Creation Workflow - Step 1
         gp_box = layout.box()
         gp_header = gp_box.row()

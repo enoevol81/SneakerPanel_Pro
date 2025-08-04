@@ -40,6 +40,7 @@ from . import edge_flow
 from . import mirror_panel
 from . import edge_relax
 from . import apply_shrinkwrap
+from . import quick_conform
 
 # Register/unregister functions
 def register():
@@ -70,6 +71,7 @@ def register():
     mirror_panel.register()
     edge_relax.register()
     apply_shrinkwrap.register()
+    quick_conform.register()
 
 def unregister():
     orient_uv_island.unregister()
@@ -99,3 +101,4 @@ def unregister():
     mirror_panel.unregister()
     edge_relax.unregister()
     apply_shrinkwrap.unregister()
+    quick_conform.unregister()
