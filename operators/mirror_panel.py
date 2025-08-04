@@ -53,6 +53,9 @@ class OBJECT_OT_mirror_panel(Operator):
         context.view_layer.objects.active = obj
         obj.select_set(True)
         
+        # Apply all transforms before mirroring to ensure proper axes
+        bpy.ops.object.transform_apply(location=True, rotation=True, scale=True)
+        
         # 1) add Mirror modifier
         mirror_mod = obj.modifiers.new(name="Mirror_Panel", type='MIRROR')
         # assign axes via vector property
