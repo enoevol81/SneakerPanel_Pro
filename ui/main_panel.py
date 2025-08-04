@@ -40,7 +40,7 @@ class OBJECT_PT_SneakerPanelProMain(bpy.types.Panel):
         # Edge Flow and Helper Tools Section
         tools_box = layout.box()
         tools_header = tools_box.row()
-        tools_header.label(text="Mesh Helper Tools", icon="TOOL_SETTINGS")
+        tools_header.label(text="Panel Helper Tools", icon="TOOL_SETTINGS")
         
         # Create a grid layout for the four buttons
         tools_grid_edgeflow = tools_box.grid_flow(columns=2, align=True)
@@ -61,11 +61,12 @@ class OBJECT_PT_SneakerPanelProMain(bpy.types.Panel):
         tools_grid_mod.operator("mesh.mirror_panel", text="Mirror Panel", icon="MOD_MIRROR")
         tools_grid_mod.operator("mesh.apply_shrinkwrap", text="Apply Shrinkwrap", icon="MOD_SHRINKWRAP")
         
-        # Row 3: Quick Conform and placeholder
-        tools_grid_mod.operator("mesh.quick_conform", text="Quick Conform", icon="SNAP_ON")
-        # Placeholder for future tool
-        tools_grid_mod.label(text="")
-        
+        # Row 3: Quick Conform and placeholder# Create a grid layout for the four buttons
+        tools_grid_mod2 = tools_box.grid_flow(columns=1, align=True)
+        tools_grid_mod2.scale_y = 1.1
+
+        tools_grid_mod2.operator("mesh.quick_conform", text="Quick Conform", icon="SNAP_ON")
+    
         # Panel Creation Workflow - Step 1
         gp_box = layout.box()
         gp_header = gp_box.row()
