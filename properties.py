@@ -196,6 +196,16 @@ def register_properties():
     )
     
     # -------------------------------------------------------------------------
+    # Curve processing properties
+    # -------------------------------------------------------------------------
+    bpy.types.Scene.spp_curve_cyclic = bpy.props.BoolProperty(
+        name="Cyclic Curve",
+        description="Make curve cyclic (closed loop) or open. Disable for half-curve mirror operations",
+        default=True,
+        update=_update_curve_cyclic
+    )
+    
+    # -------------------------------------------------------------------------
     # Solidify modifier properties
     # -------------------------------------------------------------------------
     bpy.types.Scene.spp_solidify_thickness = bpy.props.FloatProperty(
@@ -347,6 +357,20 @@ def _update_lace_modifier(self, context):
             print(f"Error updating Lace modifier: {e}")
 
 
+def _update_curve_cyclic(self, context):
+    """Callback to update curve cyclic property when scene property changes."""
+    obj = context.active_object
+    if not obj or obj.type != 'CURVE':
+        return
+    
+    # Update all splines in the curve
+    for spline in obj.data.splines:
+        spline.use_cyclic_u = context.scene.spp_curve_cyclic
+    
+    # Force viewport update
+    context.view_layer.update()
+
+
 
 def unregister_properties():
     """Unregister all properties used by the SneakerPanel Pro addon."""
@@ -367,6 +391,9 @@ def unregister_properties():
         "spp_smooth_factor",
         "spp_grid_fill_span",
         "spp_decimate_ratio",
+        
+        # Curve processing
+        "spp_curve_cyclic",
         
         # Solidify
         "spp_solidify_thickness",

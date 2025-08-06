@@ -132,8 +132,16 @@ class OBJECT_PT_SneakerPanelProMain(bpy.types.Panel):
         decimate_row.prop(context.scene, "spp_decimate_ratio", text="Ratio")
         decimate_row.operator("object.decimate_curve", text="Apply", icon='CHECKMARK')
         
+        # Curve Options section
+        curve_options_col = curve_tools_box.column(align=True)
+        curve_options_col.label(text="Curve Options:", icon="CURVE_DATA")
+        
+        # Cyclic curve checkbox with similar styling to stabilizer
+        cyclic_row = curve_options_col.row()
+        cyclic_row.prop(context.scene, "spp_curve_cyclic", text="")
+        cyclic_row.label(text="Cyclic Curve")
+        
         # Mirror section
-        curve_tools_box.separator()
         mirror_col = curve_tools_box.column(align=True)
         
         # Mirror header with tooltip toggle

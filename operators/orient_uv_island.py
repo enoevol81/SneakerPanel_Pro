@@ -144,99 +144,43 @@ class OBJECT_OT_OrientUVIsland(Operator):
             
             toe_uv_rotated = sum(toe_uvs_after_rotation, Vector((0, 0))) / len(toe_uvs_after_rotation)
             
-            # Calculate the target scale to maximize the UV island within the UDIM tile (0-1 range)
-            # We'll use a more aggressive scaling approach to fill the bounds
-            # Leave a small margin (0.05) on each side
-            margin = 0.05
-            target_scale = (1.0 - 2 * margin) / max(width, height)
+            # Center the UV island at (0.5, 0.5) first
+            center_target = Vector((0.5, 0.5))
+            translation_to_center = center_target - island_center
             
-            # Apply scaling around the island center
+            # Apply centering translation
+            for face in bm.faces:
+                for loop in face.loops:
+                    loop[uv_layer_bm].uv += translation_to_center
+            
+            # Now maximize the scale to fill the UV space (similar to unwrap behavior)
+            # Recalculate bounds after centering
+            all_uvs_centered = [loop[uv_layer_bm].uv.copy() for face in bm.faces for loop in face.loops]
+            min_u_centered = min(uv.x for uv in all_uvs_centered)
+            max_u_centered = max(uv.x for uv in all_uvs_centered)
+            min_v_centered = min(uv.y for uv in all_uvs_centered)
+            max_v_centered = max(uv.y for uv in all_uvs_centered)
+            
+            # Calculate dimensions after centering
+            centered_width = max_u_centered - min_u_centered
+            centered_height = max_v_centered - min_v_centered
+            
+            # Calculate scale to maximize UV space usage (like unwrap does)
+            # Use a very small margin to match unwrap behavior
+            margin = 0.001  # Same small margin as unwrap operation
+            max_scale = min(
+                (1.0 - 2 * margin) / centered_width if centered_width > 0 else 1.0,
+                (1.0 - 2 * margin) / centered_height if centered_height > 0 else 1.0
+            )
+            
+            # Apply maximizing scale around the center (0.5, 0.5)
             for face in bm.faces:
                 for loop in face.loops:
                     uv = loop[uv_layer_bm].uv
-                    # Scale around island center
-                    uv_centered = uv - island_center
-                    uv_scaled = uv_centered * target_scale
-                    loop[uv_layer_bm].uv = island_center + uv_scaled
-            
-            # Recalculate toe position after scaling
-            toe_uvs_after_scaling = []
-            for face in bm.faces:
-                for loop in face.loops:
-                    if loop.vert.index == closest_index:
-                        toe_uvs_after_scaling.append(loop[uv_layer_bm].uv.copy())
-            
-            toe_uv_scaled = sum(toe_uvs_after_scaling, Vector((0, 0))) / len(toe_uvs_after_scaling)
-            
-            # Calculate translation to place toe at the center of the UDIM tile (0.5, 0.5)
-            # and ensure the entire UV island is within the 0-1 UDIM tile
-            translation = Vector((0.5, 0.5)) - toe_uv_scaled
-            
-            # Apply translation to all UVs
-            for face in bm.faces:
-                for loop in face.loops:
-                    loop[uv_layer_bm].uv += translation
-            
-            # After translation, check the bounds of the UV island
-            all_uvs_after_translation = [loop[uv_layer_bm].uv.copy() for face in bm.faces for loop in face.loops]
-            min_u_after = min(uv.x for uv in all_uvs_after_translation)
-            max_u_after = max(uv.x for uv in all_uvs_after_translation)
-            min_v_after = min(uv.y for uv in all_uvs_after_translation)
-            max_v_after = max(uv.y for uv in all_uvs_after_translation)
-            
-            # Calculate current width and height after translation
-            current_width = max_u_after - min_u_after
-            current_height = max_v_after - min_v_after
-            
-            # Calculate additional scaling to maximize size within bounds
-            # We want to scale as much as possible while keeping everything in 0-1 range
-            # with a small margin
-            margin = 0.05
-            max_scale_factor = min(
-                (1.0 - 2 * margin) / current_width,
-                (1.0 - 2 * margin) / current_height
-            ) if current_width > 0 and current_height > 0 else 1.0
-            
-            # Only apply additional scaling if we can make it larger
-            if max_scale_factor > 1.0:
-                # Scale around the toe position (which should be at 0.5, 0.5)
-                center_point = Vector((0.5, 0.5))
-                
-                for face in bm.faces:
-                    for loop in face.loops:
-                        uv = loop[uv_layer_bm].uv
-                        # Scale around center point
-                        uv_centered = uv - center_point
-                        uv_scaled = uv_centered * max_scale_factor
-                        loop[uv_layer_bm].uv = center_point + uv_scaled
-                        
-            # Final check to ensure everything is within bounds
-            all_uvs_final = [loop[uv_layer_bm].uv.copy() for face in bm.faces for loop in face.loops]
-            min_u_final = min(uv.x for uv in all_uvs_final)
-            max_u_final = max(uv.x for uv in all_uvs_final)
-            min_v_final = min(uv.y for uv in all_uvs_final)
-            max_v_final = max(uv.y for uv in all_uvs_final)
-            
-            # Calculate final adjustments if needed
-            u_offset = 0
-            v_offset = 0
-            
-            if min_u_final < 0:
-                u_offset = -min_u_final + margin
-            elif max_u_final > 1:
-                u_offset = 1 - max_u_final - margin
-                
-            if min_v_final < 0:
-                v_offset = -min_v_final + margin
-            elif max_v_final > 1:
-                v_offset = 1 - max_v_final - margin
-                
-            # Apply additional offset if needed
-            if u_offset != 0 or v_offset != 0:
-            
-                for face in bm.faces:
-                    for loop in face.loops:
-                        loop[uv_layer_bm].uv += Vector((u_offset, v_offset))
+                    # Scale around center to maximize UV space usage
+                    uv_from_center = uv - center_target
+                    uv_scaled = uv_from_center * max_scale
+                    loop[uv_layer_bm].uv = center_target + uv_scaled
 
             # Apply changes to the mesh
             bm.to_mesh(mesh)
