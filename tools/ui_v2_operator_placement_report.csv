@@ -1,0 +1,47 @@
+op_id,panel,section,instance,order,file_name,present_in,status
+object.unwrap_shell,Auto UV,Shell UV Generation ? 1. Unwrap Shell,,,unwrap_shell.py,autu_uv.py,OK
+object.define_toe,Auto UV,Shell UV Generation -  2. Define Toe,,,define_toe.py,autu_uv.py,OK
+object.orient_uv_island,Auto UV,Shell UV Generation ? 3. Orient UV Island,,,orient_uv_island.py,autu_uv.py,OK
+mesh.create_quad_panel_from_outline,Depricated,nan,,,create_quad_panel_border.py,uv_workflow_panel.py,OK
+mesh.fill_quad_border,Depricated,nan,,,fill_quad_border.py,,MISSING-IN-UI
+object.apply_lace_nodegroup,Lace Generator,Lace Generator ? Apply Lace Geometry,,,lace_from_curve.py,lace_panel.py,OK
+mesh.set_edge_flow,Main Panel,Panel Helper Tools - Edge Flow,,,edge_flow.py,main_panel.py,OK
+mesh.select_all,Main Panel,Panel Helper Tools - Select All,,,nan,main_panel.py,OK
+mesh.edge_relax,Main Panel,Panel Helper Tools - Edge Relax,,,edge_relax.py,main_panel.py,OK
+mesh.loop_multi_select,Main Panel,Panel Helper Tools - Select Edge Loops,,,nan,main_panel.py,OK
+mesh.mirror_panel,Main Panel,Panel Helper Tools - Mirror Panel,,,mirror_panel.py,main_panel.py,OK
+mesh.apply_shrinkwrap,Main Panel,Panel Helper Tools - Apply Shrinkwrap,,,apply_shrinkwrap.py,main_panel.py,OK
+mesh.quick_conform,Main Panel,Panel Helper Tools - Quick Conform,,,nan,main_panel.py,OK
+object.apply_solidify,Main Panel,Applies Solidify,,,nan,finalize_panel.py,OK
+object.solidify_panel,Main Panel,Add Solidify (if missing),,,solidify_panel.py,finalize_panel.py,OK
+object.uv_to_mesh,Nurbs To Surface - UV Curve To Panel,Step 1. UV to Mesh (Auto Add Grease Pencil),,,uv_to_mesh.py,uv_workflow_panel.py,OK
+object.gp_to_curve,Nurbs To Surface - UV Curve To Panel,Step 2: Create & Edit Curve,,,gp_to_curve.py,main_panel.py,OK
+object.decimate_curve,Nurbs To Surface - UV Curve To Panel,Step 2a: Curve Editing Tools - Decimate Curve,,,decimate_curve.py,main_panel.py,OK
+curve.mirror_selected_points_at_cursor,Nurbs To Surface - UV Curve To Panel,Step 2b: Curve Editing Tools - Mirror Tools (Edit Mode),,,mirror_curve_points.py,main_panel.py,OK
+mesh.reselect_uv_violations,Nurbs To Surface - UV Curve To Panel,Step 2a: UV Boundary Check - Re-select Violations,,,nan,uv_workflow_panel.py,OK
+mesh.check_uv_boundary,Nurbs To Surface - UV Curve To Panel,Step 2a : Boundary Check,,,uv_boundary_checker.py,uv_workflow_panel.py,OK
+object.shell_uv_to_panel,Nurbs To Surface - UV Curve To Panel,Step 3: Shell UV to Panel,,,shell_uv_to_panel.py,uv_workflow_panel.py,OK
+object.add_gp_draw,Nurbs To Surface-Bezier To Surface,Step 1: Create Grease Pencil,,,add_gp_draw.py,main_panel.py,OK
+object.gp_to_curve,Nurbs To Surface-Bezier To Surface,Step 2: Create & Edit Curve,,,gp_to_curve.py,main_panel.py,OK
+object.decimate_curve,Nurbs To Surface-Bezier To Surface,Step 2a: Curve Editing Tools - Decimate Curve,,,decimate_curve.py,main_panel.py,OK
+curve.mirror_selected_points_at_cursor,Nurbs To Surface-Bezier To Surface,Step 2b: Curve Editing Tools - Mirror Tools (Edit Mode),,,mirror_curve_points.py,main_panel.py,OK
+spp.convert_bezier_to_surface,Nurbs To Surface-Bezier To Surface,Step 3: Generate NURBS Surface,,,convert_bezier_to_surface.py,surface_workflow_panel.py,OK
+object.convert,Nurbs To Surface-Bezier To Surface,Step 4: Surface to Mesh (target=MESH),,,nan,surface_workflow_panel.py,OK
+object.add_gp_draw,Surface Direct [3D],Step 1: Create Grease Pencil,,,add_gp_draw.py,main_panel.py,OK
+object.gp_to_curve,Surface Direct [3D],Step 2: Create & Edit Curve,,,gp_to_curve.py,main_panel.py,OK
+object.decimate_curve,Surface Direct [3D],Step 2a: Curve Editing Tools - Decimate Curve,,,decimate_curve.py,main_panel.py,OK
+curve.mirror_selected_points_at_cursor,Surface Direct [3D],Step 2b: Curve Editing Tools - Mirror Tools (Edit Mode),,,mirror_curve_points.py,main_panel.py,OK
+object.convert_to_mesh,Surface Direct [3D],Step 3: Convert Curve to Boundary Mesh,,,convert_to_mesh.py,surface_workflow_panel.py,OK
+object.smooth_vertices,Surface Direct [3D],Step 3a: Refine Mesh - Smoothing,,,smooth_vertices.py,surface_workflow_panel.py,OK
+object.reduce_verts,Surface Direct [3D],Step 3a: Refine Mesh - Vertex Reduction,,,reduce_verts.py,surface_workflow_panel.py,OK
+nan,Surface Direct [3D],Step 4: Helper File To object.panel_generate,,,panel_generator.py,,MISSING-IN-UI
+object.panel_generate,Surface Direct [3D],Step 4: Generate Boundary Fill,,,panel_generate.py,surface_workflow_panel.py,OK
+object.uv_to_mesh,UV Workflow [2D],Step 1. UV to Mesh (Auto Add Grease Pencil),,,uv_to_mesh.py,uv_workflow_panel.py,OK
+object.gp_to_curve,UV Workflow [2D],Step 2: Create & Edit Curve,,,gp_to_curve.py,main_panel.py,OK
+object.decimate_curve,UV Workflow [2D],Step 2a: Curve Editing Tools - Decimate Curve,,,decimate_curve.py,main_panel.py,OK
+curve.mirror_selected_points_at_cursor,UV Workflow [2D],Step 2b: Curve Editing Tools - Mirror Tools (Edit Mode),,,mirror_curve_points.py,main_panel.py,OK
+curve.sample_to_polyline,UV Workflow [2D],Step 3: Sample Curve to Polyline,,,sample_curve_to_polyline.py,uv_workflow_panel.py,OK
+mesh.reselect_uv_violations,UV Workflow [2D],Step 4: UV Boundary Check - Re-select Violations,,,nan,uv_workflow_panel.py,OK
+mesh.check_uv_boundary,UV Workflow [2D],Step 4: Boundary Check,,,uv_boundary_checker.py,uv_workflow_panel.py,OK
+mesh.fill_border_grid,UV Workflow [2D],Step 5: Fill Border with Grid,,,fill_border_grid.py,uv_workflow_panel.py,OK
+mesh.overlay_panel_onto_shell,UV Workflow [2D],Step 6:  Project To Surface,,,overlay_panel_onto_shell.py,uv_workflow_panel.py,OK
