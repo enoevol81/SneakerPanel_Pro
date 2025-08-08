@@ -276,59 +276,32 @@ def register():
         default=True
     )
     
-    bpy.types.Scene.spp_smooth_factor = bpy.props.FloatProperty(
-        name="Smooth Factor",
-        description="Smoothing factor for vertices",
-        default=0.5,
-        min=0.0,
-        max=1.0
-    )
-    
-    bpy.types.Scene.spp_reduce_verts = bpy.props.BoolProperty(
-        name="Reduce Vertices",
-        description="Enable vertex reduction options",
-        default=False
-    )
-    
-    bpy.types.Scene.spp_grid_fill_span = bpy.props.IntProperty(
-        name="Grid Fill Span",
-        description="Number of segments for grid fill",
-        default=12,
-        min=2,
-        max=100
-    )
-    
     for cls in classes:
         register_class(cls)
 
 
 def unregister():
     from bpy.utils import unregister_class
-    
-    # Unregister scene properties for workflow expansion
-    del bpy.types.Scene.spp_bezier_workflow_expanded
-    del bpy.types.Scene.spp_boundary_workflow_expanded
-    
-    # Unregister tooltip properties
-    del bpy.types.Scene.spp_show_bezier_tooltip
-    del bpy.types.Scene.spp_show_boundary_tooltip
-    
-    # Unregister Bezier to Surface properties
-    del bpy.types.Scene.spp_bezier_center
-    del bpy.types.Scene.spp_resolution_u
-    del bpy.types.Scene.spp_resolution_v
-    del bpy.types.Scene.spp_show_surface_resolution_controls
-    del bpy.types.Scene.spp_preserve_surface
-    del bpy.types.Scene.spp_shade_smooth
-    
-    # Unregister Boundary Mesh properties
-    del bpy.types.Scene.spp_show_mesh_edit_section
-    del bpy.types.Scene.spp_smooth_factor
-    del bpy.types.Scene.spp_reduce_verts
-    del bpy.types.Scene.spp_grid_fill_span
-    
-    for cls in classes:
-        unregister_class(cls)
 
-if __name__ == "__main__":
-    register()
+    # Unregister scene properties for workflow expansion
+    for attr in (
+        "spp_bezier_workflow_expanded",
+        "spp_boundary_workflow_expanded",
+        "spp_show_bezier_tooltip",
+        "spp_show_boundary_tooltip",
+        "spp_bezier_center",
+        "spp_resolution_u",
+        "spp_resolution_v",
+        "spp_show_surface_resolution_controls",
+        "spp_preserve_surface",
+        "spp_shade_smooth",
+        "spp_show_mesh_edit_section",
+    ):
+        if hasattr(bpy.types.Scene, attr):
+            delattr(bpy.types.Scene, attr)
+
+    for cls in classes:
+        try:
+            unregister_class(cls)
+        except Exception:
+            pass
