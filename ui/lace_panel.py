@@ -17,6 +17,10 @@ class OBJECT_PT_SneakerPanelLace(bpy.types.Panel):
     bl_space_type = 'VIEW_3D'
     bl_region_type = 'UI'
     bl_category = 'Sneaker Panel'
+
+    @classmethod
+    def poll(cls, context):
+        return bool(context.window_manager.spp_show_lace_gen)
     
     def draw(self, context):
         layout = self.layout

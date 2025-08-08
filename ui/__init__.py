@@ -6,6 +6,7 @@ from . import uv_workflow_panel
 from . import surface_workflow_panel
 from . import lace_panel
 from . import autu_uv
+from . import panel_nurbs_qd
 
 modules = [
     main_panel,
@@ -15,6 +16,7 @@ modules = [
     surface_workflow_panel,
     lace_panel,
     autu_uv,
+    panel_nurbs_qd,
     ]
 
 def register():
