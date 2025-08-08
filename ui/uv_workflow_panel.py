@@ -10,29 +10,36 @@ from bpy.types import Panel
 
 # Properties for collapsible sections and tooltips
 def register_properties():
-    bpy.types.Scene.spp_workflow_a_expanded = bpy.props.BoolProperty(
+    S = bpy.types.Scene
+
+    def add(name, prop):
+        if not hasattr(S, name):
+            setattr(S, name, prop)
+
+    # Collapsible sections + tooltips
+    add("spp_workflow_a_expanded", bpy.props.BoolProperty(
         name="Expand Workflow A",
         description="Expand or collapse Workflow A section",
         default=True
-    )
-    bpy.types.Scene.spp_workflow_b_expanded = bpy.props.BoolProperty(
+    ))
+    add("spp_workflow_b_expanded", bpy.props.BoolProperty(
         name="Expand Workflow B",
         description="Expand or collapse Workflow B section",
         default=True
-    )
-    bpy.types.Scene.spp_show_workflow_a_tooltip = bpy.props.BoolProperty(
+    ))
+    add("spp_show_workflow_a_tooltip", bpy.props.BoolProperty(
         name="Show Workflow A Tooltip",
         description="Show or hide the tooltip for Workflow A",
         default=False
-    )
-    bpy.types.Scene.spp_show_workflow_b_tooltip = bpy.props.BoolProperty(
+    ))
+    add("spp_show_workflow_b_tooltip", bpy.props.BoolProperty(
         name="Show Workflow B Tooltip",
         description="Show or hide the tooltip for Workflow B",
         default=False
-    )
-    
-    # UV Boundary Checker properties
-    bpy.types.Scene.spp_uv_boundary_action = bpy.props.EnumProperty(
+    ))
+
+    # UV Boundary Checker props (unique to this panel)
+    add("spp_uv_boundary_action", bpy.props.EnumProperty(
         name="Boundary Action",
         description="What to do with boundary violations",
         items=[
@@ -41,45 +48,45 @@ def register_properties():
             ('INTERACTIVE', "Select for Manual Fix", "Select violations for manual editing (recommended for edges)")
         ],
         default='CHECK'
-    )
-    
-    bpy.types.Scene.spp_uv_boundary_samples = bpy.props.IntProperty(
+    ))
+    add("spp_uv_boundary_samples", bpy.props.IntProperty(
         name="Raycast Samples",
         description="Number of samples per edge for boundary checking",
-        default=10,
-        min=3,
-        max=50
-    )
-    
-    bpy.types.Scene.spp_uv_boundary_margin = bpy.props.FloatProperty(
+        default=10, min=3, max=50
+    ))
+    add("spp_uv_boundary_margin", bpy.props.FloatProperty(
         name="Boundary Margin",
         description="Safety margin from UV boundary (0.0-1.0)",
-        default=0.01,
-        min=0.0,
-        max=0.1
-    )
-    
-    bpy.types.Scene.spp_uv_boundary_status = bpy.props.EnumProperty(
+        default=0.01, min=0.0, max=0.1
+    ))
+    add("spp_uv_boundary_status", bpy.props.EnumProperty(
         name="Boundary Status",
         description="Status of the last UV boundary check",
         items=[
             ('NONE', "Not Checked", "No boundary check has been performed"),
             ('PASS', "Pass", "No boundary violations found"),
             ('VIOLATIONS', "Violations Found", "Boundary violations detected"),
-            ('ERROR', "Error", "Error occurred during boundary check")
+            ('ERROR', "Error", "Error occurred during boundary check"),
         ],
         default='NONE'
-    )
+    ))
+
 
 def unregister_properties():
-    del bpy.types.Scene.spp_workflow_a_expanded
-    del bpy.types.Scene.spp_workflow_b_expanded
-    del bpy.types.Scene.spp_show_workflow_a_tooltip
-    del bpy.types.Scene.spp_show_workflow_b_tooltip
-    del bpy.types.Scene.spp_uv_boundary_action
-    del bpy.types.Scene.spp_uv_boundary_samples
-    del bpy.types.Scene.spp_uv_boundary_margin
-    del bpy.types.Scene.spp_uv_boundary_status
+    S = bpy.types.Scene
+    for name in (
+        "spp_workflow_a_expanded",
+        "spp_workflow_b_expanded",
+        "spp_show_workflow_a_tooltip",
+        "spp_show_workflow_b_tooltip",
+        "spp_uv_boundary_action",
+        "spp_uv_boundary_samples",
+        "spp_uv_boundary_margin",
+        "spp_uv_boundary_status",
+    ):
+        if hasattr(S, name):
+            delattr(S, name)
+
 
 class OBJECT_PT_UVWorkflow(Panel):
     """UV Workflow panel.
@@ -370,12 +377,20 @@ from . import workflow_operators
 
 # Registration
 classes = [OBJECT_PT_UVWorkflow]
+
 def register():
     register_properties()
     for cls in classes:
-        bpy.utils.register_class(cls)
+        try:
+            bpy.utils.register_class(cls)
+        except Exception:
+            # Avoid crashing on hot-reload if already registered
+            pass
 
 def unregister():
     for cls in reversed(classes):
-        bpy.utils.unregister_class(cls)
+        try:
+            bpy.utils.unregister_class(cls)
+        except Exception:
+            pass
     unregister_properties()

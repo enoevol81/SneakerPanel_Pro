@@ -115,7 +115,25 @@ def register_properties():
         description="Descriptive name for the current panel (e.g., Toecap, Quarter Panel)",
         default="Panel"
     )
-    
+    # -------------------------------------------------------------------------
+    # --- UI tooltip toggles
+    # -------------------------------------------------------------------------
+    bpy.types.Scene.spp_show_mirror_tooltip = bpy.props.BoolProperty(
+        name="Show Mirror at Cursor Tooltip",
+        default=False,
+        description="Show helpful tips for the Mirror at Cursor function"
+    )
+    bpy.types.Scene.spp_show_uv_gen_tooltip = bpy.props.BoolProperty(
+        name="Show UV Generation Tooltip",
+        default=False,
+        description="Show helpful tips for the Shell UV Generation workflow"
+    )
+    bpy.types.Scene.spp_show_gp_tooltip = bpy.props.BoolProperty(
+        name="Show Grease Pencil Drawing Tooltip",
+        default=False,
+        description="Show helpful tips for drawing panels with Grease Pencil"
+    )
+
     # -------------------------------------------------------------------------
     # Target object properties
     # -------------------------------------------------------------------------
@@ -379,6 +397,11 @@ def unregister_properties():
         "spp_panel_count",
         "spp_panel_name",
         "spp_shell_object",
+
+        # --- UI tooltip toggles
+        "spp_show_mirror_tooltip",
+        "spp_show_uv_gen_tooltip",
+        "spp_show_gp_tooltip",
         
         # Grease Pencil stabilizer
         "spp_use_stabilizer",

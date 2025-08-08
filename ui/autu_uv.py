@@ -59,14 +59,15 @@ class OBJECT_PT_autu_uv(bpy.types.Panel):
 classes = [OBJECT_PT_autu_uv]
 
 def register():
-    # Register the panel class
     for cls in classes:
-        bpy.utils.register_class(cls)
+        try:
+            bpy.utils.register_class(cls)
+        except Exception:
+            pass  # safe hot-reload
 
 def unregister():
-    # Unregister the panel class
     for cls in reversed(classes):
-        bpy.utils.unregister_class(cls)
-
-if __name__ == "__main__":
-    register()
+        try:
+            bpy.utils.unregister_class(cls)
+        except Exception:
+            pass

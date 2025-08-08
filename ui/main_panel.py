@@ -173,44 +173,23 @@ class OBJECT_PT_SneakerPanelProMain(bpy.types.Panel):
 classes = [OBJECT_PT_SneakerPanelProMain]
 
 def register():
-    """Register the panel and properties."""
+    """Register the panel class only (tooltip props now live in properties.py)."""
     for cls in classes:
-        bpy.utils.register_class(cls)
-    
-    
-    
-    # Register tooltip properties
-    bpy.types.Scene.spp_show_mirror_tooltip = bpy.props.BoolProperty(
-        name="Show Mirror at Cursor Tooltip",
-        default=False,
-        description="Show helpful tips for the Mirror at Cursor function"
-    )
-    bpy.types.Scene.spp_show_uv_gen_tooltip = bpy.props.BoolProperty(
-        name="Show UV Generation Tooltip",
-        default=False,
-        description="Show helpful tips for the Shell UV Generation workflow"
-    )
-    bpy.types.Scene.spp_show_gp_tooltip = bpy.props.BoolProperty(
-        name="Show Grease Pencil Drawing Tooltip",
-        default=False,
-        description="Show helpful tips for drawing panels with Grease Pencil"
-    )
+        try:
+            bpy.utils.register_class(cls)
+        except Exception:
+            pass
+
 
 def unregister():
-    """Unregister the panel and properties."""
+    """Unregister the panel class only."""
     for cls in reversed(classes):
-        if hasattr(cls, 'bl_rna'):
-            bpy.utils.unregister_class(cls)
-        
-    # Remove tooltip properties
-    if hasattr(bpy.types.Scene, "spp_show_mirror_tooltip"):
-        del bpy.types.Scene.spp_show_mirror_tooltip
-    
-    if hasattr(bpy.types.Scene, "spp_show_uv_gen_tooltip"):
-        del bpy.types.Scene.spp_show_uv_gen_tooltip
-        
-    if hasattr(bpy.types.Scene, "spp_show_gp_tooltip"):
-        del bpy.types.Scene.spp_show_gp_tooltip
+        try:
+            if hasattr(cls, 'bl_rna'):
+                bpy.utils.unregister_class(cls)
+        except Exception:
+            pass
+
 
 if __name__ == "__main__":
     register()
