@@ -1,57 +1,50 @@
+# File: ui/main_panel.py
 """Main panel for the Sneaker Panel Pro addon.
 
-This module defines the main panel that appears in the 3D View sidebar under the 'Sneaker Panel' category.
-It provides access to common tools and settings used across the addon's workflow.
+This panel contains only:
+- Workflow toggles (Surface Direct [3D] / UV Workflow [2D])
+- Compact toggles (Auto UV / Lace Generator)
+- Panel Configuration
+- Panel Helper Tools
+- Thicken Panel (Solidify)
+No Step 1/2/3 workflow content lives here; those are in their workflow panels.
 """
 
 import bpy
-from bpy.props import BoolProperty
 
 
 class OBJECT_PT_SneakerPanelProMain(bpy.types.Panel):
-    """Main panel for Sneaker Panel Pro addon.
-    
-    This panel provides access to common tools and settings used in the panel creation workflow,
-    including shell UV generation, panel settings, and the initial steps of the panel creation process.
-    """
     bl_label = "Sneaker Panel Pro"
     bl_idname = "OBJECT_PT_sneaker_panel_pro_main"
     bl_space_type = 'VIEW_3D'
     bl_region_type = 'UI'
     bl_category = 'Sneaker Panel'
-    
+
     def draw(self, context):
         layout = self.layout
-
-        # === Top toolbar: Segmented big workflow buttons + compact module toggles ===
         wm = context.window_manager
+        scn = context.scene
 
-        # Segmented pair (Surface 3D | UV 2D)
-        seg = layout.row(align=True)
-        seg.scale_y = 1.5  # beefy buttons
+        # === Top: Segmented workflow selector ===
+        seg = layout.row(align=True); seg.scale_y = 1.5
 
         left = seg.row(align=True)
-        b = left.operator(
-            "wm.context_set_enum",
-            text=" Surface Direct [3D] ",
-            icon='MESH_CUBE',
-            depress=(wm.spp_active_workflow == 'SURFACE_3D'),
-        )
+        b = left.operator("wm.context_set_enum",
+                          text=" Surface Direct [3D] ",
+                          icon='MESH_CUBE',
+                          depress=(wm.spp_active_workflow == 'SURFACE_3D'))
         b.data_path = "window_manager.spp_active_workflow"; b.value = 'SURFACE_3D'
 
         right = seg.row(align=True)
-        b = right.operator(
-            "wm.context_set_enum",
-            text=" UV Workflow [2D] ",
-            icon='MESH_GRID',
-            depress=(wm.spp_active_workflow == 'UV_2D'),
-        )
+        b = right.operator("wm.context_set_enum",
+                           text=" UV Workflow [2D] ",
+                           icon='MESH_GRID',
+                           depress=(wm.spp_active_workflow == 'UV_2D'))
         b.data_path = "window_manager.spp_active_workflow"; b.value = 'UV_2D'
 
-        # Optional: subtle divider under the pair
         layout.separator(factor=0.5)
 
-        # Compact toggles on one line (Auto UV | Lace)
+        # === Compact toggles ===
         toggles = layout.row(align=True)
         t = toggles.operator("wm.context_toggle", text=" Auto UV", icon='UV', depress=wm.spp_show_auto_uv)
         t.data_path = "window_manager.spp_show_auto_uv"
@@ -59,174 +52,62 @@ class OBJECT_PT_SneakerPanelProMain(bpy.types.Panel):
         t.data_path = "window_manager.spp_show_lace_gen"
 
         layout.separator()
-        
-        # Panel Settings Section - Moved to top for better workflow
+
+        # === Panel Configuration ===
         main_box = layout.box()
         header_row = main_box.row()
         header_row.label(text="Panel Configuration", icon="SETTINGS")
-        
-        # Create a collapsible section using a row with a prop
-        row = main_box.row()
-        row.prop(context.scene, "spp_panel_count", text="Panel #")
-        row.prop(context.scene, "spp_panel_name", text="Name")
-        
-        # Shell object selection with better formatting
-        shell_row = main_box.row()
-        shell_row.prop_search(context.scene, "spp_shell_object", bpy.data, "objects", text="Shell Object", icon="OUTLINER_OB_MESH")
-        
-        # Edge Flow and Helper Tools Section
+
+        row = main_box.row(align=True)
+        row.prop(scn, "spp_panel_count", text="Panel #")
+        row.prop(scn, "spp_panel_name", text="Name")
+
+        shell_row = main_box.row(align=True)
+        shell_row.prop_search(scn, "spp_shell_object", bpy.data, "objects", text="Shell Object", icon="OUTLINER_OB_MESH")
+
+        # === Panel Helper Tools ===
         tools_box = layout.box()
         tools_header = tools_box.row()
         tools_header.label(text="Panel Helper Tools", icon="TOOL_SETTINGS")
-        
-        # Create a grid layout for the four buttons
-        tools_grid_edgeflow = tools_box.grid_flow(columns=2, align=True)
-        tools_grid_edgeflow.scale_y = 1.1
-        
-        # Row 1: Edge Flow and Select Edge Loops
+
+        tools_grid_edgeflow = tools_box.grid_flow(columns=2, align=True); tools_grid_edgeflow.scale_y = 1.1
         tools_grid_edgeflow.operator("mesh.set_edge_flow", text="Set Edge Flow", icon="MOD_SMOOTH")
         tools_grid_edgeflow.operator("mesh.edge_relax", text="Edge Relax", icon="MOD_SMOOTH")
-                
-        # Row 2: Additional helper buttons (placeholders for now)
+
         tools_grid_edgeflow.operator("mesh.select_all", text="Select All", icon="SELECT_SET").action = 'SELECT'
         tools_grid_edgeflow.operator("mesh.loop_multi_select", text="Select Edge Loops", icon="EDGESEL")
 
-        # Create a grid layout for the four buttons
-        tools_grid_mod = tools_box.grid_flow(columns=2, align=True)
-        tools_grid_mod.scale_y = 1.1
-
+        tools_grid_mod = tools_box.grid_flow(columns=2, align=True); tools_grid_mod.scale_y = 1.1
         tools_grid_mod.operator("mesh.mirror_panel", text="Mirror Panel", icon="MOD_MIRROR")
         tools_grid_mod.operator("mesh.apply_shrinkwrap", text="Apply Shrinkwrap", icon="MOD_SHRINKWRAP")
-        
-        # Row 3: Quick Conform and placeholder# Create a grid layout for the four buttons
-        tools_grid_mod2 = tools_box.grid_flow(columns=1, align=True)
-        tools_grid_mod2.scale_y = 1.1
 
+        tools_grid_mod2 = tools_box.grid_flow(columns=1, align=True); tools_grid_mod2.scale_y = 1.1
         tools_grid_mod2.operator("mesh.quick_conform", text="Quick Conform", icon="SNAP_ON")
-    
-        # Panel Creation Workflow - Step 1
-        gp_box = layout.box()
-        gp_header = gp_box.row()
-        gp_header.label(text="Step 1: Create Grease Pencil Object - Design Your Panel", icon="GREASEPENCIL")
-        
-        # Add tooltip toggle button
-        tooltip_icon = "LIGHT_SUN" if context.scene.spp_show_gp_tooltip else "LIGHT"
-        gp_header.prop(context.scene, "spp_show_gp_tooltip", text="", icon=tooltip_icon, emboss=False)
-        
-        # Show tooltip if enabled
-        if context.scene.spp_show_gp_tooltip:
-            tip_box = gp_box.box()
-            tip_box.alert = True  # Makes the box stand out with a different color
-            tip_col = tip_box.column(align=True)
-            tip_col.scale_y = 0.9  # Slightly smaller text
-            tip_col.label(text="Grease Pencil Drawing Tips:", icon='HELP')
-            tip_col.label(text="• Draw directly on the 3D shell surface")
-            tip_col.label(text="• Use the stabilizer for smoother lines")
-            tip_col.label(text="• Creation of grease pencil is step 1 of panel creation workflow")
-            tip_col.label(text="• New panel group automatically generated")
-            tip_col.label(text="• Be sure to assign panel name and # before creating grease pencil")
-            tip_col.label(text="• Use Undo (Ctrl+Z) to correct mistakes")
-            tip_col.label(text="• Keep panel shapes simple and clean")
-            tip_col.label(text="• Utilize eraser brush to clean up gp lines")
-            tip_col.operator("wm.url_open", text="View Drawing Tutorial", icon='URL').url = "https://example.com/drawing-tutorial"
-        
-        # Grease pencil controls with better organization
-        gp_col = gp_box.column(align=True)
-        gp_col.scale_y = 1.1
-        gp_col.operator("object.add_gp_draw", text="Create Grease Pencil", icon='OUTLINER_OB_GREASEPENCIL')
-        
-        # Stabilizer settings in a nested box for better visual hierarchy
-        stab_box = gp_box.box()
-        stab_row = stab_box.row()
-        stab_row.prop(context.scene, "spp_use_stabilizer", text="")
-        stab_row.label(text="Stabilizer Settings")
-        
-        # Only show settings when stabilizer is enabled
-        if context.scene.spp_use_stabilizer:
-            stab_col = stab_box.column(align=True)
-            stab_col.prop(context.scene, "spp_stabilizer_radius", text="Radius")
-            stab_col.prop(context.scene, "spp_stabilizer_strength_ui", text="Strength")
 
-        # Panel Creation Workflow - Step 2
-        curve_box = layout.box()
-        curve_header = curve_box.row()
-        curve_header.label(text="Step 2: Create & Edit Curve", icon='OUTLINER_OB_CURVE')
-        
-        # Curve creation with better organization
-        curve_col = curve_box.column(align=True)
-        curve_col.scale_y = 1.1
-        curve_col.operator("object.gp_to_curve", text="Convert to Curve", icon='IPO_BEZIER')
-        
-        # Optional curve tools in a nested box
-        curve_tools_box = curve_box.box()
-        curve_tools_header = curve_tools_box.row()
-        curve_tools_header.label(text="Curve Editing Tools", icon="TOOL_SETTINGS")
-        
-        # Decimate section
-        decimate_col = curve_tools_box.column(align=True)
-        decimate_col.label(text="Decimate Curve:", icon="MOD_DECIM")
-        decimate_row = decimate_col.row(align=True)
-        decimate_row.prop(context.scene, "spp_decimate_ratio", text="Ratio")
-        decimate_row.operator("object.decimate_curve", text="Apply", icon='CHECKMARK')
-        
-        # Curve Options section
-        curve_options_col = curve_tools_box.column(align=True)
-        curve_options_col.label(text="Curve Options:", icon="CURVE_DATA")
-        
-        # Cyclic curve checkbox with similar styling to stabilizer
-        cyclic_row = curve_options_col.row()
-        cyclic_row.prop(context.scene, "spp_curve_cyclic", text="")
-        cyclic_row.label(text="Cyclic Curve")
-        
-        # Mirror section
-        mirror_col = curve_tools_box.column(align=True)
-        
-        # Mirror header with tooltip toggle
-        mirror_header = mirror_col.row(align=True)
-        mirror_header.label(text="Mirror Tools (Edit Mode):", icon="MOD_MIRROR")
-        
-        # Add light bulb icon for tooltip
-        tooltip_icon = 'LIGHT_SUN' if context.scene.spp_show_mirror_tooltip else 'LIGHT'
-        mirror_header.prop(context.scene, "spp_show_mirror_tooltip", text="", icon=tooltip_icon, emboss=False)
-        
-        # Mirror operator
-        mirror_col.operator("curve.mirror_selected_points_at_cursor", text="Mirror at Cursor", icon="CURVE_BEZCIRCLE")
-        
-        # Show tooltip if enabled
-        if context.scene.spp_show_mirror_tooltip:
-            tip_box = mirror_col.box()
-            tip_box.alert = True  # Makes the box stand out with a different color
-            tip_col = tip_box.column(align=True)
-            tip_col.scale_y = 0.9  # Slightly smaller text
-            tip_col.label(text="Mirror at Cursor Tips:", icon='HELP')
-            tip_col.label(text="• Position 3D cursor at desired mirror axis")
-            tip_col.label(text="• Select points to mirror in Edit Mode")
-            tip_col.label(text="• Creates symmetrical curves quickly")
-            tip_col.label(text="• Great for creating matching left/right panels")
-            tip_col.label(text="• Use front/side view for precise placement")
-            tip_col.operator("wm.url_open", text="View Mirror Tutorial", icon='URL').url = "https://example.com/tutorial"
-     
+        # === Thicken Panel (Solidify) ===
+        finalize = layout.box()
+        finalize.label(text="Thicken Panel", icon='MOD_SOLIDIFY')
+        # Only show the button; the full parameters/UI live in finalize_panel.py
+        finalize.operator("object.solidify_panel", text="Solidify", icon='MODIFIER')
+
+
 # Registration
 classes = [OBJECT_PT_SneakerPanelProMain]
 
 def register():
-    """Register the panel class only (tooltip props now live in properties.py)."""
     for cls in classes:
         try:
             bpy.utils.register_class(cls)
         except Exception:
             pass
 
-
 def unregister():
-    """Unregister the panel class only."""
     for cls in reversed(classes):
         try:
             if hasattr(cls, 'bl_rna'):
                 bpy.utils.unregister_class(cls)
         except Exception:
             pass
-
 
 if __name__ == "__main__":
     register()
