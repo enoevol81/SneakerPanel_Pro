@@ -1,6 +1,5 @@
 import bpy
 from . import main_panel
-from . import finalize_panel
 from . import workflow_operators
 from . import uv_workflow_panel
 from . import surface_workflow_panel
@@ -10,7 +9,6 @@ from . import panel_nurbs_qd
 
 modules = [
     main_panel,
-    finalize_panel,
     workflow_operators,
     uv_workflow_panel,
     surface_workflow_panel,
