@@ -102,7 +102,11 @@ class OBJECT_PT_UVWorkflow(Panel):
     bl_space_type = 'VIEW_3D'
     bl_region_type = 'UI'
     bl_category = 'Sneaker Panel' 
-    bl_order = 2 
+    bl_order = 2
+
+    @classmethod
+    def poll(cls, context):
+        return context.window_manager.spp_active_workflow == 'UV_2D'
 
     def draw(self, context):
         layout = self.layout

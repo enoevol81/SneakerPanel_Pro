@@ -25,7 +25,11 @@ class OBJECT_PT_SurfaceWorkflow(bpy.types.Panel):
     bl_region_type = 'UI'
     bl_category = 'Sneaker Panel'
     bl_options = {'DEFAULT_CLOSED'}
-
+    
+    @classmethod
+    def poll(cls, context):
+        return context.window_manager.spp_active_workflow == 'SURFACE_3D'
+    
     def draw(self, context):
         layout = self.layout
         scene = context.scene

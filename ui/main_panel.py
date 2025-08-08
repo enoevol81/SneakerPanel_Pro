@@ -22,6 +22,43 @@ class OBJECT_PT_SneakerPanelProMain(bpy.types.Panel):
     
     def draw(self, context):
         layout = self.layout
+
+        # === Top toolbar: Segmented big workflow buttons + compact module toggles ===
+        wm = context.window_manager
+
+        # Segmented pair (Surface 3D | UV 2D)
+        seg = layout.row(align=True)
+        seg.scale_y = 1.5  # beefy buttons
+
+        left = seg.row(align=True)
+        b = left.operator(
+            "wm.context_set_enum",
+            text=" Surface Direct [3D] ",
+            icon='MESH_CUBE',
+            depress=(wm.spp_active_workflow == 'SURFACE_3D'),
+        )
+        b.data_path = "window_manager.spp_active_workflow"; b.value = 'SURFACE_3D'
+
+        right = seg.row(align=True)
+        b = right.operator(
+            "wm.context_set_enum",
+            text=" UV Workflow [2D] ",
+            icon='MESH_GRID',
+            depress=(wm.spp_active_workflow == 'UV_2D'),
+        )
+        b.data_path = "window_manager.spp_active_workflow"; b.value = 'UV_2D'
+
+        # Optional: subtle divider under the pair
+        layout.separator(factor=0.5)
+
+        # Compact toggles on one line (Auto UV | Lace)
+        toggles = layout.row(align=True)
+        t = toggles.operator("wm.context_toggle", text=" Auto UV", icon='UV', depress=wm.spp_show_auto_uv)
+        t.data_path = "window_manager.spp_show_auto_uv"
+        t = toggles.operator("wm.context_toggle", text=" Lace Generator", icon='CURVE_NCURVE', depress=wm.spp_show_lace_gen)
+        t.data_path = "window_manager.spp_show_lace_gen"
+
+        layout.separator()
         
         # Panel Settings Section - Moved to top for better workflow
         main_box = layout.box()

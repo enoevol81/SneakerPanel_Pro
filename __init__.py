@@ -29,6 +29,7 @@ from . import properties
 from . import operators
 from . import ui
 from . import prefs  # Import preferences module
+from . import state  # Import state module
 
 # List of all classes for registration
 classes = []
@@ -38,6 +39,9 @@ def register():
     try:
         # Register preferences first
         prefs.register()
+        
+        # Register state
+        state.register()
         
         # Register properties
         properties.register()
@@ -72,9 +76,13 @@ def unregister():
         
         # Unregister properties
         properties.unregister()
+
+        # Unregister state
+        state.unregister()
         
         # Unregister preferences last
         prefs.unregister()
+        
         
         print(f"SneakerPanel Pro: Successfully unregistered addon")
     except Exception as e:
