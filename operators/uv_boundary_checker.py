@@ -138,6 +138,13 @@ class MESH_OT_CheckUVBoundary(bpy.types.Operator):
             point_uv.y < 0 or point_uv.y > 1):
             return True
         
+        # Treat points exactly on the boundary as inside (no violation)
+        epsilon = 1e-6
+        for boundary_start, boundary_end in boundary_edges:
+            closest = self.closest_point_on_line_segment(point_uv, boundary_start, boundary_end)
+            if (closest - point_uv).length <= epsilon:
+                return False
+        
         # Use single horizontal ray for efficiency
         ray_start = Vector((point_uv.x, point_uv.y))
         ray_dir = Vector((1, 0))  # Horizontal ray to the right
@@ -491,6 +498,30 @@ class MESH_OT_CheckUVBoundary(bpy.types.Operator):
             del panel_obj['_violation_verts']
         if '_violation_edges' in panel_obj:
             del panel_obj['_violation_edges']
+    
+    def clear_violation_vertex_groups(self, panel_obj):
+        """Remove persistent violation vertex groups and any stored violation data.
+        
+        This is called after a successful FIX resulting in PASS so the UI and any
+        pre-checks no longer indicate lingering violations.
+        """
+        if panel_obj is None or panel_obj.type != 'MESH':
+            return
+        # Remove groups that mark violations
+        groups_to_remove = [vg for vg in panel_obj.vertex_groups if vg.name.startswith("UV_Violation_")]
+        for vg in groups_to_remove:
+            panel_obj.vertex_groups.remove(vg)
+        # Clean up any stored violation data
+        if '_violation_verts' in panel_obj:
+            try:
+                del panel_obj['_violation_verts']
+            except Exception:
+                pass
+        if '_violation_edges' in panel_obj:
+            try:
+                del panel_obj['_violation_edges']
+            except Exception:
+                pass
 
     def select_violation_vertex_groups(self, panel_obj):
         """Re-select vertices from violation vertex groups."""
@@ -676,10 +707,14 @@ class MESH_OT_CheckUVBoundary(bpy.types.Operator):
                         else:
                             message += ". All violations fixed!"
                             context.scene.spp_uv_boundary_status = 'PASS'
+                            # Clear any persistent violation groups now that mesh is clean
+                            self.clear_violation_vertex_groups(panel_obj)
                         self.report({'INFO'}, message)
                     else:
                         context.scene.spp_uv_boundary_status = 'PASS'
                         self.report({'INFO'}, "No violations found to fix")
+                        # Also clear lingering violation groups from previous checks
+                        self.clear_violation_vertex_groups(panel_obj)
                         
                 except Exception as fix_error:
                     context.scene.spp_uv_boundary_status = 'ERROR'
