@@ -1,13 +1,13 @@
-# File: ui/main_panel.py
 """Main panel for the Sneaker Panel Pro addon.
 
-This panel contains only:
+This panel shows ONLY:
 - Workflow toggles (Surface Direct [3D] / UV Workflow [2D])
 - Compact toggles (Auto UV / Lace Generator)
 - Panel Configuration
 - Panel Helper Tools
 - Thicken Panel (Solidify)
-No Step 1/2/3 workflow content lives here; those are in their workflow panels.
+
+All workflow Steps (Create GP, Convert to Curve, Decimate, etc.) live in the workflow panels.
 """
 
 import bpy
@@ -63,7 +63,8 @@ class OBJECT_PT_SneakerPanelProMain(bpy.types.Panel):
         row.prop(scn, "spp_panel_name", text="Name")
 
         shell_row = main_box.row(align=True)
-        shell_row.prop_search(scn, "spp_shell_object", bpy.data, "objects", text="Shell Object", icon="OUTLINER_OB_MESH")
+        shell_row.prop_search(scn, "spp_shell_object", bpy.data, "objects",
+                              text="Shell Object", icon="OUTLINER_OB_MESH")
 
         # === Panel Helper Tools ===
         tools_box = layout.box()
@@ -73,7 +74,6 @@ class OBJECT_PT_SneakerPanelProMain(bpy.types.Panel):
         tools_grid_edgeflow = tools_box.grid_flow(columns=2, align=True); tools_grid_edgeflow.scale_y = 1.1
         tools_grid_edgeflow.operator("mesh.set_edge_flow", text="Set Edge Flow", icon="MOD_SMOOTH")
         tools_grid_edgeflow.operator("mesh.edge_relax", text="Edge Relax", icon="MOD_SMOOTH")
-
         tools_grid_edgeflow.operator("mesh.select_all", text="Select All", icon="SELECT_SET").action = 'SELECT'
         tools_grid_edgeflow.operator("mesh.loop_multi_select", text="Select Edge Loops", icon="EDGESEL")
 
@@ -87,7 +87,6 @@ class OBJECT_PT_SneakerPanelProMain(bpy.types.Panel):
         # === Thicken Panel (Solidify) ===
         finalize = layout.box()
         finalize.label(text="Thicken Panel", icon='MOD_SOLIDIFY')
-        # Only show the button; the full parameters/UI live in finalize_panel.py
         finalize.operator("object.solidify_panel", text="Solidify", icon='MODIFIER')
 
 
