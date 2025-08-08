@@ -35,6 +35,7 @@ from . import create_quad_panel_from_outline
 from . import fill_quad_border
 from . import fill_border_grid
 from . import overlay_panel_onto_shell
+from . import uv_boundary_checker
 from . import lace_from_curves
 from . import edge_flow
 from . import mirror_panel
@@ -66,6 +67,7 @@ def register():
     fill_quad_border.register()
     fill_border_grid.register()
     overlay_panel_onto_shell.register()
+    uv_boundary_checker.register()
     lace_from_curves.register()
     edge_flow.register()
     mirror_panel.register()
@@ -96,6 +98,7 @@ def unregister():
     fill_quad_border.unregister()
     fill_border_grid.unregister()
     overlay_panel_onto_shell.unregister()
+    uv_boundary_checker.unregister()
     lace_from_curves.unregister()
     edge_flow.unregister()
     mirror_panel.unregister()

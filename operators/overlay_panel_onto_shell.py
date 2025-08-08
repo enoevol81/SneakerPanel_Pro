@@ -53,6 +53,76 @@ class MESH_OT_OverlayPanelOntoShell(bpy.types.Operator):
                     return obj
         return None
 
+    def check_uv_boundary_violations(self, panel_obj, uv_mesh_obj, scale_factor):
+        """Quick check for UV boundary violations.
+        
+        Args:
+            panel_obj: The 2D panel object to check
+            uv_mesh_obj: The UV reference mesh object  
+            scale_factor: Scale factor from UV reference mesh
+            
+        Returns:
+            Number of vertices that violate UV boundaries
+        """
+        violation_count = 0
+        
+        # Create bmesh from panel
+        bm = bmesh.new()
+        bm.from_mesh(panel_obj.data)
+        
+        try:
+            # Check each vertex
+            for vert in bm.verts:
+                # Convert vertex to UV space
+                p_world = panel_obj.matrix_world @ vert.co
+                p_local_uv = uv_mesh_obj.matrix_world.inverted() @ p_world
+                uv_coord = Vector((p_local_uv.x / scale_factor, p_local_uv.y / scale_factor))
+                
+                # Check if outside UV bounds (0-1 range)
+                if (uv_coord.x < 0 or uv_coord.x > 1 or 
+                    uv_coord.y < 0 or uv_coord.y > 1):
+                    violation_count += 1
+                    
+        finally:
+            bm.free()
+            
+        return violation_count
+
+    def check_uv_boundary_violations(self, panel_obj, uv_mesh_obj, scale_factor):
+        """Quick check for UV boundary violations.
+        
+        Args:
+            panel_obj: The 2D panel object to check
+            uv_mesh_obj: The UV reference mesh object  
+            scale_factor: Scale factor from UV reference mesh
+            
+        Returns:
+            Number of vertices that violate UV boundaries
+        """
+        violation_count = 0
+        
+        # Create bmesh from panel
+        bm = bmesh.new()
+        bm.from_mesh(panel_obj.data)
+        
+        try:
+            # Check each vertex
+            for vert in bm.verts:
+                # Convert vertex to UV space
+                p_world = panel_obj.matrix_world @ vert.co
+                p_local_uv = uv_mesh_obj.matrix_world.inverted() @ p_world
+                uv_coord = Vector((p_local_uv.x / scale_factor, p_local_uv.y / scale_factor))
+                
+                # Check if outside UV bounds (0-1 range)
+                if (uv_coord.x < 0 or uv_coord.x > 1 or 
+                    uv_coord.y < 0 or uv_coord.y > 1):
+                    violation_count += 1
+                    
+        finally:
+            bm.free()
+            
+        return violation_count
+
     def execute(self, context):
         # Add undo checkpoint
         bpy.ops.ed.undo_push(message="Project 2D Panel to 3D")
@@ -75,6 +145,15 @@ class MESH_OT_OverlayPanelOntoShell(bpy.types.Operator):
         if scale_factor == 0:
             self.report({'ERROR'}, "UV reference mesh scale factor is zero.")
             return {'CANCELLED'}
+
+        # Pre-check for UV boundary violations
+        boundary_violations = self.check_uv_boundary_violations(
+            panel_obj_2d, uv_mesh_obj, scale_factor)
+        
+        if boundary_violations > 0:
+            self.report({'WARNING'}, 
+                f"Found {boundary_violations} UV boundary violations. "
+                "This may cause misprojections. Consider running 'Check UV Boundary' first.")
 
         try:
             # Duplicate the panel so we keep the 2-D original intact

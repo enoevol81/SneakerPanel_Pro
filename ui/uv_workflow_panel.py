@@ -30,12 +30,56 @@ def register_properties():
         description="Show or hide the tooltip for Workflow B",
         default=False
     )
+    
+    # UV Boundary Checker properties
+    bpy.types.Scene.spp_uv_boundary_action = bpy.props.EnumProperty(
+        name="Boundary Action",
+        description="What to do with boundary violations",
+        items=[
+            ('CHECK', "Check Only", "Highlight violations for inspection"),
+            ('FIX', "Fix Vertices", "Fix vertex violations only (preserves topology)"),
+            ('INTERACTIVE', "Select for Manual Fix", "Select violations for manual editing (recommended for edges)")
+        ],
+        default='CHECK'
+    )
+    
+    bpy.types.Scene.spp_uv_boundary_samples = bpy.props.IntProperty(
+        name="Raycast Samples",
+        description="Number of samples per edge for boundary checking",
+        default=10,
+        min=3,
+        max=50
+    )
+    
+    bpy.types.Scene.spp_uv_boundary_margin = bpy.props.FloatProperty(
+        name="Boundary Margin",
+        description="Safety margin from UV boundary (0.0-1.0)",
+        default=0.01,
+        min=0.0,
+        max=0.1
+    )
+    
+    bpy.types.Scene.spp_uv_boundary_status = bpy.props.EnumProperty(
+        name="Boundary Status",
+        description="Status of the last UV boundary check",
+        items=[
+            ('NONE', "Not Checked", "No boundary check has been performed"),
+            ('PASS', "Pass", "No boundary violations found"),
+            ('VIOLATIONS', "Violations Found", "Boundary violations detected"),
+            ('ERROR', "Error", "Error occurred during boundary check")
+        ],
+        default='NONE'
+    )
 
 def unregister_properties():
     del bpy.types.Scene.spp_workflow_a_expanded
     del bpy.types.Scene.spp_workflow_b_expanded
     del bpy.types.Scene.spp_show_workflow_a_tooltip
     del bpy.types.Scene.spp_show_workflow_b_tooltip
+    del bpy.types.Scene.spp_uv_boundary_action
+    del bpy.types.Scene.spp_uv_boundary_samples
+    del bpy.types.Scene.spp_uv_boundary_margin
+    del bpy.types.Scene.spp_uv_boundary_status
 
 class OBJECT_PT_UVWorkflow(Panel):
     """UV Workflow panel.
@@ -104,6 +148,58 @@ class OBJECT_PT_UVWorkflow(Panel):
                 tip_col.label(text="• This method works best for simple panel shapes")
                 tip_col.label(text="• Use subdivision for smoother results")
                 tip_col.operator("wm.url_open", text="View Tutorial", icon='URL').url = "https://example.com/tutorial"
+            
+            # Add UV Boundary Checker before projection
+            box_boundary = box_workflow_a.box()
+            boundary_header = box_boundary.row()
+            boundary_header.label(text="UV Boundary Check (Recommended):", icon='CHECKMARK')
+            
+            # Action selection
+            action_row = box_boundary.row(align=True)
+            action_row.prop(context.scene, "spp_uv_boundary_action", text="Action")
+            
+            # Main operator button
+            boundary_op_row = box_boundary.row(align=True)
+            boundary_op_row.scale_y = 1.2
+            boundary_op_row.operator("mesh.check_uv_boundary", text="Check UV Boundary", icon='ZOOM_SELECTED')
+            
+            # Help text
+            help_col = box_boundary.column(align=True)
+            help_col.scale_y = 0.8
+            help_col.label(text="Prevents misprojections by detecting boundary violations")
+            help_col.label(text="FIX mode snaps vertices directly to boundary (no padding)")
+            help_col.label(text="Simple and reliable approach that actually works")
+            
+            # Status indicator
+            status_row = box_boundary.row(align=True)
+            status_row.scale_y = 0.9
+            
+            try:
+                status = context.scene.spp_uv_boundary_status
+            except AttributeError:
+                # Property doesn't exist, initialize it
+                context.scene.spp_uv_boundary_status = 'NONE'
+                status = 'NONE'
+            
+            if status == 'PASS':
+                status_row.label(text="Status: PASS - No Violations", icon='CHECKMARK')
+            elif status == 'VIOLATIONS':
+                status_row.alert = True
+                status_row.label(text="Status: VIOLATIONS - Found Issues", icon='ERROR')
+            elif status == 'ERROR':
+                status_row.alert = True
+                status_row.label(text="Status: ERROR - Check Failed", icon='CANCEL')
+            else:  # NONE
+                status_row.enabled = False
+                status_row.label(text="Status: NONE - Not Checked", icon='QUESTION')
+            
+            # Re-select button (only show if violation vertex groups exist)
+            if context.active_object and context.active_object.type == 'MESH':
+                has_violations = any(vg.name.startswith("UV_Violation_") for vg in context.active_object.vertex_groups)
+                if has_violations:
+                    reselect_row = box_boundary.row(align=True)
+                    reselect_row.scale_y = 1.0
+                    reselect_row.operator("mesh.reselect_uv_violations", text="Re-select Violations", icon='RESTRICT_SELECT_OFF')
             
             box = box_workflow_a.box()
             box.label(text=" Step 5. Shell UV to Panel:", icon='MODIFIER')
@@ -202,14 +298,63 @@ class OBJECT_PT_UVWorkflow(Panel):
             box_edge_loop = box_workflow_b.box()
             edge_loop_header = box_edge_loop.row()
             edge_loop_header.label(text="Step 8: Select Edge Loops", icon='EDGESEL')
-            edge_loop_row = box_edge_loop.row(align=True)
-            edge_loop_row.scale_y = 1.2
-            edge_loop_row.operator("mesh.loop_multi_select", text="Select Edge Loop", icon='SELECT_SET')
             
             # Tips for edge loop selection
             tips_col = box_edge_loop.column(align=True)
             tips_col.label(text="Tip: Alt+Click on edges to select loops")
             tips_col.label(text="Shift+Alt+Click to select multiple loops")
+            
+            # Add UV Boundary Checker before projection
+            box_boundary = box_workflow_b.box()
+            boundary_header = box_boundary.row()
+            boundary_header.label(text="UV Boundary Check (Recommended):", icon='CHECKMARK')
+            
+            # Action selection
+            action_row = box_boundary.row(align=True)
+            action_row.prop(context.scene, "spp_uv_boundary_action", text="Action")
+            
+            # Main operator button
+            boundary_op_row = box_boundary.row(align=True)
+            boundary_op_row.scale_y = 1.2
+            boundary_op_row.operator("mesh.check_uv_boundary", text="Check UV Boundary", icon='ZOOM_SELECTED')
+            
+            # Help text
+            help_col = box_boundary.column(align=True)
+            help_col.scale_y = 0.8
+            help_col.label(text="Prevents misprojections by detecting boundary violations")
+            help_col.label(text="FIX mode snaps vertices directly to boundary (no padding)")
+            help_col.label(text="Simple and reliable approach that actually works")
+            
+            # Status indicator
+            status_row = box_boundary.row(align=True)
+            status_row.scale_y = 0.9
+            
+            try:
+                status = context.scene.spp_uv_boundary_status
+            except AttributeError:
+                # Property doesn't exist, initialize it
+                context.scene.spp_uv_boundary_status = 'NONE'
+                status = 'NONE'
+            
+            if status == 'PASS':
+                status_row.label(text="Status: PASS - No Violations", icon='CHECKMARK')
+            elif status == 'VIOLATIONS':
+                status_row.alert = True
+                status_row.label(text="Status: VIOLATIONS - Found Issues", icon='ERROR')
+            elif status == 'ERROR':
+                status_row.alert = True
+                status_row.label(text="Status: ERROR - Check Failed", icon='CANCEL')
+            else:  # NONE
+                status_row.enabled = False
+                status_row.label(text="Status: NONE - Not Checked", icon='QUESTION')
+            
+            # Re-select button (only show if violation vertex groups exist)
+            if context.active_object and context.active_object.type == 'MESH':
+                has_violations = any(vg.name.startswith("UV_Violation_") for vg in context.active_object.vertex_groups)
+                if has_violations:
+                    reselect_row = box_boundary.row(align=True)
+                    reselect_row.scale_y = 1.0
+                    reselect_row.operator("mesh.reselect_uv_violations", text="Re-select Violations", icon='RESTRICT_SELECT_OFF')
             
             # Rename the relax step to Step 9
             box_relax = box_workflow_b.box()
