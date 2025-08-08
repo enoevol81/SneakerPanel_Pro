@@ -1,11 +1,20 @@
 name: Operator ID Guard
-on: [pull_request]
+
+on:
+  pull_request:
+    # Only run this on relevant changes
+    paths:
+      - 'sneaker_panel_pro/ui/**'
+      - 'tools/ui_refactor_check.py'
+  workflow_dispatch: {}  # adds a "Run workflow" button in the Actions tab
+
 jobs:
   check-ops:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
-        with: { python-version: '3.x' }
+        with:
+          python-version: '3.x'
       - run: python tools/ui_refactor_check.py --before
       - run: python tools/ui_refactor_check.py --after
