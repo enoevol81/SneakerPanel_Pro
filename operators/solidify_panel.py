@@ -78,11 +78,34 @@ class OBJECT_OT_SolidifyPanel(Operator):
 
             # Create new solidify modifier with optimized settings
             solidify = obj.modifiers.new(name='Solidify', type='SOLIDIFY')
-            solidify.thickness = self.thickness
-            solidify.offset = 0.0      # Centered offset
-            solidify.use_even_offset = True  # Even thickness distribution
-            solidify.use_rim = True    # Create rim faces
+
+            # Pull initial values from UI scene properties when available
+            scn = context.scene
+            thickness_val = getattr(scn, 'spp_solidify_thickness', self.thickness)
+            offset_val = getattr(scn, 'spp_solidify_offset', 0.0)
+            even_val = getattr(scn, 'spp_solidify_even_thickness', True)
+            rim_val = getattr(scn, 'spp_solidify_rim', True)
+            rim_only_val = getattr(scn, 'spp_solidify_rim_only', False)
+
+            solidify.thickness = thickness_val
+            solidify.offset = offset_val
+            solidify.use_even_offset = even_val
+            solidify.use_rim = rim_val
+            if hasattr(solidify, 'use_rim_only'):
+                solidify.use_rim_only = rim_only_val
             solidify.use_quality_normals = True  # Better normal calculation
+
+            # Sync scene UI properties to reflect the new modifier's state
+            if hasattr(scn, 'spp_solidify_thickness'):
+                scn.spp_solidify_thickness = solidify.thickness
+            if hasattr(scn, 'spp_solidify_offset'):
+                scn.spp_solidify_offset = solidify.offset
+            if hasattr(scn, 'spp_solidify_even_thickness'):
+                scn.spp_solidify_even_thickness = solidify.use_even_offset
+            if hasattr(scn, 'spp_solidify_rim'):
+                scn.spp_solidify_rim = solidify.use_rim
+            if hasattr(scn, 'spp_solidify_rim_only'):
+                scn.spp_solidify_rim_only = getattr(solidify, 'use_rim_only', False)
 
             self.report({'INFO'}, 
                        f"Added solidify modifier with thickness: {self.thickness:.4f}m")
