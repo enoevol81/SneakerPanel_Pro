@@ -84,6 +84,8 @@ class OBJECT_PT_SneakerPanelProMain(bpy.types.Panel):
         tools_grid_mod.operator("mesh.apply_shrinkwrap", text="Apply Shrinkwrap", icon="MOD_SHRINKWRAP")
 
         tools_grid_mod2 = tools_box.grid_flow(columns=1, align=True); tools_grid_mod2.scale_y = 1.1
+        # Add Subdivision button placed above Quick Conform as requested
+        tools_grid_mod2.operator("mesh.add_subsurf", text="Add Subdivision", icon="MOD_SUBSURF")
         tools_grid_mod2.operator("mesh.quick_conform", text="Quick Conform", icon="SNAP_ON")
 
         # === Thicken Panel (Solidify) ===
