@@ -76,6 +76,8 @@ class OBJECT_PT_SneakerPanelProMain(bpy.types.Panel):
         tools_grid_edgeflow.operator("mesh.edge_relax", text="Edge Relax", icon="MOD_SMOOTH")
         tools_grid_edgeflow.operator("mesh.select_all", text="Select All", icon="SELECT_SET").action = 'SELECT'
         tools_grid_edgeflow.operator("mesh.loop_multi_select", text="Select Edge Loops", icon="EDGESEL")
+        tools_grid_edgeflow.operator("mesh.select_boundary_edges", text="Select Boundary", icon="EDGESEL")
+        tools_grid_edgeflow.operator("mesh.deselect_boundary_edges", text="Deselect Boundary", icon="EDGESEL")
 
         tools_grid_mod = tools_box.grid_flow(columns=2, align=True); tools_grid_mod.scale_y = 1.1
         tools_grid_mod.operator("mesh.mirror_panel", text="Mirror Panel", icon="MOD_MIRROR")
