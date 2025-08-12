@@ -76,18 +76,65 @@ class OBJECT_PT_SneakerPanelProMain(bpy.types.Panel):
         tools_grid_edgeflow.operator("mesh.edge_relax", text="Edge Relax", icon="MOD_SMOOTH")
         tools_grid_edgeflow.operator("mesh.select_all", text="Select All", icon="SELECT_SET").action = 'SELECT'
         tools_grid_edgeflow.operator("mesh.loop_multi_select", text="Select Edge Loops", icon="EDGESEL")
+        tools_grid_edgeflow.operator("mesh.select_boundary_edges", text="Select Boundary", icon="EDGESEL")
+        tools_grid_edgeflow.operator("mesh.deselect_boundary_edges", text="Deselect Boundary", icon="EDGESEL")
 
         tools_grid_mod = tools_box.grid_flow(columns=2, align=True); tools_grid_mod.scale_y = 1.1
         tools_grid_mod.operator("mesh.mirror_panel", text="Mirror Panel", icon="MOD_MIRROR")
         tools_grid_mod.operator("mesh.apply_shrinkwrap", text="Apply Shrinkwrap", icon="MOD_SHRINKWRAP")
 
         tools_grid_mod2 = tools_box.grid_flow(columns=1, align=True); tools_grid_mod2.scale_y = 1.1
+        # Add Subdivision button placed above Quick Conform as requested
+        tools_grid_mod2.operator("mesh.add_subsurf", text="Add Subdivision", icon="MOD_SUBSURF")
         tools_grid_mod2.operator("mesh.quick_conform", text="Quick Conform", icon="SNAP_ON")
 
         # === Thicken Panel (Solidify) ===
         finalize = layout.box()
         finalize.label(text="Thicken Panel", icon='MOD_SOLIDIFY')
-        finalize.operator("object.solidify_panel", text="Solidify", icon='MODIFIER')
+
+        obj = context.active_object
+        col = finalize.column(align=True)
+
+        if obj and obj.type == 'MESH':
+            # Get existing Solidify modifier and sync scene props if present
+            mod = obj.modifiers.get("Solidify")
+            if mod:
+                try:
+                    if hasattr(scn, "spp_solidify_thickness") and getattr(mod, "thickness", None) is not None and scn.spp_solidify_thickness != mod.thickness:
+                        scn.spp_solidify_thickness = mod.thickness
+                    if hasattr(scn, "spp_solidify_offset") and hasattr(mod, "offset") and scn.spp_solidify_offset != mod.offset:
+                        scn.spp_solidify_offset = mod.offset
+                    if hasattr(scn, "spp_solidify_even_thickness") and hasattr(mod, "use_even_offset") and scn.spp_solidify_even_thickness != mod.use_even_offset:
+                        scn.spp_solidify_even_thickness = mod.use_even_offset
+                    if hasattr(scn, "spp_solidify_rim") and hasattr(mod, "use_rim") and scn.spp_solidify_rim != mod.use_rim:
+                        scn.spp_solidify_rim = mod.use_rim
+                    if hasattr(scn, "spp_solidify_rim_only") and hasattr(mod, "use_rim_only") and scn.spp_solidify_rim_only != mod.use_rim_only:
+                        scn.spp_solidify_rim_only = mod.use_rim_only
+                except Exception:
+                    pass
+
+            # Always show Add Solidify button when a mesh is selected
+            buttons = col.row(align=True)
+            add = buttons.operator("object.solidify_panel", text="Add Solidify", icon='MODIFIER')
+            add.thickness = scn.spp_solidify_thickness
+
+            # Show parameters and Finalize only when a Solidify modifier exists
+            if mod:
+                col.separator(factor=0.4)
+                # Parameter controls (live update via property callbacks)
+                col.prop(scn, "spp_solidify_thickness", text="Thickness")
+                row = col.row(align=True)
+                row.prop(scn, "spp_solidify_offset", text="Offset")
+                toggles = col.row(align=True)
+                toggles.prop(scn, "spp_solidify_even_thickness", text="Even")
+                toggles.prop(scn, "spp_solidify_rim", text="Fill Rim")
+                toggles.prop(scn, "spp_solidify_rim_only", text="Only Rim")
+
+                # Finalize (Apply) button
+                apply_row = col.row(align=True)
+                apply_row.operator("object.apply_solidify", text="Finalize", icon='CHECKMARK')
+        else:
+            col.label(text="Select a mesh object to enable solidify controls.", icon='INFO')
 
 
 # Registration
