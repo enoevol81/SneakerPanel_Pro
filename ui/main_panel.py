@@ -76,12 +76,16 @@ class OBJECT_PT_SneakerPanelProMain(bpy.types.Panel):
         tools_grid_edgeflow.operator("mesh.edge_relax", text="Edge Relax", icon="MOD_SMOOTH")
         tools_grid_edgeflow.operator("mesh.select_all", text="Select All", icon="SELECT_SET").action = 'SELECT'
         tools_grid_edgeflow.operator("mesh.loop_multi_select", text="Select Edge Loops", icon="EDGESEL")
+        tools_grid_edgeflow.operator("mesh.select_boundary_edges", text="Select Boundary", icon="EDGESEL")
+        tools_grid_edgeflow.operator("mesh.deselect_boundary_edges", text="Deselect Boundary", icon="EDGESEL")
 
         tools_grid_mod = tools_box.grid_flow(columns=2, align=True); tools_grid_mod.scale_y = 1.1
         tools_grid_mod.operator("mesh.mirror_panel", text="Mirror Panel", icon="MOD_MIRROR")
         tools_grid_mod.operator("mesh.apply_shrinkwrap", text="Apply Shrinkwrap", icon="MOD_SHRINKWRAP")
 
         tools_grid_mod2 = tools_box.grid_flow(columns=1, align=True); tools_grid_mod2.scale_y = 1.1
+        # Add Subdivision button placed above Quick Conform as requested
+        tools_grid_mod2.operator("mesh.add_subsurf", text="Add Subdivision", icon="MOD_SUBSURF")
         tools_grid_mod2.operator("mesh.quick_conform", text="Quick Conform", icon="SNAP_ON")
 
         # === Thicken Panel (Solidify) ===

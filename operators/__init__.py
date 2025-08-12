@@ -42,6 +42,8 @@ from . import mirror_panel
 from . import edge_relax
 from . import apply_shrinkwrap
 from . import quick_conform
+from . import boundary_edges
+from . import add_subsurf
 
 # Register/unregister functions
 def register():
@@ -74,6 +76,8 @@ def register():
     edge_relax.register()
     apply_shrinkwrap.register()
     quick_conform.register()
+    boundary_edges.register()
+    add_subsurf.register()
 
 def unregister():
     orient_uv_island.unregister()
@@ -105,3 +109,5 @@ def unregister():
     edge_relax.unregister()
     apply_shrinkwrap.unregister()
     quick_conform.unregister()
+    boundary_edges.unregister()
+    add_subsurf.unregister()

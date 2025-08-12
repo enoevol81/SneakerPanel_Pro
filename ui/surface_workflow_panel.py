@@ -98,6 +98,17 @@ class OBJECT_PT_SurfaceWorkflow(bpy.types.Panel):
             n = int(original * (1.0 - factor))
             return n if n % 2 == 0 else max(0, n - 1)
 
+        # Parity status and quick-fix
+        if obj and obj.type == 'MESH':
+            if vert_count % 2 != 0:
+                warn = vr.row(align=True)
+                warn.alert = True
+                warn.label(text="Odd vertex count", icon='ERROR')
+                warn.operator("mesh.make_even_verts", text="Make Even", icon='AUTOMERGE_ON')
+            elif vert_count > 0:
+                ok = vr.row(align=True)
+                ok.label(text="Even vertex count", icon='CHECKMARK')
+
         row1 = vr.row(align=True)
         b = row1.operator("object.reduce_verts", text=f"20% ({even_after(vert_count, 0.2)} verts)")
         b.factor = 0.2

@@ -7,7 +7,121 @@ and Loop Tools Space operator to achieve clean results, followed by surface
 snapping to ensure the reduced mesh still conforms to the target surface.
 """
 import bpy
+import bmesh
 from ..utils.panel_utils import apply_surface_snap
+
+def _collapse_shortest_edge_to_make_even(obj, context):
+    """Ensure mesh has an even vertex count by collapsing the shortest edge if needed.
+    Returns True if a change was made, False otherwise."""
+    if not obj or obj.type != 'MESH':
+        return False
+    # Quick check in object mode
+    if obj.mode != 'EDIT' and len(obj.data.vertices) % 2 == 0:
+        return False
+
+    original_mode = obj.mode
+    try:
+        if obj.mode != 'EDIT':
+            bpy.ops.object.mode_set(mode='EDIT')
+
+        me = obj.data
+        bm = bmesh.from_edit_mesh(me)
+
+        if len(bm.verts) % 2 == 0:
+            return False
+        if len(bm.edges) == 0:
+            return False
+
+        # Find shortest edge to minimally affect shape
+        shortest = None
+        shortest_len = 1e30
+        for e in bm.edges:
+            l = (e.verts[0].co - e.verts[1].co).length
+            if l < shortest_len:
+                shortest_len = l
+                shortest = e
+        if not shortest:
+            return False
+
+        # Select only the two verts of the shortest edge
+        for v in bm.verts:
+            v.select = False
+        for v in shortest.verts:
+            v.select = True
+        bmesh.update_edit_mesh(me, loop_triangles=False, destructive=False)
+
+        # Ensure vertex select mode
+        try:
+            context.tool_settings.mesh_select_mode = (True, False, False)
+        except Exception:
+            pass
+
+        # Merge to center to collapse one vertex
+        bpy.ops.mesh.merge(type='CENTER')
+        bmesh.update_edit_mesh(me, loop_triangles=False, destructive=False)
+        return True
+    finally:
+        if original_mode != 'EDIT':
+            try:
+                bpy.ops.object.mode_set(mode=original_mode)
+            except Exception:
+                pass
+
+
+def _collapse_n_shortest_edges(obj, count):
+    """Collapse the shortest edges 'count' times on the active mesh in Edit mode."""
+    if count <= 0:
+        return 0
+    if not obj or obj.type != 'MESH':
+        return 0
+    # Ensure we're in edit mode; caller should manage this, but be safe
+    if obj.mode != 'EDIT':
+        bpy.ops.object.mode_set(mode='EDIT')
+    me = obj.data
+    bm = bmesh.from_edit_mesh(me)
+    collapsed = 0
+    for _ in range(count):
+        if len(bm.edges) == 0:
+            break
+        # Find shortest edge
+        shortest = None
+        shortest_len = 1e30
+        for e in bm.edges:
+            l = (e.verts[0].co - e.verts[1].co).length
+            if l < shortest_len:
+                shortest = e
+                shortest_len = l
+        if not shortest:
+            break
+        try:
+            bmesh.ops.collapse(bm, edges=[shortest])
+            collapsed += 1
+        except Exception:
+            break
+    bmesh.update_edit_mesh(me, loop_triangles=False, destructive=False)
+    return collapsed
+
+
+class MESH_OT_MakeEvenVerts(bpy.types.Operator):
+    """Make current mesh vertex count even by collapsing the shortest edge"""
+    bl_idname = "mesh.make_even_verts"
+    bl_label = "Make Even"
+    bl_options = {'REGISTER', 'UNDO'}
+
+    def execute(self, context):
+        obj = context.active_object
+        if not obj or obj.type != 'MESH':
+            self.report({'ERROR'}, "Please select a mesh object")
+            return {'CANCELLED'}
+
+        changed = _collapse_shortest_edge_to_make_even(obj, context)
+        if changed:
+            self.report({'INFO'}, "Adjusted vertex count to be even")
+            return {'FINISHED'}
+        else:
+            self.report({'INFO'}, "Vertex count already even or no change possible")
+            return {'CANCELLED'}
+
 
 class OBJECT_OT_ReduceVerts(bpy.types.Operator):
     """Reduce mesh vertices while maintaining shape.
@@ -88,6 +202,13 @@ class OBJECT_OT_ReduceVerts(bpy.types.Operator):
                 if current_verts > target_verts:
                     bpy.ops.object.mode_set(mode='EDIT')
 
+            # If we're still above target, collapse the shortest edges to hit it exactly
+            if current_verts > target_verts:
+                bpy.ops.object.mode_set(mode='EDIT')
+                _collapse_n_shortest_edges(obj, current_verts - target_verts)
+                bpy.ops.object.mode_set(mode='OBJECT')
+                current_verts = len(obj.data.vertices)
+
             # Ensure we're in edit mode for Loop Tools
             bpy.ops.object.mode_set(mode='EDIT')
             
@@ -103,9 +224,15 @@ class OBJECT_OT_ReduceVerts(bpy.types.Operator):
             except Exception as e:
                 self.report({'WARNING'}, f"Could not apply surface snap: {str(e)}")
 
+            # Enforce even vertex count at the end (safety)
+            bpy.ops.object.mode_set(mode='OBJECT')
+            _collapse_shortest_edge_to_make_even(obj, context)
+
             # Restore original mode
             bpy.ops.object.mode_set(mode=original_mode)
 
+            # Recompute current vert count for accurate reporting
+            current_verts = len(obj.data.vertices)
             reduction_percent = ((original_verts - current_verts) / original_verts) * 100
             self.report({'INFO'}, f"Reduced vertices from {original_verts} to {current_verts} ({reduction_percent:.1f}% reduction)")
             return {'FINISHED'}
@@ -120,7 +247,7 @@ class OBJECT_OT_ReduceVerts(bpy.types.Operator):
             return {'CANCELLED'}
 
 # Registration
-classes = [OBJECT_OT_ReduceVerts]
+classes = [OBJECT_OT_ReduceVerts, MESH_OT_MakeEvenVerts]
 
 def register():
     for cls in classes:
