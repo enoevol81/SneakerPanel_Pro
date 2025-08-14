@@ -76,7 +76,7 @@ class OBJECT_PT_SneakerPanelProMain(bpy.types.Panel):
         # === Panel Configuration ===
         main_box = layout.box()
         header_row = main_box.row()
-        header_row.label(text="Panel Configuration", icon="SETTINGS")
+        header_row.label(text="Panel Configuration", icon="COLLECTION_COLOR_05")
 
         row = main_box.row(align=True)
         row.prop(scn, "spp_panel_count", text="Panel #")
@@ -102,30 +102,44 @@ class OBJECT_PT_SneakerPanelProMain(bpy.types.Panel):
 
         # Edge Flow
         flow_box = tools_box.box()
-        flow_box.label(text="Edge Flow:")
+        flow_box.label(text="Edge Flow:", icon="VIEW_PERSPECTIVE")
         flow_grid = flow_box.grid_flow(columns=3, align=True); flow_grid.scale_y = 1.1
         flow_grid.operator("mesh.set_edge_linear", text="Straighten", icon="IPO_LINEAR")
         flow_grid.operator("mesh.edge_relax", text="Relax", icon="MOD_SMOOTH")
-        flow_grid.operator("mesh.set_edge_flow", text="Set Flow", icon="MOD_SMOOTH")
+        flow_grid.operator("mesh.set_edge_flow", text="Set Flow", icon="FORCE_FORCE")
 
         # Panel
         panel_box = tools_box.box()
-        panel_box.label(text="Panel:")
+        panel_box.label(text="Object:", icon='MESH_GRID')
+
+        # Shading controls
+        obj = context.active_object
+        shading_row = panel_box.row(align=True)
+        
+        # Check current shading mode
+        is_smooth = False
+        if obj and obj.type == 'MESH' and obj.data.polygons:
+            # Check if any face is smooth (if any face is smooth, consider object as smooth)
+            is_smooth = any(poly.use_smooth for poly in obj.data.polygons)
+        
+        shading_row.operator("object.shade_smooth", text="Shade Smooth", icon="SHADING_RENDERED", depress=is_smooth)
+        shading_row.operator("object.shade_flat", text="Shade Flat", icon="SHADING_SOLID", depress=not is_smooth)
+
+        # Object tools
         panel_grid = panel_box.grid_flow(columns=3, align=True); panel_grid.scale_y = 1.1
-        panel_grid.operator("mesh.add_subsurf", text="Sub D", icon="MOD_SUBSURF")
+        panel_grid.operator("mesh.add_subsurf", text="SubD", icon="MOD_SUBSURF")
         panel_grid.operator("mesh.mirror_panel", text="Mirror", icon="MOD_MIRROR")
         panel_grid.operator("mesh.apply_shrinkwrap", text="Shrinkwrap", icon="MOD_SHRINKWRAP")
+        
+        
 
-        # Quick Conform
-        tools_box.operator("mesh.quick_conform", text="Quick Conform", icon="SNAP_ON")
-
-        # === Thicken Panel (Solidify) ===
-        finalize = layout.box()
-        finalize.label(text="Thicken Panel", icon='MOD_SOLIDIFY')
-
+        conform_row = panel_box.row(align=True)
+        conform_row.operator("mesh.quick_conform", text="Quick Conform", icon="SNAP_ON")
+        
+        # Thicken Panel (Solidify) section
+        panel_box.label(text="Thicken Panel:", icon='MOD_SOLIDIFY')
+        
         obj = context.active_object
-        col = finalize.column(align=True)
-
         if obj and obj.type == 'MESH':
             # Get existing Solidify modifier and sync scene props if present
             mod = obj.modifiers.get("Solidify")
@@ -145,27 +159,28 @@ class OBJECT_PT_SneakerPanelProMain(bpy.types.Panel):
                     pass
 
             # Always show Add Solidify button when a mesh is selected
-            buttons = col.row(align=True)
+            buttons = panel_box.row(align=True)
             add = buttons.operator("object.solidify_panel", text="Add Solidify", icon='MODIFIER')
             add.thickness = scn.spp_solidify_thickness
 
             # Show parameters and Finalize only when a Solidify modifier exists
             if mod:
-                col.separator(factor=0.4)
+                panel_box.separator(factor=0.4)
                 # Parameter controls (live update via property callbacks)
-                col.prop(scn, "spp_solidify_thickness", text="Thickness")
-                row = col.row(align=True)
+                panel_box.prop(scn, "spp_solidify_thickness", text="Thickness")
+                row = panel_box.row(align=True)
                 row.prop(scn, "spp_solidify_offset", text="Offset")
-                toggles = col.row(align=True)
+                toggles = panel_box.row(align=True)
                 toggles.prop(scn, "spp_solidify_even_thickness", text="Even")
                 toggles.prop(scn, "spp_solidify_rim", text="Fill Rim")
                 toggles.prop(scn, "spp_solidify_rim_only", text="Only Rim")
 
                 # Finalize (Apply) button
-                apply_row = col.row(align=True)
+                apply_row = panel_box.row(align=True)
                 apply_row.operator("object.apply_solidify", text="Finalize", icon='CHECKMARK')
         else:
-            col.label(text="Select a mesh object to enable solidify controls.", icon='INFO')
+            panel_box.label(text="Select a mesh object to enable solidify controls.", icon='INFO')
+    
 
 
 # Registration

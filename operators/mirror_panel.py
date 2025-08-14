@@ -1,5 +1,5 @@
 import bpy
-from bpy.props import EnumProperty
+from bpy.props import EnumProperty, BoolProperty
 from bpy.types import Operator
 
 
@@ -20,12 +20,20 @@ class OBJECT_OT_mirror_panel(Operator):
         default='X'
     )
     
+    apply_modifier: BoolProperty(
+        name="Apply Modifier",
+        description="Apply the mirror modifier immediately, or leave it as a modifier",
+        default=True
+    )
+    
     def invoke(self, context, event):
         return context.window_manager.invoke_props_dialog(self)
     
     def draw(self, context):
         layout = self.layout
         layout.prop(self, "mirror_axis", expand=True)
+        layout.separator()
+        layout.prop(self, "apply_modifier")
         shell = getattr(context.scene, "spp_shell_object", None)
         if shell and isinstance(shell, str):
             shell = bpy.data.objects.get(shell)
@@ -76,19 +84,23 @@ class OBJECT_OT_mirror_panel(Operator):
             shrink_mod.wrap_mode = 'ON_SURFACE'
             shrink_mod.offset = 0.001
         
-        # 3) apply modifiers in correct order (mirror first, then shrinkwrap)
-        to_apply = []
-        to_apply.append(mirror_mod)  # Mirror first
-        if shrink_mod:
-            to_apply.append(shrink_mod)  # Shrinkwrap second
+        # 3) apply modifiers in correct order (mirror first, then shrinkwrap) - only if requested
+        if self.apply_modifier:
+            to_apply = []
+            to_apply.append(mirror_mod)  # Mirror first
+            if shrink_mod:
+                to_apply.append(shrink_mod)  # Shrinkwrap second
+            
+            for mod in to_apply:
+                try:
+                    bpy.ops.object.modifier_apply(modifier=mod.name)
+                except Exception as e:
+                    self.report({'WARNING'}, f"Failed to apply {mod.name}: {e}")
+            
+            self.report({'INFO'}, f"Applied mirror across {self.mirror_axis}-axis" + (f" and shrink-wrapped to '{shell.name}'" if shrink_mod else ""))
+        else:
+            self.report({'INFO'}, f"Added mirror modifier across {self.mirror_axis}-axis" + (f" and shrinkwrap to '{shell.name}'" if shrink_mod else ""))
         
-        for mod in to_apply:
-            try:
-                bpy.ops.object.modifier_apply(modifier=mod.name)
-            except Exception as e:
-                self.report({'WARNING'}, f"Failed to apply {mod.name}: {e}")
-        
-        self.report({'INFO'}, f"Mirrored across {self.mirror_axis}-axis" + (f" and shrink-wrapped to '{shell.name}'" if shrink_mod else ""))
         return {'FINISHED'}
 
 
