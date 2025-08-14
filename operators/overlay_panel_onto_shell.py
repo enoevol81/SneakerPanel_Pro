@@ -124,10 +124,8 @@ class MESH_OT_OverlayPanelOntoShell(bpy.types.Operator):
         return violation_count
 
     def execute(self, context):
-        # Store original mode and switch to Object mode if needed
-        original_mode = context.mode
-        if original_mode != 'OBJECT':
-            bpy.ops.object.mode_set(mode='OBJECT')
+        # Add undo checkpoint
+        bpy.ops.ed.undo_push(message="Project 2D Panel to 3D")
 
         panel_obj_2d = context.active_object
         shell_obj = context.scene.spp_shell_object
@@ -263,13 +261,6 @@ class MESH_OT_OverlayPanelOntoShell(bpy.types.Operator):
                 bm.free()
             if 'bm_shell' in locals():
                 bm_shell.free()
-            
-            # Restore original mode
-            try:
-                if original_mode != 'OBJECT':
-                    bpy.ops.object.mode_set(mode=original_mode.split('_')[-1])
-            except:
-                pass  # If mode restoration fails, stay in current mode
                 
         return {'FINISHED'}
 

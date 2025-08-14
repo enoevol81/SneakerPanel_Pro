@@ -51,9 +51,9 @@ class MESH_OT_SmoothMesh(Operator):
     
     @classmethod
     def poll(cls, context):
-        """Check if we have an active mesh object."""
+        """Check if we're in edit mode with a mesh."""
         obj = context.active_object
-        return obj and obj.type == 'MESH'
+        return obj and obj.type == 'MESH' and obj.mode == 'EDIT'
     
     def smooth_with_bmesh(self, context):
         """Apply smoothing using bmesh for more control."""
@@ -126,49 +126,24 @@ class MESH_OT_SmoothMesh(Operator):
         return True
     
     def execute(self, context):
-        # Context-agnostic execution - automatically switch to required mode
+        # Simplified execution for stable interactive properties
         obj = context.active_object
         if not obj or obj.type != 'MESH':
             self.report({'ERROR'}, "No active mesh object")
             return {'CANCELLED'}
         
-        # Store original mode for restoration
-        original_mode = obj.mode
-        
-        # Switch to Edit Mode if not already there
         if context.mode != 'EDIT_MESH':
-            try:
-                bpy.ops.object.mode_set(mode='EDIT')
-            except Exception as e:
-                self.report({'ERROR'}, f"Could not switch to Edit Mode: {str(e)}")
-                return {'CANCELLED'}
+            self.report({'ERROR'}, "Must be in Edit Mode")
+            return {'CANCELLED'}
         
         # Use bmesh method for reliable smoothing
         try:
             if self.smooth_with_bmesh(context):
-                # Restore original mode if it was different
-                if original_mode != 'EDIT':
-                    try:
-                        bpy.ops.object.mode_set(mode=original_mode)
-                    except:
-                        pass  # Don't fail if mode restoration fails
                 return {'FINISHED'}
             else:
-                # Restore original mode on failure
-                if original_mode != 'EDIT':
-                    try:
-                        bpy.ops.object.mode_set(mode=original_mode)
-                    except:
-                        pass
                 self.report({'ERROR'}, "Smoothing failed")
                 return {'CANCELLED'}
         except Exception as e:
-            # Restore original mode on error
-            if original_mode != 'EDIT':
-                try:
-                    bpy.ops.object.mode_set(mode=original_mode)
-                except:
-                    pass
             self.report({'ERROR'}, f"Smoothing error: {str(e)}")
             return {'CANCELLED'}
 

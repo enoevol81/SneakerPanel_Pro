@@ -542,17 +542,11 @@ class MESH_OT_CheckUVBoundary(bpy.types.Operator):
         import time
         start_time = time.time()
         
-        # Context-agnostic execution - automatically switch to required mode
-        panel_obj = context.active_object
-        if not panel_obj or panel_obj.type != 'MESH':
-            self.report({'ERROR'}, "No active mesh object")
-            return {'CANCELLED'}
+        # Add undo checkpoint
+        bpy.ops.ed.undo_push(message="Check UV Boundary")
         
+        panel_obj = context.active_object
         shell_obj = context.scene.spp_shell_object
-        if not shell_obj:
-            self.report({'ERROR'}, "No shell object defined")
-            return {'CANCELLED'}
-            
         scene = context.scene
         
         # Get action from scene properties (samples and margin now use smart defaults)
@@ -577,17 +571,11 @@ class MESH_OT_CheckUVBoundary(bpy.types.Operator):
             self.report({'ERROR'}, "UV reference mesh missing required custom properties.")
             return {'CANCELLED'}
         
-        # Store original mode for restoration
-        original_mode = panel_obj.mode if panel_obj else 'OBJECT'
-        
         try:
-            # Switch to Object Mode if not already there
-            if context.mode != 'OBJECT':
-                try:
-                    bpy.ops.object.mode_set(mode='OBJECT')
-                except Exception as e:
-                    self.report({'ERROR'}, f"Could not switch to Object Mode: {str(e)}")
-                    return {'CANCELLED'}
+            # Store original mode and ensure we're in Object mode for mesh operations
+            original_mode = bpy.context.mode
+            if original_mode != 'OBJECT':
+                bpy.ops.object.mode_set(mode='OBJECT')
             
             # Get UV boundary edges
             boundary_edges = self.get_uv_boundary_edges(shell_obj, source_uv_map_name)
@@ -760,13 +748,6 @@ class MESH_OT_CheckUVBoundary(bpy.types.Operator):
             if elapsed_time > 5:  # Only report if took more than 5 seconds
                 self.report({'INFO'}, f"Boundary check completed in {elapsed_time:.1f} seconds")
             
-            # Restore original mode if it was different (except for INTERACTIVE which stays in Edit)
-            if action != 'INTERACTIVE' and original_mode != 'OBJECT':
-                try:
-                    bpy.ops.object.mode_set(mode=original_mode)
-                except:
-                    pass  # Don't fail if mode restoration fails
-            
         except Exception as e:
             context.scene.spp_uv_boundary_status = 'ERROR'
             self.report({'ERROR'}, f"Error checking UV boundary: {str(e)}")
@@ -804,52 +785,29 @@ class MESH_OT_ReselectUVViolations(bpy.types.Operator):
         return False
 
     def execute(self, context):
-        # Context-agnostic execution - automatically switch to required mode
         panel_obj = context.active_object
-        if not panel_obj or panel_obj.type != 'MESH':
-            self.report({'ERROR'}, "No active mesh object")
-            return {'CANCELLED'}
-        
-        # Store original mode for restoration
-        original_mode = panel_obj.mode
         
         # Switch to Edit mode if not already
-        if context.mode != 'EDIT_MESH':
-            try:
-                bpy.ops.object.mode_set(mode='EDIT')
-            except Exception as e:
-                self.report({'ERROR'}, f"Could not switch to Edit Mode: {str(e)}")
-                return {'CANCELLED'}
+        if bpy.context.mode != 'EDIT_MESH':
+            bpy.ops.object.mode_set(mode='EDIT')
         
-        try:
-            # Deselect all
-            bpy.ops.mesh.select_all(action='DESELECT')
-            
-            # Select vertices from violation groups
-            violation_count = 0
-            for vg in panel_obj.vertex_groups:
-                if vg.name.startswith("UV_Violation_"):
-                    panel_obj.vertex_groups.active = vg
-                    bpy.ops.object.vertex_group_select()
-                    violation_count += len([v for v in panel_obj.data.vertices if vg.index in [g.group for g in v.groups]])
-            
-            if violation_count > 0:
-                self.report({'INFO'}, f"Re-selected {violation_count} violation vertices")
-            else:
-                self.report({'WARNING'}, "No violation vertex groups found")
-            
-            # Note: Stay in Edit Mode to show selection - don't restore mode for this operator
-            return {'FINISHED'}
-            
-        except Exception as e:
-            # Restore original mode on error
-            if original_mode != 'EDIT':
-                try:
-                    bpy.ops.object.mode_set(mode=original_mode)
-                except:
-                    pass
-            self.report({'ERROR'}, f"Error re-selecting violations: {str(e)}")
-            return {'CANCELLED'}
+        # Deselect all
+        bpy.ops.mesh.select_all(action='DESELECT')
+        
+        # Select vertices from violation groups
+        violation_count = 0
+        for vg in panel_obj.vertex_groups:
+            if vg.name.startswith("UV_Violation_"):
+                panel_obj.vertex_groups.active = vg
+                bpy.ops.object.vertex_group_select()
+                violation_count += len([v for v in panel_obj.data.vertices if vg.index in [g.group for g in v.groups]])
+        
+        if violation_count > 0:
+            self.report({'INFO'}, f"Re-selected {violation_count} violation vertices")
+        else:
+            self.report({'WARNING'}, "No violation vertex groups found")
+        
+        return {'FINISHED'}
 
 # Registration
 classes = [MESH_OT_CheckUVBoundary, MESH_OT_ReselectUVViolations]

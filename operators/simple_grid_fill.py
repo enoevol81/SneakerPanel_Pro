@@ -51,9 +51,9 @@ class MESH_OT_SimpleGridFill(Operator):
     
     @classmethod
     def poll(cls, context):
-        """Check if we have an active mesh object."""
+        """Check if we're in edit mode with a mesh."""
         obj = context.active_object
-        return obj and obj.type == 'MESH'
+        return obj and obj.type == 'MESH' and obj.mode == 'EDIT'
     
     def find_open_endpoints(self, bm):
         """Find vertices that are endpoints (connected to only one edge)."""
@@ -94,24 +94,10 @@ class MESH_OT_SimpleGridFill(Operator):
         return False
     
     def execute(self, context):
-        # Context-agnostic execution - automatically switch to required mode
-        obj = context.active_object
-        if not obj or obj.type != 'MESH':
-            self.report({'ERROR'}, "No active mesh object")
-            return {'CANCELLED'}
-        
-        # Store original mode for restoration
-        original_mode = obj.mode
-        
-        # Switch to Edit Mode if not already there
-        if context.mode != 'EDIT_MESH':
-            try:
-                bpy.ops.object.mode_set(mode='EDIT')
-            except Exception as e:
-                self.report({'ERROR'}, f"Could not switch to Edit Mode: {str(e)}")
-                return {'CANCELLED'}
+        # Note: Undo is handled automatically by bl_options = {'REGISTER', 'UNDO'}
         
         try:
+            obj = context.active_object
             bm = bmesh.from_edit_mesh(obj.data)
             
             # Report initial state
@@ -215,22 +201,9 @@ class MESH_OT_SimpleGridFill(Operator):
                 'FACE'
             )
             
-            # Restore original mode if it was different
-            if original_mode != 'EDIT':
-                try:
-                    bpy.ops.object.mode_set(mode=original_mode)
-                except:
-                    pass  # Don't fail if mode restoration fails
-            
             return {'FINISHED'} if success else {'CANCELLED'}
             
         except Exception as e:
-            # Restore original mode on error
-            if original_mode != 'EDIT':
-                try:
-                    bpy.ops.object.mode_set(mode=original_mode)
-                except:
-                    pass
             self.report({'ERROR'}, f"Simple grid fill failed: {str(e)}")
             return {'CANCELLED'}
 

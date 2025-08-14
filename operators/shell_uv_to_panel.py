@@ -85,11 +85,6 @@ class OBJECT_OT_ShellUVToPanel(bpy.types.Operator):
         return None
 
     def execute(self, context):
-        # Store original mode and switch to Object mode if needed
-        original_mode = context.mode
-        if original_mode != 'OBJECT':
-            bpy.ops.object.mode_set(mode='OBJECT')
-
         bpy.ops.ed.undo_push(message="Shell UV to Panel")
 
         design_obj = context.active_object
@@ -285,14 +280,6 @@ class OBJECT_OT_ShellUVToPanel(bpy.types.Operator):
         add_object_to_panel_collection(created_panel_obj, panel_count, panel_name_prop) 
         context.scene.spp_panel_count += 1
         self.report({'INFO'}, f"Successfully created panel: {created_panel_obj.name}")
-        
-        # Restore original mode
-        try:
-            if original_mode != 'OBJECT':
-                bpy.ops.object.mode_set(mode=original_mode.split('_')[-1])
-        except:
-            pass  # If mode restoration fails, stay in current mode
-        
         return {'FINISHED'}
 
 def register():
