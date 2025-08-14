@@ -1,10 +1,3 @@
-"""
-Creates a filled quad panel from a mesh outline using the inset method.
-
-This operator takes a mesh outline and creates a filled quad panel by creating
-an N-gon face, applying an inset, and then deleting the interior face to create
-a clean border loop. The resulting mesh is added to the appropriate collection.
-"""
 
 import bpy
 from bpy.props import BoolProperty, FloatProperty
@@ -14,17 +7,6 @@ from ..utils.collections import add_object_to_panel_collection
 
 
 class MESH_OT_CreateQuadPanelFromOutline(Operator):
-    """Creates a filled panel from an active mesh outline using an inset-fill method.
-
-    This operator takes a mesh outline and creates a filled quad panel by:
-    1. Creating an N-gon face from the boundary edges
-    2. Applying an inset to create a clean border
-    3. Deleting the interior face to leave a quad border loop
-
-    The resulting mesh is named based on the current panel count and
-    added to the appropriate collection.
-    """
-
     bl_idname = "mesh.create_quad_panel_from_outline"
     bl_label = "Create Quad Panel from Outline"
     bl_options = {"REGISTER", "UNDO"}

@@ -3,8 +3,7 @@ from bpy.types import Operator
 
 
 class OBJECT_OT_quick_conform(Operator):
-    """Quick conform selected mesh to shell surface by selecting all vertices and snapping to surface"""
-
+    
     bl_idname = "mesh.quick_conform"
     bl_label = "Quick Conform"
     bl_options = {"REGISTER", "UNDO"}

@@ -1,21 +1,3 @@
-"""
-Properties module for SneakerPanel Pro.
-
-This module defines all the properties used by the SneakerPanel Pro addon,
-organized by functionality categories. The properties are grouped into logical sections:
-
-- Panel identification and naming properties
-- Target object properties
-- Grease Pencil stabilizer properties
-- Mesh processing properties
-- Curve processing properties
-- Panel generation properties
-- Solidify properties
-- UV unwrapping properties
-
-The module also provides helper functions for property registration, unregistration,
-and updating modifier properties.
-"""
 
 import bpy
 

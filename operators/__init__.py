@@ -1,6 +1,3 @@
-# SneakerPanel Pro - Operators Package
-#
-# This package contains modular operators for the SneakerPanel Pro addon
 
 bl_info = {
     "name": "SneakerPanel Pro Operators",
@@ -12,7 +9,6 @@ bl_info = {
     "category": "Object",
 }
 
-# Import all operator modules
 from . import (
     add_gp_draw,
     add_subsurf,
@@ -51,7 +47,6 @@ from . import (
 )
 
 
-# Register/unregister functions
 def register():
     add_gp_draw.register()
     gp_to_curve.register()

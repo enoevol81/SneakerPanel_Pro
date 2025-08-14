@@ -1,10 +1,3 @@
-"""
-Simple Grid Fill operator for UV workflow.
-
-This operator provides a straightforward approach to filling selected geometry
-with grid topology. It works with whatever is currently selected and doesn't
-make assumptions about boundary loops or polylines.
-"""
 
 import bmesh
 import bpy
@@ -13,11 +6,6 @@ from bpy.types import Operator
 
 
 class MESH_OT_SimpleGridFill(Operator):
-    """Simple grid fill for selected geometry.
-
-    This operator applies grid fill to whatever is currently selected.
-    It can optionally close open edges first and balance vertex counts.
-    """
 
     bl_idname = "mesh.simple_grid_fill"
     bl_label = "Simple Grid Fill"
@@ -54,12 +42,10 @@ class MESH_OT_SimpleGridFill(Operator):
 
     @classmethod
     def poll(cls, context):
-        """Check if we have an active mesh object."""
         obj = context.active_object
         return obj and obj.type == "MESH"
 
     def find_open_endpoints(self, bm):
-        """Find vertices that are endpoints (connected to only one edge)."""
         endpoints = []
         for vert in bm.verts:
             if len(vert.link_edges) == 1:
@@ -67,11 +53,9 @@ class MESH_OT_SimpleGridFill(Operator):
         return endpoints
 
     def close_open_edges(self, bm):
-        """Connect open endpoints to close the shape."""
         endpoints = self.find_open_endpoints(bm)
 
         if len(endpoints) == 2:
-            # Simple case: connect the two endpoints
             try:
                 new_edge = bm.edges.new(endpoints)
                 bm.edges.ensure_lookup_table()
@@ -81,11 +65,9 @@ class MESH_OT_SimpleGridFill(Operator):
                 self.report({"WARNING"}, "Could not connect endpoints")
                 return False
         elif len(endpoints) > 2:
-            # Multiple endpoints - connect them in a chain
             try:
                 for i in range(len(endpoints) - 1):
                     bm.edges.new([endpoints[i], endpoints[i + 1]])
-                # Close the loop by connecting last to first
                 bm.edges.new([endpoints[-1], endpoints[0]])
                 bm.edges.ensure_lookup_table()
                 self.report({"INFO"}, f"Connected {len(endpoints)} endpoints in a loop")
@@ -117,13 +99,11 @@ class MESH_OT_SimpleGridFill(Operator):
         try:
             bm = bmesh.from_edit_mesh(obj.data)
 
-            # Report initial state
             self.report(
                 {"INFO"},
                 f"Starting: {len(bm.verts)} verts, {len(bm.edges)} edges, {len(bm.faces)} faces",
             )
 
-            # Close open edges if requested
             if self.close_first:
                 endpoints = self.find_open_endpoints(bm)
                 if endpoints:
@@ -133,14 +113,11 @@ class MESH_OT_SimpleGridFill(Operator):
                 else:
                     self.report({"INFO"}, "No open endpoints found")
 
-            # Store original selection mode
             select_mode = context.tool_settings.mesh_select_mode[:]
 
-            # Select all edges for grid fill
             bpy.ops.mesh.select_all(action="SELECT")
             bpy.ops.mesh.select_mode(type="EDGE")
 
-            # Try grid fill
             try:
                 bpy.ops.mesh.fill_grid(span=self.span)
                 self.report({"INFO"}, f"Grid fill successful with span={self.span}")
@@ -158,23 +135,19 @@ class MESH_OT_SimpleGridFill(Operator):
                     self.report({"ERROR"}, f"Triangle fill also failed: {str(e2)}")
                     success = False
 
-            # Apply smoothing if requested and fill was successful
             if success and self.smooth_after:
                 try:
-                    # Get fresh bmesh instance after fill operations
                     obj = context.active_object
                     bm = bmesh.from_edit_mesh(obj.data)
                     bm.faces.ensure_lookup_table()
                     bm.edges.ensure_lookup_table()
                     bm.verts.ensure_lookup_table()
 
-                    # Identify boundary vertices to preserve
                     boundary_verts = set()
                     for edge in bm.edges:
                         if edge.is_boundary:
                             boundary_verts.update(edge.verts)
 
-                    # Get interior vertices only
                     interior_verts = [v for v in bm.verts if v not in boundary_verts]
 
                     if interior_verts:
@@ -183,7 +156,6 @@ class MESH_OT_SimpleGridFill(Operator):
                             f"Smoothing {len(interior_verts)} interior vertices, preserving {len(boundary_verts)} boundary vertices",
                         )
 
-                        # Apply smoothing iterations to interior vertices only
                         for iteration in range(self.smooth_iterations):
                             new_positions = {}
 
@@ -191,7 +163,6 @@ class MESH_OT_SimpleGridFill(Operator):
                                 if len(vert.link_edges) == 0:
                                     continue
 
-                                # Calculate average position of connected vertices
                                 connected_positions = []
                                 for edge in vert.link_edges:
                                     other_vert = edge.other_vert(vert)
@@ -201,15 +172,12 @@ class MESH_OT_SimpleGridFill(Operator):
                                     avg_pos = sum(
                                         connected_positions, vert.co * 0
                                     ) / len(connected_positions)
-                                    # Blend between original and average position
                                     new_pos = vert.co.lerp(avg_pos, 0.5)
                                     new_positions[vert] = new_pos
 
-                            # Apply new positions
                             for vert, new_pos in new_positions.items():
                                 vert.co = new_pos
 
-                        # Update the mesh
                         bmesh.update_edit_mesh(obj.data)
                         obj.data.update()
                         self.report(
@@ -227,22 +195,19 @@ class MESH_OT_SimpleGridFill(Operator):
                         {"WARNING"}, f"Boundary-preserving smoothing failed: {str(e)}"
                     )
 
-            # Restore original selection mode
             bpy.ops.mesh.select_mode(
                 type="VERT" if select_mode[0] else "EDGE" if select_mode[1] else "FACE"
             )
 
-            # Restore original mode if it was different
             if original_mode != "EDIT":
                 try:
                     bpy.ops.object.mode_set(mode=original_mode)
                 except:
-                    pass  # Don't fail if mode restoration fails
+                    pass
 
             return {"FINISHED"} if success else {"CANCELLED"}
 
         except Exception as e:
-            # Restore original mode on error
             if original_mode != "EDIT":
                 try:
                     bpy.ops.object.mode_set(mode=original_mode)

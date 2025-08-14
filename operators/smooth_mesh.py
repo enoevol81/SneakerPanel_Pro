@@ -1,10 +1,3 @@
-"""
-Mesh smoothing operator for UV workflow.
-
-This operator provides mesh smoothing functionality specifically designed
-for the UV workflow after grid fill operations. It can preserve boundary
-vertices while smoothing interior vertices for better topology.
-"""
 
 import bmesh
 import bpy
@@ -13,11 +6,6 @@ from bpy.types import Operator
 
 
 class MESH_OT_SmoothMesh(Operator):
-    """Smooth mesh vertices with boundary preservation options.
-
-    This operator applies smoothing to mesh vertices with options to
-    preserve boundary vertices and control smoothing intensity.
-    """
 
     bl_idname = "mesh.smooth_mesh"
     bl_label = "Smooth Mesh"

@@ -1,11 +1,3 @@
-"""
-UV to Mesh conversion operator for SneakerPanel Pro.
-
-This module provides functionality to convert a UV map from a 3D shell object into
-a 2D mesh representation. It creates a flat mesh based on the UV coordinates and
-sets up a Grease Pencil object for drawing on this UV mesh. This is a critical part
-of the workflow for creating 2D panel patterns from 3D shoe surfaces.
-"""
 
 import math
 
@@ -19,20 +11,7 @@ from ..utils.collections import add_object_to_panel_collection
 
 
 def convert_object_to_mesh(obj, apply_modifiers=True, preserve_status=True):
-    """Convert any object to a mesh object.
 
-    Creates a duplicate of the input object and converts it to a mesh,
-    optionally applying modifiers. Preserves the original selection state
-    if requested.
-
-    Args:
-        obj: The source object to convert
-        apply_modifiers: Whether to apply modifiers during conversion
-        preserve_status: Whether to preserve original selection and active object
-
-    Returns:
-        The new mesh object
-    """
     original_active = None
     original_selected = []
 
@@ -74,23 +53,13 @@ def convert_object_to_mesh(obj, apply_modifiers=True, preserve_status=True):
 
 
 class OBJECT_OT_UVToMesh(Operator):
-    """UV to Mesh and Prep for Drawing Operator
-
-    Creates a UV Mesh, adds Grease Pencil, isolates, frames, and sets view for drawing.
-
-    Properties:
-        apply_modifiers (BoolProperty): Apply object's modifiers from the Shell Object
-        vertex_groups (BoolProperty): Keep Vertex Groups
-        materials (BoolProperty): Keep Materials
-        auto_scale (BoolProperty): Resize (Preserve Area)
-    """
 
     bl_idname = "object.uv_to_mesh"
     bl_label = "UV to Mesh and Prep for Drawing"
     bl_description = "Creates UV Mesh, adds Grease Pencil, isolates, frames, and sets view for drawing."
     bl_options = {"REGISTER", "UNDO"}
 
-    apply_modifiers: BoolProperty(  # (Properties as before)
+    apply_modifiers: BoolProperty(
         name="Apply Modifiers",
         default=True,
         description="Apply object's modifiers from the Shell Object",
@@ -119,12 +88,11 @@ class OBJECT_OT_UVToMesh(Operator):
         return False
 
     def execute(self, context):
-        # Context-agnostic execution - automatically switch to required mode
         source_object_from_scene = context.scene.spp_shell_object
-        if not source_object_from_scene:  # Should be caught by poll
+        if not source_object_from_scene:
             self.report({"ERROR"}, "No 'Shell Object' defined in Scene Properties.")
             return {"CANCELLED"}
-        if source_object_from_scene.type != "MESH":  # Should be caught by poll
+        if source_object_from_scene.type != "MESH":
             self.report({"ERROR"}, "'Shell Object' must be a Mesh type.")
             return {"CANCELLED"}
         if (
@@ -163,12 +131,10 @@ class OBJECT_OT_UVToMesh(Operator):
         me0_from_conversion = ob0_for_conversion.data
         original_source_name = source_object_from_scene.name
 
-        # (Core UV mesh generation logic - bmesh, face creation, scaling - as before)
-        # ...
         area_3d = 0
         bm = bmesh.new()
         polygons_to_process = me0_from_conversion.polygons
-        if not polygons_to_process:  # ... (error handling) ...
+        if not polygons_to_process:
             self.report(
                 {"ERROR"}, f"No polygons in Shell Object '{original_source_name}'."
             )
@@ -286,21 +252,14 @@ class OBJECT_OT_UVToMesh(Operator):
             f"UV Mesh '{ob_uv.name}' added to collection for '{panel_name_prop} {panel_count}'.",
         )
 
-        # --- SET UV MESH TO WIREFRAME DISPLAY ---
-        # Set the display type to wireframe for better visibility when drawing
-        ob_uv.display_type = "WIRE"  # Options: 'BOUNDS', 'WIRE', 'SOLID', 'TEXTURED'
-        # Also set the viewport display settings
+        ob_uv.display_type = "WIRE"
         if hasattr(ob_uv, "show_wire"):
-            ob_uv.show_wire = True  # Show wireframe on top of solid/textured
+            ob_uv.show_wire = True
         if hasattr(ob_uv, "show_all_edges"):
-            ob_uv.show_all_edges = True  # Show all edges for better visibility
+            ob_uv.show_all_edges = True
 
-        # --- CREATE AND SETUP NEW GREASE PENCIL OBJECT ---
         self.report({"INFO"}, "Creating Grease Pencil object for UV drawing.")
-        # Ensure ob_uv is at a known location if GP is parented or aligned (it should be at origin after scale apply)
-        gp_location = (
-            ob_uv.location
-        )  # ob_uv is at origin if scale was applied without location change
+        gp_location = ob_uv.location
 
         # Create GP object
         bpy.ops.object.select_all(

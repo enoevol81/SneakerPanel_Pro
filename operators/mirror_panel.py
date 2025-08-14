@@ -4,8 +4,6 @@ from bpy.types import Operator
 
 
 class OBJECT_OT_mirror_panel(Operator):
-    """Mirror selected mesh panel with axis selection and shrinkwrap to shell"""
-
     bl_idname = "mesh.mirror_panel"
     bl_label = "Mirror Panel"
     bl_options = {"REGISTER", "UNDO"}

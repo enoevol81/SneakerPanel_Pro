@@ -1,9 +1,3 @@
-"""
-Converts curves to meshes with surface snapping and proper collection management.
-
-This operator takes a curve object and converts it to a mesh, applies surface
-snapping, and adds it to the appropriate collection based on the panel count.
-"""
 
 import bpy
 
@@ -12,11 +6,6 @@ from ..utils.panel_utils import apply_surface_snap
 
 
 class OBJECT_OT_ConvertToMesh(bpy.types.Operator):
-    """Convert selected curve to mesh and apply surface snapping.
-
-    Converts the active curve object to a mesh, applies surface snapping,
-    and organizes it into the appropriate panel collection.
-    """
 
     bl_idname = "object.convert_to_mesh"
     bl_label = "Convert to Mesh"

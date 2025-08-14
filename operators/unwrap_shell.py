@@ -1,10 +1,3 @@
-"""
-Shell unwrapping operator for SneakerPanel Pro.
-
-This module provides functionality to unwrap a 3D shoe shell mesh for UV mapping.
-It creates or ensures a UVMap layer exists and performs angle-based unwrapping
-to create a clean UV layout suitable for panel design and visualization.
-"""
 
 import bmesh
 import bpy
@@ -12,16 +5,6 @@ from bpy.types import Operator
 
 
 class OBJECT_OT_UnwrapShell(Operator):
-    """Unwrap the selected shell object using smart UV unwrapping.
-
-    This operator creates or ensures a UVMap layer exists on the active mesh
-    and performs angle-based unwrapping to create a clean UV layout. This is
-    typically used on shoe shell meshes to prepare them for panel design in UV space.
-
-    The unwrapping uses Blender's angle-based method with a small margin to
-    prevent UV islands from touching. The operator works in edit mode and
-    restores the original mode when finished.
-    """
 
     bl_idname = "object.unwrap_shell"
     bl_label = "Unwrap Shell"
@@ -30,14 +13,6 @@ class OBJECT_OT_UnwrapShell(Operator):
 
     @classmethod
     def poll(cls, context):
-        """Check if the operator can be executed.
-
-        Args:
-            context: Blender context
-
-        Returns:
-            bool: True if active object is a mesh
-        """
         obj = context.active_object
         return obj is not None and obj.type == "MESH"
 

@@ -1,12 +1,3 @@
-"""
-Orients UV islands using a two-point direction system.
-
-This operator rotates and scales the UV island of a mesh using two markers:
-1. Toe_Marker - The toe tip position
-2. Toe_Direction_Marker - The direction indicating "up"
-
-This provides precise directional control for UV orientation.
-"""
 
 import math
 
@@ -17,16 +8,6 @@ from mathutils import Vector
 
 
 class OBJECT_OT_OrientUVIsland(Operator):
-    """Orient UV island using two-point direction system.
-
-    This operator rotates the UV island of the active mesh using the direction
-    vector defined by two markers. It also scales the UV to fit the entire
-    width of the UV grid with proper aspect ratio.
-
-    Prerequisites:
-    - The mesh must have UVs (unwrapped)
-    - Both Toe_Marker and Toe_Direction_Marker must exist
-    """
 
     bl_idname = "object.orient_uv_island"
     bl_label = "Orient UV Island"
@@ -35,7 +16,6 @@ class OBJECT_OT_OrientUVIsland(Operator):
 
     @classmethod
     def poll(cls, context):
-        """Check if the active object is a mesh with UVs and both markers exist."""
         obj = context.active_object
         return (
             obj
@@ -46,10 +26,8 @@ class OBJECT_OT_OrientUVIsland(Operator):
         )
 
     def execute(self, context):
-        # Add undo checkpoint
         bpy.ops.ed.undo_push(message="Orient UV Island")
 
-        # Get the active object
         obj = context.active_object
         toe_marker = bpy.data.objects.get("Toe_Marker")
         direction_marker = bpy.data.objects.get("Toe_Direction_Marker")
@@ -72,14 +50,11 @@ class OBJECT_OT_OrientUVIsland(Operator):
             )
             return {"CANCELLED"}
 
-        # Store the current mode
         original_mode = obj.mode
 
-        # Make sure we're in object mode for consistent mesh access
         if original_mode != "OBJECT":
             bpy.ops.object.mode_set(mode="OBJECT")
 
-        # Access mesh and UVs
         mesh = obj.data
         if not mesh.uv_layers:
             self.report({"ERROR"}, "No UVs found. Please unwrap first.")
@@ -89,15 +64,11 @@ class OBJECT_OT_OrientUVIsland(Operator):
         uv_layer = mesh.uv_layers.active
 
         try:
-            # Create a new bmesh to work with
             bm = bmesh.new()
             bm.from_mesh(mesh)
             uv_layer_bm = bm.loops.layers.uv.active
-
-            # Map each vertex to its world coordinates
             world_coords = [(v.index, obj.matrix_world @ v.co) for v in bm.verts]
 
-            # Find closest vertices to both markers
             toe_pos = toe_marker.location
             direction_pos = direction_marker.location
 
@@ -108,7 +79,6 @@ class OBJECT_OT_OrientUVIsland(Operator):
                 world_coords, key=lambda x: (x[1] - direction_pos).length
             )[0]
 
-            # Find average UV positions for both vertices
             toe_uvs = []
             direction_uvs = []
 
@@ -131,22 +101,18 @@ class OBJECT_OT_OrientUVIsland(Operator):
                 bpy.ops.object.mode_set(mode=original_mode)
                 return {"CANCELLED"}
 
-            # Average UV positions
             toe_uv = sum(toe_uvs, Vector((0, 0))) / len(toe_uvs)
             direction_uv = sum(direction_uvs, Vector((0, 0))) / len(direction_uvs)
 
-            # Get UV centroid of all UVs
             all_uvs = [
                 loop[uv_layer_bm].uv.copy() for face in bm.faces for loop in face.loops
             ]
             center = sum(all_uvs, Vector((0, 0))) / len(all_uvs)
 
-            # Calculate direction vector from toe to direction marker in UV space
             uv_direction_vec = direction_uv - toe_uv
 
-            # Compute rotation angle to make this direction point up, then flip 180° for A-shape
             current_angle = math.atan2(uv_direction_vec.y, uv_direction_vec.x)
-            desired_angle = math.pi / 2  # 90 degrees - pointing straight up
+            desired_angle = math.pi / 2
             rotation = (
                 desired_angle - current_angle + math.pi
             )  # Add 180° to flip the orientation
@@ -154,7 +120,6 @@ class OBJECT_OT_OrientUVIsland(Operator):
             cos_a = math.cos(rotation)
             sin_a = math.sin(rotation)
 
-            # Apply rotation to all UVs
             for face in bm.faces:
                 for loop in face.loops:
                     uv = loop[uv_layer_bm].uv

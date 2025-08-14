@@ -1,7 +1,3 @@
-"""Icon management for Sneaker Panel Pro addon.
-
-This module handles loading and managing custom icons using Blender's previews system.
-"""
 
 import os
 
@@ -12,6 +8,9 @@ import bpy.utils.previews
 preview_collections = {}
 
 
+# -------------------------------------------------------------------------
+# Icons
+# ------------------------------------------------------------------------
 def load_icons():
     """Load custom icons for the addon."""
     # Create a new preview collection
@@ -34,14 +33,7 @@ def load_icons():
 
 
 def get_icon(icon_name):
-    """Get an icon from the preview collection.
 
-    Args:
-        icon_name (str): Name of the icon to retrieve
-
-    Returns:
-        int: Icon ID for use in UI layouts, or 0 if not found
-    """
     pcoll = preview_collections.get("main")
     if pcoll and icon_name in pcoll:
         return pcoll[icon_name].icon_id
@@ -49,7 +41,7 @@ def get_icon(icon_name):
 
 
 def unload_icons():
-    """Unload all icon preview collections."""
+
     for pcoll in preview_collections.values():
         bpy.utils.previews.remove(pcoll)
     preview_collections.clear()

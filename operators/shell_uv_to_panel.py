@@ -1,11 +1,3 @@
-"""
-Shell UV to Panel conversion operator for SneakerPanel Pro.
-
-This module provides functionality to reproject a 2D design (curve) from UV space onto
-the 3D shell and creates a panel. This is a critical part of the workflow for creating
-3D panels from 2D designs drawn on UV maps, allowing for accurate pattern creation
-from flat designs.
-"""
 
 import bmesh
 import bpy
@@ -16,9 +8,7 @@ from ..utils.panel_utils import apply_surface_snap  # For transform-based snap
 from .panel_generator import generate_panel  # Import the utility function
 
 
-# (get_3d_point_from_uv function remains as previously corrected - ensure it's here)
 def get_3d_point_from_uv(shell_obj, uv_layer_name, uv_coord_target_2d, context):
-    # Ensure this function is the fully corrected version from previous steps
     if not shell_obj or shell_obj.type != "MESH":
         return None
     if not shell_obj.data.uv_layers:
@@ -435,12 +425,8 @@ class OBJECT_OT_ShellUVToPanel(bpy.types.Operator):
                     f"Deleted intermediate object that was curve: {intermediate_curve_obj_name}",
                 )
 
-        # Remove the original curve_data_3d_ref if it's orphaned
-        # Use the stored name for reporting if data is removed.
         if curve_data_3d_ref and curve_data_3d_ref.users == 0:
-            bpy.data.curves.remove(
-                curve_data_3d_ref
-            )  # Use the reference to the datablock
+            bpy.data.curves.remove(curve_data_3d_ref)
             self.report(
                 {"INFO"},
                 f"Deleted intermediate curve data: {curve_data_3d_name_for_report}",
@@ -496,7 +482,7 @@ class OBJECT_OT_ShellUVToPanel(bpy.types.Operator):
             pass  # If mode restoration fails, stay in current mode
 
         return {"FINISHED"}
-
+    
 
 def register():
     bpy.utils.register_class(OBJECT_OT_ShellUVToPanel)

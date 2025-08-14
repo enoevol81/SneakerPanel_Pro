@@ -1,10 +1,3 @@
-"""
-Mirrors selected curve points around the 3D cursor.
-
-This operator duplicates and mirrors selected curve points around the 3D cursor
-in Edit Mode. It allows mirroring across the X, Y, or Z axis relative to the
-3D cursor position, which is useful for creating symmetrical curve designs.
-"""
 
 import bpy
 from bpy.props import EnumProperty
@@ -12,15 +5,6 @@ from bpy.types import Operator
 
 
 class CURVE_OT_MirrorSelectedPointsAtCursor(Operator):
-    """Duplicate and mirror selected curve points around the 3D cursor.
-
-    This operator duplicates the currently selected curve points and mirrors
-    them across a specified axis (X, Y, or Z) using the 3D cursor as the pivot point.
-    This is useful for creating symmetrical curve designs for panels.
-
-    Note: After mirroring, you may need to manually join endpoints or adjust
-    handles to create a continuous curve if desired.
-    """
 
     bl_idname = "curve.mirror_selected_points_at_cursor"
     bl_label = "Mirror Selected Curve Points"
@@ -41,18 +25,16 @@ class CURVE_OT_MirrorSelectedPointsAtCursor(Operator):
 
     @classmethod
     def poll(cls, context):
-        """Check if we have an active curve object."""
         obj = context.active_object
         return obj and obj.type == "CURVE"
 
     def execute(self, context):
-        # Context-agnostic execution - automatically switch to required mode
         obj = context.active_object
         if not obj or obj.type != "CURVE":
             self.report({"ERROR"}, "No active curve object")
             return {"CANCELLED"}
 
-        # Store original mode for restoration
+        original_mode = obj.mode
         original_mode = obj.mode
 
         # Switch to Edit Mode if not already there
@@ -63,11 +45,9 @@ class CURVE_OT_MirrorSelectedPointsAtCursor(Operator):
                 self.report({"ERROR"}, f"Could not switch to Edit Mode: {str(e)}")
                 return {"CANCELLED"}
 
-        # Store original pivot point and set to 3D Cursor for the operation
         original_pivot_point = context.scene.tool_settings.transform_pivot_point
         context.scene.tool_settings.transform_pivot_point = "CURSOR"
 
-        # Determine constraint axis based on user choice
         constraint_axis_tuple = (self.axis == "X", self.axis == "Y", self.axis == "Z")
 
         try:

@@ -1,14 +1,3 @@
-"""
-Generate filled panels from outline meshes — merged operator + utilities.
-
-This module merges the previous split:
-- `object.panel_generate` operator (formerly in panel_generate.py)
-- Utility functions (formerly in panel_generator.py)
-
-Backwards compatibility:
-- `panel_generator.py` remains as a thin shim re-exporting `generate_panel`
-  from this module so any legacy imports continue to work.
-"""
 
 import bmesh
 import bpy
@@ -295,8 +284,6 @@ def generate_panel(
 
 
 class OBJECT_OT_PanelGenerate(bpy.types.Operator):
-    """Generate a filled panel mesh from an outline (uses merged utilities)."""
-
     bl_idname = "object.panel_generate"
     bl_label = "Generate Panel"
     bl_description = "Generate a filled panel mesh from an outline"

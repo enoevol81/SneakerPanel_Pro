@@ -7,12 +7,6 @@ def lerp(v0, v1, t):
 
 
 class MESH_OT_set_edge_linear(bpy.types.Operator):
-    """Straighten selected OPEN edge paths into a line between endpoints.
-
-    - Skips closed loops (no unique start/end).
-    - Optional even spacing.
-    - End segments can be blended back toward originals (blend_zone), similar to Set Edge Flow.
-    """
 
     bl_idname = "mesh.set_edge_linear"
     bl_label = "Set Edge Linear"
@@ -66,7 +60,7 @@ class MESH_OT_set_edge_linear(bpy.types.Operator):
         visited = set()
 
         def walk_path(start):
-            """Walk an open path from endpoint to endpoint."""
+
             path = [start]
             visited.add(start)
             prev = None

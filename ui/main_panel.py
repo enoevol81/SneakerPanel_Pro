@@ -1,14 +1,3 @@
-"""Main panel for the Sneaker Panel Pro addon.
-
-This panel shows ONLY:
-- Workflow toggles (Surface Direct [3D] / UV Workflow [2D])
-- Compact toggles (Auto UV / Lace Generator)
-- Panel Configuration
-- Panel Helper Tools
-- Thicken Panel (Solidify)
-
-All workflow Steps (Create GP, Convert to Curve, Decimate, etc.) live in the workflow panels.
-"""
 
 import bpy
 from bpy.props import EnumProperty

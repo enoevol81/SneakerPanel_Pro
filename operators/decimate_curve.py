@@ -1,22 +1,8 @@
-"""
-Simplifies selected curve splines using the decimate operator.
-
-This operator takes a curve object and simplifies it by reducing the number
-of points while maintaining the overall shape based on the decimate ratio
-specified in the scene properties.
-"""
 
 import bpy
 
 
 class OBJECT_OT_DecimateCurve(bpy.types.Operator):
-    """Simplify selected curve splines using the decimate operator.
-
-    Reduces the number of points in the selected curve while maintaining
-    its overall shape based on the decimate ratio specified in scene properties.
-    This helps create cleaner curves with fewer control points.
-    """
-
     bl_idname = "object.decimate_curve"
     bl_label = "Decimate Curve"
     bl_description = "Simplify selected curve splines using the decimate operator"
@@ -29,16 +15,13 @@ class OBJECT_OT_DecimateCurve(bpy.types.Operator):
         return obj and obj.type == "CURVE"
 
     def execute(self, context):
-        # Context-agnostic execution - automatically switch to required mode
         obj = context.active_object
         if not obj or obj.type != "CURVE":
             self.report({"ERROR"}, "No active curve object")
             return {"CANCELLED"}
 
-        # Store original mode for restoration
         original_mode = obj.mode
 
-        # Switch to Edit Mode if not already there
         if context.mode != "EDIT_CURVE":
             try:
                 bpy.ops.object.mode_set(mode="EDIT")

@@ -2,10 +2,6 @@ import bpy
 
 
 class OBJECT_PT_autu_uv(bpy.types.Panel):
-    """Lace Generator panel for Sneaker Panel Pro addon.
-
-    This panel provides a button to apply the lace geometry node group to selected curve objects.
-    """
 
     bl_label = "Auto UV"
     bl_idname = "OBJECT_PT_sneaker_panel_pro_autu_uv"

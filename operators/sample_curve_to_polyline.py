@@ -1,11 +1,3 @@
-"""
-Curve sampling operator for SneakerPanel Pro.
-
-This module provides an operator to convert Bezier curves to evenly sampled polyline meshes.
-The sampling process ensures consistent vertex spacing along the curve, which is essential
-for further operations like grid fill. The module also handles curve extraction from mesh data
-and maintains proper collection management.
-"""
 
 import bpy
 
@@ -14,15 +6,7 @@ from ..utils.collections import add_object_to_panel_collection
 
 # --- Helper Function: Resample Polyline (from your script) ---
 def resample_polyline(points, num_samples):
-    """Takes a list of 3D Vector points and returns a new list of evenly spaced points.
 
-    Args:
-        points: List of 3D Vector points representing the original polyline
-        num_samples: Number of evenly spaced points to generate
-
-    Returns:
-        List of evenly spaced 3D Vector points
-    """
     if not points or num_samples < 2:
         return []
 
@@ -36,8 +20,6 @@ def resample_polyline(points, num_samples):
 
     if total_length < 1e-6:
         return [points[0]] * num_samples
-
-    # Using num_samples for spacing assumes a closed loop, which is appropriate for panels.
     spacing = total_length / num_samples if num_samples > 0 else 0
     if spacing < 1e-9:
         return [points[0]] * num_samples
@@ -65,14 +47,7 @@ def resample_polyline(points, num_samples):
 
 # --- Helper Function: Extract ordered points from a mesh outline ---
 def get_ordered_points_from_mesh(mesh_data):
-    """Walks mesh edges to return a list of ordered vertex coordinate lists.
 
-    Args:
-        mesh_data: Blender mesh data object
-
-    Returns:
-        List of polylines, where each polyline is a list of 3D Vector points
-    """
     if not mesh_data or not mesh_data.edges:
         return []
 
@@ -122,17 +97,6 @@ def get_ordered_points_from_mesh(mesh_data):
 
 # --- Main Operator ---
 class CURVE_OT_SampleToPolyline(bpy.types.Operator):
-    """Convert Bezier curve to an evenly sampled polyline mesh.
-
-    This operator converts a selected Bezier curve to a mesh with evenly spaced vertices.
-    The sampling density is controlled by the spp_sampler_fidelity scene property.
-    The operator ensures that the resulting mesh has an even number of vertices for
-    compatibility with grid fill operations. The original curve is hidden after conversion.
-
-    Note:
-        The operator requires a curve object to be selected.
-        The resulting mesh is added to the appropriate SneakerPanel Pro collection.
-    """
 
     bl_idname = "curve.sample_to_polyline"
     bl_label = "Sample Curve to Polyline"

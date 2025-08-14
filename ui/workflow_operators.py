@@ -1,8 +1,3 @@
-"""Shared operators for workflow panels in the Sneaker Panel Pro addon.
-
-This module contains operators that are used by multiple UI panels
-to provide consistent behavior across the addon.
-"""
 
 import bpy
 

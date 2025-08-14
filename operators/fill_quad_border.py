@@ -1,10 +1,3 @@
-"""
-Fills interior hole of mesh border with quad topology.
-
-This operator takes a mesh with a border edge loop and fills the interior
-with clean quad topology using inset, separation, triangulation, and joining
-techniques. The resulting mesh is organized into the appropriate collection.
-"""
 
 import bmesh
 import bpy
@@ -15,18 +8,6 @@ from ..utils.collections import add_object_to_panel_collection
 
 
 class MESH_OT_FillQuadBorder(bpy.types.Operator):
-    """Fill interior hole of mesh border with quad topology.
-
-    Takes a mesh with a border edge loop and fills it with clean quad topology
-    using a combination of techniques:
-    1. Creating an N-gon face from the boundary
-    2. Applying inset with configurable thickness
-    3. Using triangulation and quad conversion for clean topology
-
-    The resulting mesh is named based on the current panel count and
-    added to the appropriate collection.
-    """
-
     bl_idname = "mesh.fill_quad_border"
     bl_label = "Fill Quad Border"
     bl_options = {"REGISTER", "UNDO"}
@@ -47,20 +28,16 @@ class MESH_OT_FillQuadBorder(bpy.types.Operator):
 
     @classmethod
     def poll(cls, context):
-        """Check if the active object is a mesh in edit mode."""
         obj = context.active_object
         return obj and obj.type == "MESH" and obj.mode == "EDIT"
 
     def execute(self, context):
-        # Add undo checkpoint
         bpy.ops.ed.undo_push(message="Fill Quad Border")
 
-        # Store original mode and ensure we're in edit mode
         original_mode = context.active_object.mode
         if original_mode != "EDIT":
             bpy.ops.object.mode_set(mode="EDIT")
 
-        # Get the active object
         obj = context.active_object
         if not obj or obj.type != "MESH":
             self.report({"ERROR"}, "Active object is not a mesh")

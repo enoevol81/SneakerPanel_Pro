@@ -1,12 +1,3 @@
-"""
-Defines the toe area and direction using separate operators.
-
-This module provides two operators:
-1. Define Toe - Places the toe tip marker
-2. Define Up Direction - Places the direction marker
-
-This two-button system provides clear, separate control for UV orientation.
-"""
 
 import bmesh
 import bpy
@@ -15,12 +6,6 @@ from mathutils import Vector
 
 
 class OBJECT_OT_DefineToe(Operator):
-    """Define the toe tip position.
-
-    Places a sphere marker at the 3D cursor position to mark the toe tip.
-    This is the first step in the two-point direction system.
-    """
-
     bl_idname = "object.define_toe"
     bl_label = "Define Toe"
     bl_description = "Place toe tip marker at cursor position"
@@ -28,11 +13,9 @@ class OBJECT_OT_DefineToe(Operator):
 
     @classmethod
     def poll(cls, context):
-        """Always available regardless of context."""
         return True
 
     def execute(self, context):
-        # Add undo checkpoint
         bpy.ops.ed.undo_push(message="Define Toe Tip")
 
         # Get the 3D cursor position
@@ -59,13 +42,6 @@ class OBJECT_OT_DefineToe(Operator):
 
 
 class OBJECT_OT_DefineUpDirection(Operator):
-    """Define the up direction for UV orientation.
-
-    Places an arrow marker at the 3D cursor position to indicate which
-    direction should point upward in UV space. The direction from toe
-    tip to this marker defines the UV orientation.
-    """
-
     bl_idname = "object.define_up_direction"
     bl_label = "Define Up Direction"
     bl_description = "Place direction marker at cursor position"
@@ -73,11 +49,9 @@ class OBJECT_OT_DefineUpDirection(Operator):
 
     @classmethod
     def poll(cls, context):
-        """Always available regardless of context."""
         return True
 
     def execute(self, context):
-        # Add undo checkpoint
         bpy.ops.ed.undo_push(message="Define Up Direction")
 
         # Get the 3D cursor position

@@ -1,9 +1,3 @@
-"""
-Creates a Grease Pencil object for drawing panels on the shoe shell.
-
-This operator creates a new Grease Pencil object, sets up proper naming
-based on the panel count, and adds it to the appropriate collection.
-"""
 
 import bpy
 
@@ -12,12 +6,6 @@ from ..utils.panel_utils import update_stabilizer
 
 
 class OBJECT_OT_AddGPDraw(bpy.types.Operator):
-    """Add a Grease Pencil object for drawing panel outlines.
-
-    Creates a new Grease Pencil object with appropriate settings for
-    drawing panel outlines on the shoe shell. The object is named based
-    on the current panel count and added to the appropriate collection.
-    """
 
     bl_idname = "object.add_gp_draw"
     bl_label = "Add GPDraw Grease Pencil"
@@ -25,18 +13,15 @@ class OBJECT_OT_AddGPDraw(bpy.types.Operator):
 
     @classmethod
     def poll(cls, context):
-        """Check if the operator can be executed in the current context."""
         return context.mode == "OBJECT"
 
     def execute(self, context):
-        # Add undo checkpoint
         bpy.ops.ed.undo_push(message="Add Grease Pencil")
 
         bpy.context.tool_settings.use_mesh_automerge = True
         bpy.ops.object.grease_pencil_add(location=(0, 0, 0))
         gp_obj = context.active_object
 
-        # Get panel count and name for naming
         panel_count = (
             context.scene.spp_panel_count
             if hasattr(context.scene, "spp_panel_count")
@@ -48,13 +33,11 @@ class OBJECT_OT_AddGPDraw(bpy.types.Operator):
             else "Panel"
         )
 
-        # Use descriptive name if provided, otherwise use default naming
         if panel_name and panel_name.strip():
             gp_obj.name = f"{panel_name}_GPDraw_{panel_count}"
         else:
             gp_obj.name = f"GPDraw_{panel_count}"
 
-        # Add to proper collection
         add_object_to_panel_collection(gp_obj, panel_count, panel_name)
 
         bpy.ops.object.mode_set(mode="PAINT_GREASE_PENCIL")

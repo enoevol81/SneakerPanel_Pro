@@ -1,15 +1,3 @@
-"""
-SneakerPanel Pro - Blender Addon for Sneaker Panel Design
-
-This addon provides tools for creating, editing, and projecting 2D panels
-onto 3D shoe models. It includes utilities for drawing with Grease Pencil,
-converting to curves and meshes, and projecting panels onto 3D surfaces.
-
-Usage:
-    1. Install the addon through Blender's addon preferences
-    2. Access tools in the 3D View sidebar under "Sneaker Panel"
-    3. Follow the workflow from drawing to projection
-"""
 
 bl_info = {
     "name": "Sneaker Panel Pro",
@@ -19,17 +7,17 @@ bl_info = {
     "location": "View3D > Sidebar > Sneaker Panel",
     "description": "Modular plugin for drawing and projecting sneaker panels",
     "category": "Object",
-    "doc_url": "",  # Add documentation URL when available
-    "tracker_url": "",  # Add issue tracker URL when available
-    "warning": "",  # Add any compatibility warnings if needed
+    "doc_url": "",  
+    "tracker_url": "", 
+    "warning": "", 
 }
 
 import bpy
 
-from . import prefs  # Import preferences module
-from . import state  # Import state module
+from . import prefs  
+from . import state  
 from . import operators, properties, ui
-from .utils import icons  # Import icon management
+from .utils import icons  
 
 # List of all classes for registration
 classes = []

@@ -2,6 +2,10 @@ import bpy
 from bpy.props import BoolProperty
 from bpy.types import AddonPreferences
 
+
+# -------------------------------------------------------------------------
+# Addon Preferences
+# -------------------------------------------------------------------------
 ADDON_ID = __package__.split(".")[0] if __package__ else __name__.split(".")[0]
 
 

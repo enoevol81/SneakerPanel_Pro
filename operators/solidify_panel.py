@@ -1,10 +1,3 @@
-"""
-Panel solidification operators for SneakerPanel Pro.
-
-This module provides operators for adding and applying solidify modifiers to
-panel meshes. It includes functionality to add a properly configured solidify
-modifier for shoe panel thickness and to apply the modifier when needed.
-"""
 
 import bpy
 from bpy.props import FloatProperty
@@ -14,15 +7,7 @@ from ..utils.collections import get_panel_collection
 
 
 class OBJECT_OT_SolidifyPanel(Operator):
-    """Add a solidify modifier to the selected panel mesh.
 
-    This operator adds a properly configured solidify modifier to the active
-    mesh object. The modifier includes settings optimized for shoe panel
-    thickness and edge handling.
-
-    If a solidify modifier already exists, this operator will not create
-    a duplicate but will instead report that one already exists.
-    """
 
     bl_idname = "object.solidify_panel"
     bl_label = "Solidify Panel"
@@ -120,12 +105,6 @@ class OBJECT_OT_SolidifyPanel(Operator):
 
 
 class OBJECT_OT_ApplySolidify(Operator):
-    """Apply the solidify modifier to the mesh.
-
-    This operator applies the solidify modifier to the active mesh object,
-    making the thickness permanent. This is useful when you need to perform
-    further mesh operations that require the actual geometry.
-    """
 
     bl_idname = "object.apply_solidify"
     bl_label = "Apply Solidify"

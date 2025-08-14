@@ -1,10 +1,3 @@
-"""
-Converts Bezier curves to NURBS surfaces.
-
-This operator takes a Bezier curve object and converts it to a NURBS surface
-by subdividing the curve and creating a surface from the resulting points.
-The surface is then added to the appropriate collection.
-"""
 
 import bpy
 from bpy.props import BoolProperty, IntProperty
@@ -47,10 +40,6 @@ def selected_1_or_more_curves():
 
 # --- Core Surface Conversion Function ---
 def surface_from_bezier(context_ref, surfacedata, points, center):
-    """
-    Converts a single Bezier spline's points to a set of NURBS splines
-    that form a surface patch. Assumes context_ref.active_object is the target surface object.
-    """
     len_points = len(points) - 1
     if len_points % 2 == 0:  # Ensure odd number of points for pairing algorithm
         h = subdivide_cubic_bezier(

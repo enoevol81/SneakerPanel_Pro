@@ -1,15 +1,11 @@
-"""
-UV Boundary Checker — streamlined with single Padding (UV) slider,
-robust vertex-group persistence, and smart padding behind the scenes.
-"""
 
 import bmesh
 import bpy
 from mathutils import Vector
 
 # Hidden defaults (no UI exposure except Padding (UV))
-SMART_FACTOR = 0.20  # scales with local spacing
-MARGIN_UV = 0.01  # treat "too close" as violation
+SMART_FACTOR = 0.20
+MARGIN_UV = 0.01
 EDGE_CHECK_LIMIT = 1000
 TIMEOUT_SEC = 30.0
 
@@ -344,11 +340,6 @@ class MESH_OT_CheckUVBoundary(bpy.types.Operator):
         user_min_pad_uv,
         eps_inside,
     ):
-        """Push violating / too-close verts inward by adaptive padding.
-        min padding = max(user slider, tiny epsilon).
-        smart padding = SMART_FACTOR * local spacing.
-        final pad = max(min padding, smart padding) + epsilon.
-        """
         M_panel = panel_obj.matrix_world
         Minv_panel = panel_obj.matrix_world.inverted()
         M_uv = uv_mesh_obj.matrix_world
@@ -402,7 +393,6 @@ class MESH_OT_CheckUVBoundary(bpy.types.Operator):
 
 
 class MESH_OT_ReselectUVViolations(bpy.types.Operator):
-    """Re-select UV boundary violations from vertex group"""
 
     bl_idname = "mesh.reselect_uv_violations"
     bl_label = "Re-select UV Violations"

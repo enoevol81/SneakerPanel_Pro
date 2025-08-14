@@ -1,8 +1,3 @@
-"""Collection management utilities for SneakerPanel Pro addon.
-
-This module provides functions for managing Blender collections for the SneakerPanel Pro addon,
-including creating and organizing collections for panels and adding objects to them.
-"""
 
 import random
 
@@ -10,12 +5,7 @@ import bpy
 
 
 def get_sneaker_panels_collection():
-    """
-    Get or create the main 'Sneaker Panels' collection with COLLECTION_COLOR_05
 
-    Returns:
-        bpy.types.Collection: The main Sneaker Panels collection
-    """
     # Check if collection already exists
     if "Sneaker Panels" in bpy.data.collections:
         main_collection = bpy.data.collections["Sneaker Panels"]
@@ -31,16 +21,7 @@ def get_sneaker_panels_collection():
 
 
 def _get_panel_color_tag(panel_number):
-    """
-    Get a color tag for a panel based on its number.
-    Uses colors 1-8 plus default (NONE), recycling after 9 panels.
 
-    Args:
-        panel_number (int): The panel number
-
-    Returns:
-        str: The color tag identifier
-    """
     # Available colors: default (NONE) + COLOR_01 through COLOR_08 = 9 total
     color_options = [
         "NONE",  # Default/white
@@ -60,17 +41,7 @@ def _get_panel_color_tag(panel_number):
 
 
 def get_panel_collection(panel_number, panel_name=None):
-    """
-    Get or create a collection for a specific panel number with optional descriptive name
-    and assign a random color from the available palette.
 
-    Args:
-        panel_number (int): The panel number
-        panel_name (str, optional): Descriptive name for the panel
-
-    Returns:
-        bpy.types.Collection: The panel-specific collection
-    """
     # Get main collection
     main_collection = get_sneaker_panels_collection()
 
@@ -98,14 +69,7 @@ def get_panel_collection(panel_number, panel_name=None):
 
 
 def add_object_to_panel_collection(obj, panel_number, panel_name=None):
-    """
-    Add an object to the appropriate panel collection
 
-    Args:
-        obj (bpy.types.Object): The object to add to the collection
-        panel_number (int): The panel number
-        panel_name (str, optional): Descriptive name for the panel
-    """
     # Get panel collection
     panel_collection = get_panel_collection(panel_number, panel_name)
 

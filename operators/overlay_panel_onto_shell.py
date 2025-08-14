@@ -1,11 +1,3 @@
-"""
-Projects 2D panel meshes onto 3D shoe shell surfaces.
-
-This operator takes a 2D panel mesh (typically created in UV space) and projects it
-onto the 3D surface of a shoe shell using UV coordinates as a mapping reference.
-It uses barycentric coordinate transformation to accurately place each vertex
-of the panel onto the corresponding position on the 3D shell.
-"""
 
 import bmesh
 import bpy
@@ -15,20 +7,7 @@ from ..utils.collections import add_object_to_panel_collection
 
 
 class MESH_OT_OverlayPanelOntoShell(bpy.types.Operator):
-    """Project a 2D panel mesh onto the 3D shoe shell surface.
-
-    This operator creates a 3D version of a selected 2D panel by:
-    1. Duplicating the selected 2D panel mesh
-    2. Using the shell's UV coordinates to map each 2D vertex to its 3D position
-    3. Applying a shrinkwrap modifier to ensure perfect surface conformity
-    4. Adding the new 3D panel to the appropriate collection
-
-    Prerequisites:
-    - A 2D panel mesh must be selected
-    - A shell object must be set in the scene properties
-    - The shell must have proper UV mapping
-    """
-
+   
     bl_idname = "mesh.overlay_panel_onto_shell"
     bl_label = "Project 2D Panel to 3D Shell"
     bl_description = "Uses the shell's UVs to recreate the selected 2-D panel directly on the shell surface"
@@ -46,15 +25,7 @@ class MESH_OT_OverlayPanelOntoShell(bpy.types.Operator):
         )
 
     def find_uv_reference_mesh(self, context, shell_obj_name):
-        """Find the UV reference mesh that corresponds to the given shell object.
 
-        Args:
-            context: Blender context
-            shell_obj_name: Name of the shell object
-
-        Returns:
-            The UV reference mesh object or None if not found
-        """
         for obj in context.scene.objects:
             if obj.type == "MESH" and "spp_original_3d_mesh_name" in obj:
                 if obj["spp_original_3d_mesh_name"] == shell_obj_name:
@@ -62,16 +33,7 @@ class MESH_OT_OverlayPanelOntoShell(bpy.types.Operator):
         return None
 
     def check_uv_boundary_violations(self, panel_obj, uv_mesh_obj, scale_factor):
-        """Quick check for UV boundary violations.
 
-        Args:
-            panel_obj: The 2D panel object to check
-            uv_mesh_obj: The UV reference mesh object
-            scale_factor: Scale factor from UV reference mesh
-
-        Returns:
-            Number of vertices that violate UV boundaries
-        """
         violation_count = 0
 
         # Create bmesh from panel
@@ -98,16 +60,7 @@ class MESH_OT_OverlayPanelOntoShell(bpy.types.Operator):
         return violation_count
 
     def check_uv_boundary_violations(self, panel_obj, uv_mesh_obj, scale_factor):
-        """Quick check for UV boundary violations.
 
-        Args:
-            panel_obj: The 2D panel object to check
-            uv_mesh_obj: The UV reference mesh object
-            scale_factor: Scale factor from UV reference mesh
-
-        Returns:
-            Number of vertices that violate UV boundaries
-        """
         violation_count = 0
 
         # Create bmesh from panel

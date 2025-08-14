@@ -1,10 +1,3 @@
-"""
-Vertex smoothing operator for SneakerPanel Pro.
-
-This module provides functionality to smooth mesh vertices while maintaining
-their position on the target surface. It's particularly useful for refining
-panel geometry after operations like grid fill or vertex reduction.
-"""
 
 import bpy
 
@@ -12,16 +5,6 @@ from ..utils.panel_utils import apply_surface_snap
 
 
 class OBJECT_OT_SmoothVertices(bpy.types.Operator):
-    """Smooth mesh vertices while maintaining surface projection.
-
-    This operator applies smoothing to the selected vertices of a mesh while
-    ensuring they stay aligned with the target surface. It's typically used
-    to refine panel geometry after operations that may create uneven vertex
-    distribution.
-
-    The smoothing strength is controlled by the scene property
-    'spp_smooth_factor' which should be between 0.0 and 1.0.
-    """
 
     bl_idname = "object.smooth_vertices"
     bl_label = "Smooth Vertices"

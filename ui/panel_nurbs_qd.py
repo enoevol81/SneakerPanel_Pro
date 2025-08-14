@@ -1,7 +1,7 @@
 import bpy
 from bpy.types import Panel
 
-from ..prefs import get_prefs  # experimental toggle lives here
+from ..prefs import get_prefs
 
 CATEGORY = "Sneaker Panel"
 
@@ -63,7 +63,6 @@ class SPP_PT_NurbsToSurface(Panel):
         if sc.spp_nurbs_qd_active == "QD_BEZIER":
             box = layout.box()
             box.label(text="Bezier → Surface (Q&D)", icon="SURFACE_DATA")
-            # Codex: move your existing Q&D Bezier stack here (reuse operators 1:1)
             self.draw_qd_bezier(layout, context)
         else:
             self.draw_qd_uvcurve(layout, context)
@@ -285,4 +284,4 @@ def unregister():
             bpy.utils.unregister_class(cls)
         except Exception:
             pass
-    # don't delete spp_nurbs_qd_active to avoid breaking other sessions
+

@@ -1,10 +1,3 @@
-"""
-Fills selected edge loop in edit mode using grid fill with configurable span and offset.
-
-This operator takes a selected edge loop in edit mode and fills it with a grid
-pattern using Blender's grid fill operator. The span and offset can be configured
-to control the density and orientation of the grid.
-"""
 
 import bpy
 from bpy.props import IntProperty
@@ -12,14 +5,6 @@ from bpy.types import Operator
 
 
 class MESH_OT_FillBorderGrid(Operator):
-    """Fill selected edge loop with grid pattern.
-
-    Takes a selected edge loop in edit mode and fills it with a grid pattern
-    using Blender's grid fill operator. The span and offset can be configured
-    to control the density and orientation of the grid.
-
-    This operator is useful for creating clean quad topology inside border loops.
-    """
 
     bl_idname = "mesh.fill_border_grid"
     bl_label = "Fill Border with Grid"

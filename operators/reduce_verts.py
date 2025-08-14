@@ -1,11 +1,3 @@
-"""
-Vertex reduction operator for SneakerPanel Pro.
-
-This module provides an operator to reduce the vertex count of a mesh
-while maintaining its overall shape. It uses a combination of limited dissolve
-and Loop Tools Space operator to achieve clean results, followed by surface
-snapping to ensure the reduced mesh still conforms to the target surface.
-"""
 
 import bmesh
 import bpy
@@ -14,8 +6,6 @@ from ..utils.panel_utils import apply_surface_snap
 
 
 def _collapse_shortest_edge_to_make_even(obj, context):
-    """Ensure mesh has an even vertex count by collapsing the shortest edge if needed.
-    Returns True if a change was made, False otherwise."""
     if not obj or obj.type != "MESH":
         return False
     # Quick check in object mode
@@ -72,7 +62,6 @@ def _collapse_shortest_edge_to_make_even(obj, context):
 
 
 def _collapse_n_shortest_edges(obj, count):
-    """Collapse the shortest edges 'count' times on the active mesh in Edit mode."""
     if count <= 0:
         return 0
     if not obj or obj.type != "MESH":
@@ -106,8 +95,6 @@ def _collapse_n_shortest_edges(obj, count):
 
 
 class MESH_OT_MakeEvenVerts(bpy.types.Operator):
-    """Make current mesh vertex count even by collapsing the shortest edge"""
-
     bl_idname = "mesh.make_even_verts"
     bl_label = "Make Even"
     bl_options = {"REGISTER", "UNDO"}
@@ -128,16 +115,6 @@ class MESH_OT_MakeEvenVerts(bpy.types.Operator):
 
 
 class OBJECT_OT_ReduceVerts(bpy.types.Operator):
-    """Reduce mesh vertices while maintaining shape.
-
-    This operator reduces the number of vertices in a mesh using limited dissolve
-    with progressively increasing angle limits until the target reduction is achieved.
-    It then applies Loop Tools Space operator to distribute vertices evenly and
-    finally applies surface snapping to maintain conformity with the target surface.
-
-    Note:
-        Requires the Loop Tools addon to be enabled for best results.
-    """
 
     bl_idname = "object.reduce_verts"
     bl_label = "Reduce Verts"
