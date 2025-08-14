@@ -13,6 +13,7 @@ All workflow Steps (Create GP, Convert to Curve, Decimate, etc.) live in the wor
 import bpy
 from bpy.types import Operator
 from bpy.props import EnumProperty
+from ..utils import icons
 
 
 class WM_OT_SPP_ToggleWorkflow(Operator):
@@ -40,6 +41,14 @@ class OBJECT_PT_SneakerPanelProMain(bpy.types.Panel):
     bl_region_type = 'UI'
     bl_category = 'Sneaker Panel'
 
+    def draw_header(self, context):
+        """Draw custom header with icon."""
+        layout = self.layout
+        # Get the custom icon ID
+        icon_id = icons.get_icon("uv_checker")
+        if icon_id:
+            layout.label(text="", icon_value=icon_id)
+
     def draw(self, context):
         layout = self.layout
         wm = context.window_manager
@@ -65,8 +74,6 @@ class OBJECT_PT_SneakerPanelProMain(bpy.types.Panel):
                            depress=(wm.spp_active_workflow == 'UV_2D'))
         b.mode = 'UV_2D'
 
-        workflow_box.separator(factor=0.5)
-
         # === Compact toggles ===
         toggles = workflow_box.row(align=True)
         t = toggles.operator("wm.context_toggle", text=" Auto UV", icon='UV', depress=wm.spp_show_auto_uv)
@@ -81,7 +88,7 @@ class OBJECT_PT_SneakerPanelProMain(bpy.types.Panel):
 
         row = main_box.row(align=True)
         row.prop(scn, "spp_panel_count", text="Panel #")
-        row.prop(scn, "spp_panel_name", text="Name")
+        row.prop(scn, "spp_panel_name", text=" Name")
 
         shell_row = main_box.row(align=True)
         shell_row.prop_search(scn, "spp_shell_object", bpy.data, "objects",
