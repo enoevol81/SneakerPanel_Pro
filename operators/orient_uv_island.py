@@ -203,7 +203,13 @@ class OBJECT_OT_OrientUVIsland(Operator):
             bm.to_mesh(mesh)
             mesh.update()
             
-            self.report({'INFO'}, "UV island oriented using direction markers")
+            # Clean up markers after successful orientation
+            if toe_marker:
+                bpy.data.objects.remove(toe_marker, do_unlink=True)
+            if direction_marker:
+                bpy.data.objects.remove(direction_marker, do_unlink=True)
+            
+            self.report({'INFO'}, "UV island oriented and markers cleaned up")
             
         except Exception as e:
             self.report({'ERROR'}, f"Error orienting UV island: {str(e)}")
