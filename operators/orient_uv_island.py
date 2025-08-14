@@ -1,9 +1,11 @@
 """
-Orients UV islands to make the toe point upward.
+Orients UV islands using a two-point direction system.
 
-This operator rotates and scales the UV island of a mesh to make the toe area
-point upward (in a upside-down V shape). It uses the toe marker to determine
-the orientation and scales the UV to fit the entire width of the UV grid.
+This operator rotates and scales the UV island of a mesh using two markers:
+1. Toe_Marker - The toe tip position
+2. Toe_Direction_Marker - The direction indicating "up"
+
+This provides precise directional control for UV orientation.
 """
 import bpy
 import bmesh
@@ -12,15 +14,15 @@ from mathutils import Vector
 import math
 
 class OBJECT_OT_OrientUVIsland(Operator):
-    """Orient UV island to make the toe point upward.
+    """Orient UV island using two-point direction system.
     
-    This operator rotates the UV island of the active mesh so that the toe area
-    (as defined by the Toe_Marker empty) points upward. It also scales the UV
-    to fit the entire width of the UV grid with proper aspect ratio.
+    This operator rotates the UV island of the active mesh using the direction
+    vector defined by two markers. It also scales the UV to fit the entire
+    width of the UV grid with proper aspect ratio.
     
     Prerequisites:
     - The mesh must have UVs (unwrapped)
-    - A Toe_Marker empty must exist (created with 'Define Toe' operator)
+    - Both Toe_Marker and Toe_Direction_Marker must exist
     """
     bl_idname = "object.orient_uv_island"
     bl_label = "Orient UV Island"
@@ -29,11 +31,12 @@ class OBJECT_OT_OrientUVIsland(Operator):
     
     @classmethod
     def poll(cls, context):
-        """Check if the active object is a mesh with UVs."""
+        """Check if the active object is a mesh with UVs and both markers exist."""
         obj = context.active_object
         return (obj and obj.type == 'MESH' and 
                 obj.data.uv_layers.active is not None and
-                bpy.data.objects.get("Toe_Marker") is not None)
+                bpy.data.objects.get("Toe_Marker") is not None and
+                bpy.data.objects.get("Toe_Direction_Marker") is not None)
     
     def execute(self, context):
         # Add undo checkpoint
@@ -41,15 +44,19 @@ class OBJECT_OT_OrientUVIsland(Operator):
         
         # Get the active object
         obj = context.active_object
-        marker_name = "Toe_Marker"
-        marker = bpy.data.objects.get(marker_name)
+        toe_marker = bpy.data.objects.get("Toe_Marker")
+        direction_marker = bpy.data.objects.get("Toe_Direction_Marker")
         
         if not obj or obj.type != 'MESH':
             self.report({'ERROR'}, "Please select a mesh object")
             return {'CANCELLED'}
             
-        if not marker:
-            self.report({'ERROR'}, f"Toe marker '{marker_name}' not found. Please use 'Define Toe' first.")
+        if not toe_marker:
+            self.report({'ERROR'}, "Toe_Marker not found. Please use 'Define Toe Direction' first.")
+            return {'CANCELLED'}
+            
+        if not direction_marker:
+            self.report({'ERROR'}, "Toe_Direction_Marker not found. Please complete 'Define Toe Direction'.")
             return {'CANCELLED'}
         
         # Store the current mode
@@ -76,36 +83,52 @@ class OBJECT_OT_OrientUVIsland(Operator):
 
             # Map each vertex to its world coordinates
             world_coords = [(v.index, obj.matrix_world @ v.co) for v in bm.verts]
-            marker_pos = marker.location
+            
+            # Find closest vertices to both markers
+            toe_pos = toe_marker.location
+            direction_pos = direction_marker.location
+            
+            toe_vertex_index = min(world_coords, key=lambda x: (x[1] - toe_pos).length)[0]
+            direction_vertex_index = min(world_coords, key=lambda x: (x[1] - direction_pos).length)[0]
 
-            # Find closest vertex to marker
-            closest_index = min(world_coords, key=lambda x: (x[1] - marker_pos).length)[0]
-
-            # Find average UV position for that vertex
+            # Find average UV positions for both vertices
             toe_uvs = []
+            direction_uvs = []
+            
             for face in bm.faces:
                 for loop in face.loops:
-                    if loop.vert.index == closest_index:
+                    if loop.vert.index == toe_vertex_index:
                         toe_uvs.append(loop[uv_layer_bm].uv.copy())
+                    elif loop.vert.index == direction_vertex_index:
+                        direction_uvs.append(loop[uv_layer_bm].uv.copy())
 
             if not toe_uvs:
-                self.report({'ERROR'}, "Couldn't find UVs for closest vertex to toe marker.")
+                self.report({'ERROR'}, "Couldn't find UVs for toe marker vertex.")
+                bm.free()
+                bpy.ops.object.mode_set(mode=original_mode)
+                return {'CANCELLED'}
+                
+            if not direction_uvs:
+                self.report({'ERROR'}, "Couldn't find UVs for direction marker vertex.")
                 bm.free()
                 bpy.ops.object.mode_set(mode=original_mode)
                 return {'CANCELLED'}
 
-            # Average UV position of toe vertex
+            # Average UV positions
             toe_uv = sum(toe_uvs, Vector((0, 0))) / len(toe_uvs)
+            direction_uv = sum(direction_uvs, Vector((0, 0))) / len(direction_uvs)
 
             # Get UV centroid of all UVs
             all_uvs = [loop[uv_layer_bm].uv.copy() for face in bm.faces for loop in face.loops]
             center = sum(all_uvs, Vector((0, 0))) / len(all_uvs)
 
-            # Compute rotation angle to make toe point up
-            vec = toe_uv - center
-            angle = math.atan2(vec.y, vec.x)
+            # Calculate direction vector from toe to direction marker in UV space
+            uv_direction_vec = direction_uv - toe_uv
+            
+            # Compute rotation angle to make this direction point up, then flip 180° for A-shape
+            current_angle = math.atan2(uv_direction_vec.y, uv_direction_vec.x)
             desired_angle = math.pi/2  # 90 degrees - pointing straight up
-            rotation = desired_angle - angle
+            rotation = desired_angle - current_angle + math.pi  # Add 180° to flip the orientation
 
             cos_a = math.cos(rotation)
             sin_a = math.sin(rotation)
@@ -135,14 +158,8 @@ class OBJECT_OT_OrientUVIsland(Operator):
             # Calculate the center of the UV island
             island_center = Vector(((min_u + max_u) / 2, (min_v + max_v) / 2))
             
-            # Find the toe UV position after rotation
-            toe_uvs_after_rotation = []
-            for face in bm.faces:
-                for loop in face.loops:
-                    if loop.vert.index == closest_index:
-                        toe_uvs_after_rotation.append(loop[uv_layer_bm].uv.copy())
-            
-            toe_uv_rotated = sum(toe_uvs_after_rotation, Vector((0, 0))) / len(toe_uvs_after_rotation)
+            # The toe UV position after rotation is already calculated
+            # We don't need to recalculate it since we're using the direction vector
             
             # Center the UV island at (0.5, 0.5) first
             center_target = Vector((0.5, 0.5))
@@ -186,7 +203,7 @@ class OBJECT_OT_OrientUVIsland(Operator):
             bm.to_mesh(mesh)
             mesh.update()
             
-            self.report({'INFO'}, "UV island oriented with toe at the top")
+            self.report({'INFO'}, "UV island oriented using direction markers")
             
         except Exception as e:
             self.report({'ERROR'}, f"Error orienting UV island: {str(e)}")
