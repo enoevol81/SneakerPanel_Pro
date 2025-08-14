@@ -1,11 +1,14 @@
 import bpy
-from . import main_panel
-from . import workflow_operators
-from . import uv_workflow_panel
-from . import surface_workflow_panel
-from . import lace_panel
-from . import autu_uv
-from . import panel_nurbs_qd
+
+from . import (
+    autu_uv,
+    lace_panel,
+    main_panel,
+    panel_nurbs_qd,
+    surface_workflow_panel,
+    uv_workflow_panel,
+    workflow_operators,
+)
 
 modules = [
     main_panel,
@@ -15,15 +18,18 @@ modules = [
     lace_panel,
     autu_uv,
     panel_nurbs_qd,
-    ]
+]
+
 
 def register():
     for module in modules:
         module.register()
 
+
 def unregister():
     for module in reversed(modules):
         module.unregister()
+
 
 if __name__ == "__main__":
     register()

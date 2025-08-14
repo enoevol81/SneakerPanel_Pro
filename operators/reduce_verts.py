@@ -6,23 +6,26 @@ while maintaining its overall shape. It uses a combination of limited dissolve
 and Loop Tools Space operator to achieve clean results, followed by surface
 snapping to ensure the reduced mesh still conforms to the target surface.
 """
-import bpy
+
 import bmesh
+import bpy
+
 from ..utils.panel_utils import apply_surface_snap
+
 
 def _collapse_shortest_edge_to_make_even(obj, context):
     """Ensure mesh has an even vertex count by collapsing the shortest edge if needed.
     Returns True if a change was made, False otherwise."""
-    if not obj or obj.type != 'MESH':
+    if not obj or obj.type != "MESH":
         return False
     # Quick check in object mode
-    if obj.mode != 'EDIT' and len(obj.data.vertices) % 2 == 0:
+    if obj.mode != "EDIT" and len(obj.data.vertices) % 2 == 0:
         return False
 
     original_mode = obj.mode
     try:
-        if obj.mode != 'EDIT':
-            bpy.ops.object.mode_set(mode='EDIT')
+        if obj.mode != "EDIT":
+            bpy.ops.object.mode_set(mode="EDIT")
 
         me = obj.data
         bm = bmesh.from_edit_mesh(me)
@@ -57,11 +60,11 @@ def _collapse_shortest_edge_to_make_even(obj, context):
             pass
 
         # Merge to center to collapse one vertex
-        bpy.ops.mesh.merge(type='CENTER')
+        bpy.ops.mesh.merge(type="CENTER")
         bmesh.update_edit_mesh(me, loop_triangles=False, destructive=False)
         return True
     finally:
-        if original_mode != 'EDIT':
+        if original_mode != "EDIT":
             try:
                 bpy.ops.object.mode_set(mode=original_mode)
             except Exception:
@@ -72,11 +75,11 @@ def _collapse_n_shortest_edges(obj, count):
     """Collapse the shortest edges 'count' times on the active mesh in Edit mode."""
     if count <= 0:
         return 0
-    if not obj or obj.type != 'MESH':
+    if not obj or obj.type != "MESH":
         return 0
     # Ensure we're in edit mode; caller should manage this, but be safe
-    if obj.mode != 'EDIT':
-        bpy.ops.object.mode_set(mode='EDIT')
+    if obj.mode != "EDIT":
+        bpy.ops.object.mode_set(mode="EDIT")
     me = obj.data
     bm = bmesh.from_edit_mesh(me)
     collapsed = 0
@@ -104,74 +107,76 @@ def _collapse_n_shortest_edges(obj, count):
 
 class MESH_OT_MakeEvenVerts(bpy.types.Operator):
     """Make current mesh vertex count even by collapsing the shortest edge"""
+
     bl_idname = "mesh.make_even_verts"
     bl_label = "Make Even"
-    bl_options = {'REGISTER', 'UNDO'}
+    bl_options = {"REGISTER", "UNDO"}
 
     def execute(self, context):
         obj = context.active_object
-        if not obj or obj.type != 'MESH':
-            self.report({'ERROR'}, "Please select a mesh object")
-            return {'CANCELLED'}
+        if not obj or obj.type != "MESH":
+            self.report({"ERROR"}, "Please select a mesh object")
+            return {"CANCELLED"}
 
         changed = _collapse_shortest_edge_to_make_even(obj, context)
         if changed:
-            self.report({'INFO'}, "Adjusted vertex count to be even")
-            return {'FINISHED'}
+            self.report({"INFO"}, "Adjusted vertex count to be even")
+            return {"FINISHED"}
         else:
-            self.report({'INFO'}, "Vertex count already even or no change possible")
-            return {'CANCELLED'}
+            self.report({"INFO"}, "Vertex count already even or no change possible")
+            return {"CANCELLED"}
 
 
 class OBJECT_OT_ReduceVerts(bpy.types.Operator):
     """Reduce mesh vertices while maintaining shape.
-    
+
     This operator reduces the number of vertices in a mesh using limited dissolve
     with progressively increasing angle limits until the target reduction is achieved.
     It then applies Loop Tools Space operator to distribute vertices evenly and
     finally applies surface snapping to maintain conformity with the target surface.
-    
+
     Note:
         Requires the Loop Tools addon to be enabled for best results.
     """
+
     bl_idname = "object.reduce_verts"
     bl_label = "Reduce Verts"
     bl_description = "Reduce mesh vertices while maintaining shape"
-    bl_options = {'REGISTER', 'UNDO'}
+    bl_options = {"REGISTER", "UNDO"}
 
     factor: bpy.props.FloatProperty(
         name="Reduction Factor",
         description="Factor to reduce vertices by (0.0 to 1.0)",
         min=0.0,
         max=1.0,
-        default=0.2
+        default=0.2,
     )
 
     @classmethod
     def poll(cls, context):
         """Check if the operator can be executed.
-        
+
         Args:
             context: Blender context
-            
+
         Returns:
             bool: True if active object is a mesh
         """
-        return context.active_object and context.active_object.type == 'MESH'
+        return context.active_object and context.active_object.type == "MESH"
 
     def execute(self, context):
         # Add undo checkpoint
         bpy.ops.ed.undo_push(message="Reduce Vertices")
-        
+
         try:
             obj = context.active_object
-            if not obj or obj.type != 'MESH':
-                self.report({'WARNING'}, "Active object is not a mesh")
-                return {'CANCELLED'}
+            if not obj or obj.type != "MESH":
+                self.report({"WARNING"}, "Active object is not a mesh")
+                return {"CANCELLED"}
 
             # Store original mode and switch to object mode
             original_mode = obj.mode
-            bpy.ops.object.mode_set(mode='OBJECT')
+            bpy.ops.object.mode_set(mode="OBJECT")
             original_verts = len(obj.data.vertices)
 
             # Calculate target vertex count and ensure it's even
@@ -179,53 +184,58 @@ class OBJECT_OT_ReduceVerts(bpy.types.Operator):
             # Make sure target_verts is even
             if target_verts % 2 != 0:
                 target_verts -= 1  # Subtract 1 to make it even
-            
+
             if target_verts >= original_verts:
-                self.report({'WARNING'}, "Reduction factor too small to make any changes")
+                self.report(
+                    {"WARNING"}, "Reduction factor too small to make any changes"
+                )
                 bpy.ops.object.mode_set(mode=original_mode)
-                return {'CANCELLED'}
+                return {"CANCELLED"}
 
             # Go to Edit Mode and select all
-            bpy.ops.object.mode_set(mode='EDIT')
-            bpy.ops.mesh.select_all(action='SELECT')
+            bpy.ops.object.mode_set(mode="EDIT")
+            bpy.ops.mesh.select_all(action="SELECT")
 
             # Try increasing dissolve angles until desired reduction
             current_verts = original_verts
             for angle in [0.01, 0.05, 0.1, 0.2, 0.4, 0.8]:
                 bpy.ops.mesh.dissolve_limited(angle_limit=angle)
-                bpy.ops.object.mode_set(mode='OBJECT')
+                bpy.ops.object.mode_set(mode="OBJECT")
                 current_verts = len(obj.data.vertices)
-                
+
                 if current_verts <= target_verts:
                     break
-                    
+
                 if current_verts > target_verts:
-                    bpy.ops.object.mode_set(mode='EDIT')
+                    bpy.ops.object.mode_set(mode="EDIT")
 
             # If we're still above target, collapse the shortest edges to hit it exactly
             if current_verts > target_verts:
-                bpy.ops.object.mode_set(mode='EDIT')
+                bpy.ops.object.mode_set(mode="EDIT")
                 _collapse_n_shortest_edges(obj, current_verts - target_verts)
-                bpy.ops.object.mode_set(mode='OBJECT')
+                bpy.ops.object.mode_set(mode="OBJECT")
                 current_verts = len(obj.data.vertices)
 
             # Ensure we're in edit mode for Loop Tools
-            bpy.ops.object.mode_set(mode='EDIT')
-            
+            bpy.ops.object.mode_set(mode="EDIT")
+
             # Run Loop Tools Space operator
             try:
                 bpy.ops.mesh.looptools_space()
             except Exception as e:
-                self.report({'WARNING'}, f"Could not run Loop Tools Space operator: {str(e)}. Make sure Loop Tools is enabled.")
+                self.report(
+                    {"WARNING"},
+                    f"Could not run Loop Tools Space operator: {str(e)}. Make sure Loop Tools is enabled.",
+                )
 
             # Apply surface snap
             try:
                 apply_surface_snap()
             except Exception as e:
-                self.report({'WARNING'}, f"Could not apply surface snap: {str(e)}")
+                self.report({"WARNING"}, f"Could not apply surface snap: {str(e)}")
 
             # Enforce even vertex count at the end (safety)
-            bpy.ops.object.mode_set(mode='OBJECT')
+            bpy.ops.object.mode_set(mode="OBJECT")
             _collapse_shortest_edge_to_make_even(obj, context)
 
             # Restore original mode
@@ -233,29 +243,38 @@ class OBJECT_OT_ReduceVerts(bpy.types.Operator):
 
             # Recompute current vert count for accurate reporting
             current_verts = len(obj.data.vertices)
-            reduction_percent = ((original_verts - current_verts) / original_verts) * 100
-            self.report({'INFO'}, f"Reduced vertices from {original_verts} to {current_verts} ({reduction_percent:.1f}% reduction)")
-            return {'FINISHED'}
-            
+            reduction_percent = (
+                (original_verts - current_verts) / original_verts
+            ) * 100
+            self.report(
+                {"INFO"},
+                f"Reduced vertices from {original_verts} to {current_verts} ({reduction_percent:.1f}% reduction)",
+            )
+            return {"FINISHED"}
+
         except Exception as e:
-            self.report({'ERROR'}, f"Error reducing vertices: {str(e)}")
+            self.report({"ERROR"}, f"Error reducing vertices: {str(e)}")
             # Try to restore original mode
             try:
                 bpy.ops.object.mode_set(mode=original_mode)
             except:
                 pass
-            return {'CANCELLED'}
+            return {"CANCELLED"}
+
 
 # Registration
 classes = [OBJECT_OT_ReduceVerts, MESH_OT_MakeEvenVerts]
+
 
 def register():
     for cls in classes:
         bpy.utils.register_class(cls)
 
+
 def unregister():
     for cls in reversed(classes):
         bpy.utils.unregister_class(cls)
+
 
 if __name__ == "__main__":
     register()
