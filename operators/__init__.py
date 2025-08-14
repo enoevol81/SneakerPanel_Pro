@@ -1,6 +1,3 @@
-# SneakerPanel Pro - Operators Package
-#
-# This package contains modular operators for the SneakerPanel Pro addon
 
 bl_info = {
     "name": "SneakerPanel Pro Operators",
@@ -9,47 +6,47 @@ bl_info = {
     "version": (1, 0),
     "blender": (2, 80, 0),
     "location": "View3D",
-    "category": "Object"
+    "category": "Object",
 }
 
-# Import all operator modules
-from . import add_gp_draw
-from . import gp_to_curve
-from . import decimate_curve
-from . import convert_bezier_to_surface
-from . import convert_to_mesh
-from . import surface_resolution
-from . import smooth_vertices
-from . import reduce_verts
-from . import panel_generate
-from . import panel_generator
-from . import shell_uv_to_panel
-from . import solidify_panel
-from . import uv_to_mesh
-from . import unwrap_shell
-from . import define_toe
-from . import orient_uv_island
-from . import mirror_curve_points
-from . import sample_curve_to_polyline
-from . import create_quad_panel_from_outline
-from . import fill_quad_border
-from . import fill_border_grid
-from . import simple_grid_fill
-from . import smooth_mesh
-from . import overlay_panel_onto_shell
-from . import uv_boundary_checker
-from . import lace_from_curves
-from . import edge_flow
-from . import mirror_panel
-from . import edge_relax
-from . import apply_shrinkwrap
-from . import quick_conform
-from . import boundary_edges
-from . import add_subsurf
-from . import set_edge_linear
+from . import (
+    add_gp_draw,
+    add_subsurf,
+    apply_shrinkwrap,
+    boundary_edges,
+    convert_bezier_to_surface,
+    convert_to_mesh,
+    create_quad_panel_from_outline,
+    decimate_curve,
+    define_toe,
+    edge_flow,
+    edge_relax,
+    fill_border_grid,
+    fill_quad_border,
+    gp_to_curve,
+    lace_from_curves,
+    mirror_curve_points,
+    mirror_panel,
+    orient_uv_island,
+    overlay_panel_onto_shell,
+    panel_generate,
+    panel_generator,
+    quick_conform,
+    reduce_verts,
+    sample_curve_to_polyline,
+    set_edge_linear,
+    shell_uv_to_panel,
+    simple_grid_fill,
+    smooth_mesh,
+    smooth_vertices,
+    solidify_panel,
+    surface_resolution,
+    unwrap_shell,
+    uv_boundary_checker,
+    uv_to_mesh,
+)
 
 
-# Register/unregister functions
 def register():
     add_gp_draw.register()
     gp_to_curve.register()
@@ -85,7 +82,7 @@ def register():
     boundary_edges.register()
     add_subsurf.register()
     set_edge_linear.register()
-    
+
 
 def unregister():
     orient_uv_island.unregister()
@@ -105,7 +102,7 @@ def unregister():
     gp_to_curve.unregister()
     add_gp_draw.unregister()
     mirror_curve_points.unregister()
-    sample_curve_to_polyline.unregister()       
+    sample_curve_to_polyline.unregister()
     create_quad_panel_from_outline.unregister()
     fill_quad_border.unregister()
     fill_border_grid.unregister()

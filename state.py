@@ -1,6 +1,7 @@
 # sneaker_panel_pro/state.py
 import bpy
-from bpy.props import EnumProperty, BoolProperty
+from bpy.props import BoolProperty, EnumProperty
+
 
 def register():
     WM = bpy.types.WindowManager
@@ -11,11 +12,11 @@ def register():
         WM.spp_active_workflow = EnumProperty(
             name="Active Workflow",
             items=[
-                ('SURFACE_3D', 'Surface 3D', ''),
-                ('UV_2D', 'UV 2D', ''),
-                ('NONE', 'None', 'Hide all workflow panels'),
+                ("SURFACE_3D", "Surface 3D", ""),
+                ("UV_2D", "UV 2D", ""),
+                ("NONE", "None", "Hide all workflow panels"),
             ],
-            default='SURFACE_3D'
+            default="SURFACE_3D",
         )
 
     # Independent toggles
@@ -28,9 +29,13 @@ def register():
     if not hasattr(SC, "spp_nurbs_qd_active"):
         SC.spp_nurbs_qd_active = EnumProperty(
             name="NURBS QD Active",
-            items=[('QD_UV_CURVE', 'UV Curve Q&D', ''), ('QD_BEZIER', 'Bezier Q&D', '')],
-            default='QD_UV_CURVE'
+            items=[
+                ("QD_UV_CURVE", "UV Curve Q&D", ""),
+                ("QD_BEZIER", "Bezier Q&D", ""),
+            ],
+            default="QD_UV_CURVE",
         )
+
 
 def unregister():
     # guard deletions so reloads don’t crash

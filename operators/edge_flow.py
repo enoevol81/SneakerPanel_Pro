@@ -1,6 +1,7 @@
-import bpy
-import bmesh
 import math
+
+import bmesh
+import bpy
 import mathutils
 
 
@@ -38,7 +39,7 @@ class OBJECT_OT_set_edge_flow(bpy.types.Operator):
     tension: bpy.props.FloatProperty(name="Tension", default=1.8, min=0.0, max=10.0)
     iterations: bpy.props.IntProperty(name="Iterations", default=8, min=1, max=32)
     blend_zone: bpy.props.IntProperty(name="Blend Zone", default=2, min=0, max=10)
-   
+
     def execute(self, context):
         obj = context.edit_object
         bm = bmesh.from_edit_mesh(obj.data)
@@ -47,10 +48,12 @@ class OBJECT_OT_set_edge_flow(bpy.types.Operator):
 
         selected_edges = [e for e in bm.edges if e.select and not e.is_boundary]
         if not selected_edges:
-            self.report({'WARNING'}, "No valid edges selected")
-            return {'CANCELLED'}
+            self.report({"WARNING"}, "No valid edges selected")
+            return {"CANCELLED"}
 
-        original_positions = {v.index: v.co.copy() for e in selected_edges for v in e.verts}
+        original_positions = {
+            v.index: v.co.copy() for e in selected_edges for v in e.verts
+        }
 
         for _ in range(self.iterations):
             updated_positions = {}
@@ -79,25 +82,32 @@ class OBJECT_OT_set_edge_flow(bpy.types.Operator):
 
         # Apply blending near boundaries
         for edge in selected_edges:
-            loop_verts = list(dict.fromkeys([v for e in selected_edges for v in e.verts]))
+            loop_verts = list(
+                dict.fromkeys([v for e in selected_edges for v in e.verts])
+            )
             if len(loop_verts) < 2:
                 continue
 
             for i, v in enumerate(loop_verts):
                 if i < self.blend_zone:
                     blend = i / self.blend_zone
-                    bm.verts[v.index].co = blend_position(original_positions[v.index], v.co, blend)
+                    bm.verts[v.index].co = blend_position(
+                        original_positions[v.index], v.co, blend
+                    )
                 elif i >= len(loop_verts) - self.blend_zone:
                     blend = (len(loop_verts) - i - 1) / self.blend_zone
-                    bm.verts[v.index].co = blend_position(original_positions[v.index], v.co, blend)
+                    bm.verts[v.index].co = blend_position(
+                        original_positions[v.index], v.co, blend
+                    )
 
         bmesh.update_edit_mesh(obj.data, loop_triangles=True)
-        self.report({'INFO'}, f"Edge Flow applied with {self.iterations} iterations")
-        return {'FINISHED'}
+        self.report({"INFO"}, f"Edge Flow applied with {self.iterations} iterations")
+        return {"FINISHED"}
 
 
 def register():
     bpy.utils.register_class(OBJECT_OT_set_edge_flow)
+
 
 def unregister():
     bpy.utils.unregister_class(OBJECT_OT_set_edge_flow)

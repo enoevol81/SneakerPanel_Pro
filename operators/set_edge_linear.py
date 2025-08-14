@@ -1,5 +1,5 @@
-import bpy
 import bmesh
+import bpy
 
 
 def lerp(v0, v1, t):
@@ -7,12 +7,7 @@ def lerp(v0, v1, t):
 
 
 class MESH_OT_set_edge_linear(bpy.types.Operator):
-    """Straighten selected OPEN edge paths into a line between endpoints.
 
-    - Skips closed loops (no unique start/end).
-    - Optional even spacing.
-    - End segments can be blended back toward originals (blend_zone), similar to Set Edge Flow.
-    """
     bl_idname = "mesh.set_edge_linear"
     bl_label = "Set Edge Linear"
     bl_options = {"REGISTER", "UNDO"}
@@ -20,20 +15,20 @@ class MESH_OT_set_edge_linear(bpy.types.Operator):
     space_evenly: bpy.props.BoolProperty(
         name="Space Evenly",
         description="Place vertices at equal intervals along the straight line",
-        default=False
+        default=False,
     )
     blend_zone: bpy.props.IntProperty(
         name="Blend Zone",
         description="Number of vertices at each end to blend back toward original",
-        default=2, min=0, max=64
+        default=2,
+        min=0,
+        max=64,
     )
 
     @classmethod
     def poll(cls, context):
         obj = context.edit_object
-        return (obj is not None
-                and obj.type == 'MESH'
-                and context.mode == 'EDIT_MESH')
+        return obj is not None and obj.type == "MESH" and context.mode == "EDIT_MESH"
 
     def execute(self, context):
         obj = context.edit_object
@@ -45,8 +40,8 @@ class MESH_OT_set_edge_linear(bpy.types.Operator):
         # Build adjacency for the SELECTED edges only
         sel_edges = [e for e in bm.edges if e.select]
         if not sel_edges:
-            self.report({'WARNING'}, "No selected edges")
-            return {'CANCELLED'}
+            self.report({"WARNING"}, "No selected edges")
+            return {"CANCELLED"}
 
         adj = {}  # vid -> set(vid)
         sel_verts = set()
@@ -54,7 +49,8 @@ class MESH_OT_set_edge_linear(bpy.types.Operator):
             v0, v1 = e.verts[0].index, e.verts[1].index
             adj.setdefault(v0, set()).add(v1)
             adj.setdefault(v1, set()).add(v0)
-            sel_verts.add(v0); sel_verts.add(v1)
+            sel_verts.add(v0)
+            sel_verts.add(v1)
 
         # Save originals for blending
         original_pos = {vid: bm.verts[vid].co.copy() for vid in sel_verts}
@@ -64,7 +60,7 @@ class MESH_OT_set_edge_linear(bpy.types.Operator):
         visited = set()
 
         def walk_path(start):
-            """Walk an open path from endpoint to endpoint."""
+
             path = [start]
             visited.add(start)
             prev = None
@@ -96,8 +92,11 @@ class MESH_OT_set_edge_linear(bpy.types.Operator):
 
         # If nothing found, selection is likely all loops/branches; bail gracefully
         if not paths:
-            self.report({'WARNING'}, "No open edge paths found (closed loops or branched selections are ignored)")
-            return {'CANCELLED'}
+            self.report(
+                {"WARNING"},
+                "No open edge paths found (closed loops or branched selections are ignored)",
+            )
+            return {"CANCELLED"}
 
         straightened = 0
 
@@ -108,9 +107,9 @@ class MESH_OT_set_edge_linear(bpy.types.Operator):
                 continue
 
             start = coords[0]
-            end   = coords[-1]
-            line  = end - start
-            L     = line.length
+            end = coords[-1]
+            line = end - start
+            L = line.length
             if L <= 1e-12:
                 # Degenerate path; skip
                 continue
@@ -125,7 +124,7 @@ class MESH_OT_set_edge_linear(bpy.types.Operator):
                 # Preserve relative arclength along the original polyline
                 cum = [0.0]
                 for i in range(1, len(coords)):
-                    cum.append(cum[-1] + (coords[i] - coords[i-1]).length)
+                    cum.append(cum[-1] + (coords[i] - coords[i - 1]).length)
                 total = cum[-1]
                 if total <= 1e-12:
                     # Fallback to even spacing
@@ -134,12 +133,12 @@ class MESH_OT_set_edge_linear(bpy.types.Operator):
                         t = (i / count) if count > 0 else 0.0
                         bm.verts[vid].co = start + t * line
                 else:
-                    for (vid, s) in zip(path, cum):
+                    for vid, s in zip(path, cum):
                         t = s / total
                         bm.verts[vid].co = start + t * line
 
             # Blend ends back toward original, similar spirit to your edge_flow
-            bz = max(0, min(self.blend_zone, len(path)//2))
+            bz = max(0, min(self.blend_zone, len(path) // 2))
             if bz > 0:
                 n = len(path)
                 for i in range(bz):  # head
@@ -156,8 +155,8 @@ class MESH_OT_set_edge_linear(bpy.types.Operator):
 
         bm.normal_update()
         bmesh.update_edit_mesh(me, loop_triangles=True)
-        self.report({'INFO'}, f"Set Edge Linear: {straightened} path(s)")
-        return {'FINISHED'}
+        self.report({"INFO"}, f"Set Edge Linear: {straightened} path(s)")
+        return {"FINISHED"}
 
 
 def register():
