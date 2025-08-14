@@ -17,8 +17,28 @@ class OBJECT_PT_SurfaceWorkflow(bpy.types.Panel):
         layout = self.layout
         S = context.scene
 
+        surface_box = layout.box()
+        surface_header = surface_box.row(align=True)
+        
+        # Panel header
+        surface_header.label(text="Surface Direct Workflow [3D]", icon="MESH_CUBE")
+        
+        # Add tooltip icon
+        tooltip_icon = 'LIGHT_SUN' if context.scene.spp_show_surface_workflow_tooltip else 'INFO'
+        surface_header.prop(context.scene, "spp_show_surface_workflow_tooltip", text="", icon=tooltip_icon, emboss=False)
+        
+        # Show tooltip if enabled
+        if context.scene.spp_show_surface_workflow_tooltip:
+            tip_box = surface_box.box()
+            tip_box.alert = True  # Makes the box stand out with a different color
+            tip_col = tip_box.column(align=True)
+            tip_col.scale_y = 0.9  # Slightly smaller text
+            tip_col.label(text="Surface Workflow Tips:", icon='HELP')
+            tip_col.label(text="• Use Stabilizer for pencil control")
+            tip_col.operator("wm.url_open", text="View Surface Workflow Tutorial", icon='URL').url = "https://example.com/surface-workflow-tutorial"
+
         # ---------- Step 1: Create Grease Pencil ----------
-        gp_box = layout.box()
+        gp_box = surface_box.box()
         gp_box.label(text="Step 1: Create Grease Pencil – Design Your Panel", icon="GREASEPENCIL")
 
         col = gp_box.column(align=True); col.scale_y = 1.1
@@ -35,7 +55,7 @@ class OBJECT_PT_SurfaceWorkflow(bpy.types.Panel):
             c.prop(S, "spp_stabilizer_strength_ui", text="Strength")
 
         # ---------- Step 2: Create & Edit Curve ----------
-        curve_box = layout.box()
+        curve_box = surface_box.box()
         curve_box.label(text="Step 2: Create & Edit Curve", icon='OUTLINER_OB_CURVE')
 
         col = curve_box.column(align=True); col.scale_y = 1.1
@@ -66,7 +86,7 @@ class OBJECT_PT_SurfaceWorkflow(bpy.types.Panel):
                      text="Mirror at Cursor", icon="CURVE_BEZCIRCLE")
 
         # ---------- Step 3: Convert Curve to Boundary Mesh ----------
-        mesh_box = layout.box()
+        mesh_box = surface_box.box()
         mesh_box.label(text="Step 3: Convert Curve to Boundary Mesh", icon='OUTLINER_OB_MESH')
         r = mesh_box.row(align=True); r.scale_y = 1.1
         r.operator("object.convert_to_mesh", text="Create Mesh", icon='MESH_DATA')
@@ -122,7 +142,7 @@ class OBJECT_PT_SurfaceWorkflow(bpy.types.Panel):
         b.factor = 0.8
 
         # ---------- Step 4: Generate Boundary Fill ----------
-        fill_box = layout.box()
+        fill_box = surface_box.box()
         fill_box.label(text="Step 4: Generate Boundary Fill", icon='MESH_GRID')
         fill_box.prop(S, "spp_grid_fill_span", text="Grid Fill Span")
         r = fill_box.row(align=True); r.scale_y = 1.2

@@ -77,16 +77,37 @@ class OBJECT_PT_UVWorkflow(Panel):
 
     def draw(self, context):
         layout = self.layout
-        scene = context.scene
+        S = context.scene
+
+        uv_box = layout.box()
+        uv_header = uv_box.row(align=True)
+        
+        # Panel header
+        uv_header.label(text="UV Workflow [2D]", icon="MOD_UVPROJECT")
+        
+        # Add tooltip icon
+        tooltip_icon = 'LIGHT_SUN' if context.scene.spp_show_uv_workflow_tooltip else 'INFO'
+        uv_header.prop(context.scene, "spp_show_uv_workflow_tooltip", text="", icon=tooltip_icon, emboss=False)
+        
+        # Show tooltip if enabled
+        if context.scene.spp_show_uv_workflow_tooltip:
+            tip_box = uv_box.box()
+            tip_box.alert = True  # Makes the box stand out with a different color
+            tip_col = tip_box.column(align=True)
+            tip_col.scale_y = 0.9  # Slightly smaller text
+            tip_col.label(text="UV Workflow Tips:", icon='HELP')
+            tip_col.label(text="• Use Stabilizer for pencil control")
+            tip_col.operator("wm.url_open", text="View UV Workflow Tutorial", icon='URL').url = "https://example.com/uv-workflow-tutorial"
+
 
         # --- Step 1: UV to Mesh ---
-        box = layout.box()
+        box = uv_box.box()
         box.label(text="Step 1. UV to Mesh (Auto Add Grease Pencil)", icon='UV')
         row = box.row()
         row.operator("object.uv_to_mesh", icon='MESH_DATA')
 
         # --- Step 2: Create & Edit Curve ---
-        curve_box = layout.box()
+        curve_box = uv_box.box()
         curve_box.label(text="Step 2: Create & Edit Curve", icon='OUTLINER_OB_CURVE')
 
         col = curve_box.column(align=True); col.scale_y = 1.1
@@ -99,39 +120,38 @@ class OBJECT_PT_UVWorkflow(Panel):
         dec = tools.column(align=True)
         dec.label(text="Decimate Curve:", icon="MOD_DECIM")
         r = dec.row(align=True)
-        r.prop(scene, "spp_decimate_ratio", text="Ratio")
+        r.prop(S, "spp_decimate_ratio", text="Ratio")
         r.operator("object.decimate_curve", text="Apply", icon='CHECKMARK')
 
         # Curve Options
         opts = tools.column(align=True)
         opts.label(text="Curve Options:", icon="CURVE_DATA")
         cyclic = opts.row()
-        cyclic.prop(scene, "spp_curve_cyclic", text="")
+        cyclic.prop(S, "spp_curve_cyclic", text="")
         cyclic.label(text="Cyclic Curve")
 
         # Step 2b: Mirror tools
         mir = tools.column(align=True)
         mh = mir.row(align=True)
         mh.label(text="Mirror Tools (Edit Mode):", icon="MOD_MIRROR")
-        mir.operator("curve.mirror_selected_points_at_cursor",
-                     text="Mirror at Cursor", icon="CURVE_BEZCIRCLE")
+        mir.operator("curve.mirror_selected_points_at_cursor",text="Mirror at Cursor", icon="CURVE_BEZCIRCLE")
 
         # --- Step 3: Sample Curve to Polyline ---
-        box_sample = layout.box()
+        box_sample = uv_box.box()
         box_sample.label(text="Step 3: Sample Curve to Polyline", icon='CURVE_DATA')
-        if hasattr(scene, "spp_sampler_fidelity"):
+        if hasattr(S, "spp_sampler_fidelity"):
             col_sample = box_sample.column(align=True)
-            col_sample.prop(scene, "spp_sampler_fidelity", text="Boundary Samples")
+            col_sample.prop(S, "spp_sampler_fidelity", text="Boundary Samples")
         row = box_sample.row(align=True); row.scale_y = 1.2
         row.operator("curve.sample_to_polyline", text="Sample Curve to Polyline", icon='CURVE_BEZCURVE')
 
         # --- Step 4: Boundary Check ---
-        box_boundary = layout.box()
+        box_boundary = uv_box.box()
         boundary_header = box_boundary.row()
         boundary_header.label(text="Step 4: Boundary Check", icon='CHECKMARK')
 
         action_row = box_boundary.row(align=True)
-        action_row.prop(scene, "spp_uv_boundary_action", text="Action")
+        action_row.prop(S, "spp_uv_boundary_action", text="Action")
 
         boundary_op_row = box_boundary.row(align=True); boundary_op_row.scale_y = 1.2
         boundary_op_row.operator("mesh.check_uv_boundary", text="Check UV Boundary", icon='ZOOM_SELECTED')
@@ -141,7 +161,7 @@ class OBJECT_PT_UVWorkflow(Panel):
         help_col.label(text="FIX mode intelligently snaps vertices (smart padding), preserves topology")
 
         status_row = box_boundary.row(align=True); status_row.scale_y = 0.9
-        status = getattr(scene, "spp_uv_boundary_status", 'NONE')
+        status = getattr(S, "spp_uv_boundary_status", 'NONE')
         if status == 'PASS':
             status_row.label(text="Status: PASS - No Violations", icon='CHECKMARK')
         elif status == 'VIOLATIONS':
@@ -165,13 +185,13 @@ class OBJECT_PT_UVWorkflow(Panel):
                                       icon='RESTRICT_SELECT_OFF')
 
         # --- Step 5: Fill Border with Grid ---
-        box_fill = layout.box()
+        box_fill = uv_box.box()
         box_fill.label(text="Step 5: Fill Border with Grid", icon='GRID')
         fill_row = box_fill.row(align=True); fill_row.scale_y = 1.2
         fill_row.operator("mesh.fill_border_grid", text="Fill Panel Border", icon='MOD_TRIANGULATE')
 
         # --- Step 6: Project To Surface ---
-        box_proj = layout.box()
+        box_proj = uv_box.box()
         box_proj.label(text="Step 6:  Project To Surface", icon='OUTLINER_OB_MESH')
         proj_row = box_proj.row(align=True); proj_row.scale_y = 1.2
         proj_row.operator("mesh.overlay_panel_onto_shell",

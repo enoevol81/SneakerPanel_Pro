@@ -45,8 +45,11 @@ class OBJECT_PT_SneakerPanelProMain(bpy.types.Panel):
         wm = context.window_manager
         scn = context.scene
 
+        # === Workflow Controls ===
+        workflow_box = layout.box()
+        
         # === Top: Segmented workflow selector ===
-        seg = layout.row(align=True); seg.scale_y = 1.5
+        seg = workflow_box.row(align=True); seg.scale_y = 1.5
 
         left = seg.row(align=True)
         b = left.operator("wm.spp_toggle_workflow",
@@ -62,16 +65,14 @@ class OBJECT_PT_SneakerPanelProMain(bpy.types.Panel):
                            depress=(wm.spp_active_workflow == 'UV_2D'))
         b.mode = 'UV_2D'
 
-        layout.separator(factor=0.5)
+        workflow_box.separator(factor=0.5)
 
         # === Compact toggles ===
-        toggles = layout.row(align=True)
+        toggles = workflow_box.row(align=True)
         t = toggles.operator("wm.context_toggle", text=" Auto UV", icon='UV', depress=wm.spp_show_auto_uv)
         t.data_path = "window_manager.spp_show_auto_uv"
         t = toggles.operator("wm.context_toggle", text=" Lace Generator", icon='CURVE_NCURVE', depress=wm.spp_show_lace_gen)
         t.data_path = "window_manager.spp_show_lace_gen"
-
-        layout.separator()
 
         # === Panel Configuration ===
         main_box = layout.box()
@@ -93,7 +94,7 @@ class OBJECT_PT_SneakerPanelProMain(bpy.types.Panel):
 
         # Edge Select
         select_box = tools_box.box()
-        select_box.label(text="Edge Select:")
+        select_box.label(text="Edge Select:", icon="UV_EDGESEL")
         sel_grid = select_box.grid_flow(columns=2, align=True); sel_grid.scale_y = 1.1
         sel_grid.operator("mesh.select_all", text="Select All", icon="SELECT_SET").action = 'SELECT'
         sel_grid.operator("mesh.loop_multi_select", text="Select Edge Loops", icon="EDGESEL")
@@ -108,9 +109,9 @@ class OBJECT_PT_SneakerPanelProMain(bpy.types.Panel):
         flow_grid.operator("mesh.edge_relax", text="Relax", icon="MOD_SMOOTH")
         flow_grid.operator("mesh.set_edge_flow", text="Set Flow", icon="FORCE_FORCE")
 
-        # Panel
+        # Mesh Object Tools
         panel_box = tools_box.box()
-        panel_box.label(text="Object:", icon='MESH_GRID')
+        panel_box.label(text="Mesh Object:", icon='OUTLINER_OB_MESH')
 
         # Shading controls
         obj = context.active_object

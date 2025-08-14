@@ -27,55 +27,70 @@ class OBJECT_PT_SneakerPanelLace(bpy.types.Panel):
         scene = context.scene
         obj = context.active_object
         
+        lace_box = layout.box()
+        lace_header = lace_box.row(align=True)
+        
+        # Panel header
+        lace_header.label(text="Lace Generator", icon="MOD_OUTLINE")
+        
+        # Add tooltip icon
+        tooltip_icon = 'LIGHT_SUN' if context.scene.spp_show_lace_gen_tooltip else 'INFO'
+        lace_header.prop(context.scene, "spp_show_lace_gen_tooltip", text="", icon=tooltip_icon, emboss=False)
+        
+        # Show tooltip if enabled
+        if context.scene.spp_show_lace_gen_tooltip:
+            tip_box = lace_box.box()
+            tip_box.alert = True  # Makes the box stand out with a different color
+            tip_col = tip_box.column(align=True)
+            tip_col.scale_y = 0.9  # Slightly smaller text
+            tip_col.label(text="Lace Generator Tips:", icon='HELP')
+            tip_col.label(text="• Select curve object to apply lace geometry")
+            tip_col.label(text="• Adjust parameters after applying")
+            tip_col.label(text="• Use custom profile for unique lace shapes")
+            tip_col.operator("wm.url_open", text="View Lace Generator Tutorial", icon='URL').url = "https://example.com/lace-generator-tutorial"
+        
         # Check if object has a lace modifier
         has_lace_modifier = False
-        for mod in obj.modifiers:
-            if mod.type == 'NODES' and mod.name.startswith('Lace'):
-                has_lace_modifier = True
-                break
-        
-        # Main box
-        main_box = layout.box()
-        main_box.label(text="Lace Generator", icon='CURVE_DATA')
+        if obj:
+            for mod in obj.modifiers:
+                if mod.type == 'NODES' and mod.name.startswith('Lace'):
+                    has_lace_modifier = True
+                    break
         
         if not has_lace_modifier:
             # Show apply button if no lace modifier exists
-            main_box.operator("object.apply_lace_nodegroup", text="Apply Lace Geometry")
+            apply_col = lace_box.column(align=True)
+            apply_col.scale_y = 1.1
+            apply_col.operator("object.apply_lace_nodegroup", text="Apply Lace Geometry", icon='CURVE_DATA')
             return
         
         # Parameters section - only shown if the modifier exists
+        params_col = lace_box.column(align=True)
+        
         # Profile type selection
-        row = main_box.row()
-        row.prop(scene, "spp_lace_profile", text="Profile")
+        params_col.prop(scene, "spp_lace_profile", text="Profile")
         
         # Scale control
-        row = main_box.row()
-        row.prop(scene, "spp_lace_scale", text="Scale")
+        params_col.prop(scene, "spp_lace_scale", text="Scale")
         
         # Resolution control
-        row = main_box.row()
-        row.prop(scene, "spp_lace_resample", text="Resolution")
+        params_col.prop(scene, "spp_lace_resample", text="Resolution")
         
         # Tilt control
-        row = main_box.row()
-        row.prop(scene, "spp_lace_tilt", text="Tilt")
+        params_col.prop(scene, "spp_lace_tilt", text="Tilt")
         
         # Normal mode selection
-        row = main_box.row()
-        row.prop(scene, "spp_lace_normal_mode", text="Normal Mode")
+        params_col.prop(scene, "spp_lace_normal_mode", text="Normal Mode")
         
         # Custom profile object - only show if profile type is Custom
         if scene.spp_lace_profile == '2':
-            row = main_box.row()
-            row.prop(scene, "spp_lace_custom_profile", text="Custom Profile")
+            params_col.prop(scene, "spp_lace_custom_profile", text="Custom Profile")
         
         # Material assignment
-        row = main_box.row()
-        row.prop(scene, "spp_lace_material", text="Material")
+        params_col.prop(scene, "spp_lace_material", text="Material")
         
         # Shade smooth toggle
-        row = main_box.row()
-        row.prop(scene, "spp_lace_shade_smooth", text="Shade Smooth")
+        params_col.prop(scene, "spp_lace_shade_smooth", text="Shade Smooth")
 
 # Registration
 classes = [OBJECT_PT_SneakerPanelLace]

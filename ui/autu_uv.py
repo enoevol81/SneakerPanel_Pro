@@ -28,7 +28,7 @@ class OBJECT_PT_autu_uv(bpy.types.Panel):
         uv_header.label(text="Shell UV Generation", icon="OUTLINER_OB_LIGHTPROBE")
         
         # Add light bulb icon for tooltip
-        tooltip_icon = 'LIGHT_SUN' if context.scene.spp_show_uv_gen_tooltip else 'LIGHT'
+        tooltip_icon = 'LIGHT_SUN' if context.scene.spp_show_uv_gen_tooltip else 'INFO'
         uv_header.prop(context.scene, "spp_show_uv_gen_tooltip", text="", icon=tooltip_icon, emboss=False)
         
         # Show tooltip if enabled
@@ -43,12 +43,9 @@ class OBJECT_PT_autu_uv(bpy.types.Panel):
             tip_col.label(text="• Place 3D Cursor at Toe")
             tip_col.label(text="• Run Define Toe")
             tip_col.label(text="• Run Orient UV Island for consistent panel direction")
-            tip_col.label(text="• Can be used for any object with seams marked")
+            tip_col.label(text="• Can be used for any object with marked seams")
             tip_col.operator("wm.url_open", text="View UV Setup Tutorial", icon='URL').url = "https://example.com/uv-setup-tutorial"
         
-        # Important note with better formatting
-        note_col = uv_box.column(align=True)
-        note_col.label(text="Before Starting: Mark Seams at Heel and Boundary Edges", icon="INFO")
         
         # Steps with better visual flow
         steps_col = uv_box.column(align=True)
