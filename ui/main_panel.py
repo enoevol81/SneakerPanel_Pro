@@ -58,16 +58,16 @@ class OBJECT_PT_SneakerPanelProMain(bpy.types.Panel):
         workflow_box = layout.box()
         
         # === Top: Segmented workflow selector ===
-        seg = workflow_box.row(align=True); seg.scale_y = 1.5
+        seg = workflow_box.row(); seg.scale_y = 1.5
 
-        left = seg.row(align=True)
+        left = seg.row()
         b = left.operator("wm.spp_toggle_workflow",
                           text=" Surface Direct [3D] ",
                           icon='MESH_CUBE',
                           depress=(wm.spp_active_workflow == 'SURFACE_3D'))
         b.mode = 'SURFACE_3D'
 
-        right = seg.row(align=True)
+        right = seg.row()
         b = right.operator("wm.spp_toggle_workflow",
                            text=" UV Workflow [2D] ",
                            icon='MESH_GRID',
@@ -75,7 +75,7 @@ class OBJECT_PT_SneakerPanelProMain(bpy.types.Panel):
         b.mode = 'UV_2D'
 
         # === Compact toggles ===
-        toggles = workflow_box.row(align=True)
+        toggles = workflow_box.row()
         t = toggles.operator("wm.context_toggle", text=" Auto UV", icon='UV', depress=wm.spp_show_auto_uv)
         t.data_path = "window_manager.spp_show_auto_uv"
         t = toggles.operator("wm.context_toggle", text=" Lace Generator", icon='CURVE_NCURVE', depress=wm.spp_show_lace_gen)
@@ -86,11 +86,11 @@ class OBJECT_PT_SneakerPanelProMain(bpy.types.Panel):
         header_row = main_box.row()
         header_row.label(text="Panel Configuration", icon="COLLECTION_COLOR_05")
 
-        row = main_box.row(align=True)
+        row = main_box.row()
         row.prop(scn, "spp_panel_count", text="Panel #")
         row.prop(scn, "spp_panel_name", text=" Name")
 
-        shell_row = main_box.row(align=True)
+        shell_row = main_box.row()
         shell_row.prop_search(scn, "spp_shell_object", bpy.data, "objects",
                               text="Shell Object", icon="OUTLINER_OB_MESH")
 
@@ -122,7 +122,7 @@ class OBJECT_PT_SneakerPanelProMain(bpy.types.Panel):
 
         # Shading controls
         obj = context.active_object
-        shading_row = panel_box.row(align=True)
+        shading_row = panel_box.row()
         
         # Check current shading mode
         is_smooth = False
