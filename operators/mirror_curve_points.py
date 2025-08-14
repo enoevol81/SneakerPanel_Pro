@@ -38,17 +38,27 @@ class CURVE_OT_MirrorSelectedPointsAtCursor(Operator):
 
     @classmethod
     def poll(cls, context):
-        """Check if we're in edit mode with a curve."""
+        """Check if we have an active curve object."""
         obj = context.active_object
-        return obj and obj.type == 'CURVE' and context.mode == 'EDIT_CURVE'
+        return obj and obj.type == 'CURVE'
 
     def execute(self, context):
-        # Add undo checkpoint
-        bpy.ops.ed.undo_push(message="Mirror Curve Points")
-        
-        if not (context.active_object and context.active_object.type == 'CURVE' and context.mode == 'EDIT_CURVE'):
-            self.report({'ERROR'}, "Active object is not a Curve in Edit Mode.")
+        # Context-agnostic execution - automatically switch to required mode
+        obj = context.active_object
+        if not obj or obj.type != 'CURVE':
+            self.report({'ERROR'}, "No active curve object")
             return {'CANCELLED'}
+        
+        # Store original mode for restoration
+        original_mode = obj.mode
+        
+        # Switch to Edit Mode if not already there
+        if context.mode != 'EDIT_CURVE':
+            try:
+                bpy.ops.object.mode_set(mode='EDIT')
+            except Exception as e:
+                self.report({'ERROR'}, f"Could not switch to Edit Mode: {str(e)}")
+                return {'CANCELLED'}
 
         # Store original pivot point and set to 3D Cursor for the operation
         original_pivot_point = context.scene.tool_settings.transform_pivot_point
@@ -76,6 +86,13 @@ class CURVE_OT_MirrorSelectedPointsAtCursor(Operator):
         finally:
             # Restore original pivot point
             context.scene.tool_settings.transform_pivot_point = original_pivot_point
+            
+            # Restore original mode if it was different
+            if original_mode != 'EDIT':
+                try:
+                    bpy.ops.object.mode_set(mode=original_mode)
+                except:
+                    pass  # Don't fail if mode restoration fails
 
         return {'FINISHED'}
 

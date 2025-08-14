@@ -107,8 +107,7 @@ class OBJECT_OT_UVToMesh(Operator):
         return False
 
     def execute(self, context):
-        bpy.ops.ed.undo_push(message="UV to Mesh and Prep Drawing")
-        
+        # Context-agnostic execution - automatically switch to required mode
         source_object_from_scene = context.scene.spp_shell_object
         if not source_object_from_scene: # Should be caught by poll
             self.report({'ERROR'}, "No 'Shell Object' defined in Scene Properties.")
@@ -120,8 +119,16 @@ class OBJECT_OT_UVToMesh(Operator):
             self.report({'ERROR'}, f"'{source_object_from_scene.name}' (Shell Object) has no active UV map.")
             return {'CANCELLED'}
 
-        original_mode = context.mode
-        if original_mode != 'OBJECT': bpy.ops.object.mode_set(mode='OBJECT')
+        # Store original mode for restoration
+        original_mode = context.active_object.mode if context.active_object else 'OBJECT'
+        
+        # Switch to Object Mode if not already there
+        if context.mode != 'OBJECT':
+            try:
+                bpy.ops.object.mode_set(mode='OBJECT')
+            except Exception as e:
+                self.report({'ERROR'}, f"Could not switch to Object Mode: {str(e)}")
+                return {'CANCELLED'}
         
         active_obj_backup = context.view_layer.objects.active
         selected_objs_backup = context.selected_objects[:]

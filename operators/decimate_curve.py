@@ -26,13 +26,22 @@ class OBJECT_OT_DecimateCurve(bpy.types.Operator):
         return obj and obj.type == 'CURVE'
 
     def execute(self, context):
-        # Add undo checkpoint
-        bpy.ops.ed.undo_push(message="Decimate Curve")
-        
+        # Context-agnostic execution - automatically switch to required mode
         obj = context.active_object
-
-        if obj.mode != 'EDIT':
-            bpy.ops.object.mode_set(mode='EDIT')
+        if not obj or obj.type != 'CURVE':
+            self.report({'ERROR'}, "No active curve object")
+            return {'CANCELLED'}
+        
+        # Store original mode for restoration
+        original_mode = obj.mode
+        
+        # Switch to Edit Mode if not already there
+        if context.mode != 'EDIT_CURVE':
+            try:
+                bpy.ops.object.mode_set(mode='EDIT')
+            except Exception as e:
+                self.report({'ERROR'}, f"Could not switch to Edit Mode: {str(e)}")
+                return {'CANCELLED'}
 
         bpy.ops.curve.select_all(action='SELECT')
         # Set all selected handles to automatic for better decimation
@@ -43,11 +52,24 @@ class OBJECT_OT_DecimateCurve(bpy.types.Operator):
         try:
             bpy.ops.curve.decimate(ratio=ratio)
             self.report({'INFO'}, f"Curve decimated with ratio {ratio}.")
+            
+            # Restore original mode if it was different
+            if original_mode != 'EDIT':
+                try:
+                    bpy.ops.object.mode_set(mode=original_mode)
+                except:
+                    pass  # Don't fail if mode restoration fails
+            
+            return {'FINISHED'}
         except Exception as e:
+            # Restore original mode on error
+            if original_mode != 'EDIT':
+                try:
+                    bpy.ops.object.mode_set(mode=original_mode)
+                except:
+                    pass
             self.report({'ERROR'}, f"Curve decimate failed: {str(e)}")
             return {'CANCELLED'}
-
-        return {'FINISHED'}
 
 # Registration
 classes = [OBJECT_OT_DecimateCurve]
