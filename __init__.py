@@ -30,6 +30,7 @@ from . import operators
 from . import ui
 from . import prefs  # Import preferences module
 from . import state  # Import state module
+from .utils import icons  # Import icon management
 
 # List of all classes for registration
 classes = []
@@ -52,6 +53,9 @@ def register():
         # Register UI components
         ui.register()
         
+        # Load custom icons
+        icons.load_icons()
+        
         # Register any classes defined directly in this file
         for cls in classes:
             bpy.utils.register_class(cls)
@@ -67,6 +71,9 @@ def unregister():
         # Unregister any classes defined directly in this file
         for cls in reversed(classes):
             bpy.utils.unregister_class(cls)
+            
+        # Unload custom icons
+        icons.unload_icons()
             
         # Unregister UI components
         ui.unregister()

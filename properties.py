@@ -133,6 +133,21 @@ def register_properties():
         default=False,
         description="Show helpful tips for drawing panels with Grease Pencil"
     )
+    bpy.types.Scene.spp_show_surface_workflow_tooltip = bpy.props.BoolProperty(
+        name="Show Surface Workflow Tooltip",
+        default=False,
+        description="Show helpful tips for the Surface Workflow"
+    )
+    bpy.types.Scene.spp_show_uv_workflow_tooltip = bpy.props.BoolProperty(
+        name="Show UV Workflow Tooltip",
+        default=False,
+        description="Show helpful tips for the UV Workflow"
+    )
+    bpy.types.Scene.spp_show_lace_gen_tooltip = bpy.props.BoolProperty(
+        name="Show Lace Generator Tooltip",
+        default=False,
+        description="Show helpful tips for the Lace Generator"
+    )
 
     # -------------------------------------------------------------------------
     # Target object properties
@@ -179,6 +194,7 @@ def register_properties():
         max=10,
         update=update_stabilizer_ui
     )
+    
     
     # -------------------------------------------------------------------------
     # Mesh processing properties

@@ -107,8 +107,7 @@ class OBJECT_OT_UVToMesh(Operator):
         return False
 
     def execute(self, context):
-        bpy.ops.ed.undo_push(message="UV to Mesh and Prep Drawing")
-        
+        # Context-agnostic execution - automatically switch to required mode
         source_object_from_scene = context.scene.spp_shell_object
         if not source_object_from_scene: # Should be caught by poll
             self.report({'ERROR'}, "No 'Shell Object' defined in Scene Properties.")
@@ -120,8 +119,16 @@ class OBJECT_OT_UVToMesh(Operator):
             self.report({'ERROR'}, f"'{source_object_from_scene.name}' (Shell Object) has no active UV map.")
             return {'CANCELLED'}
 
-        original_mode = context.mode
-        if original_mode != 'OBJECT': bpy.ops.object.mode_set(mode='OBJECT')
+        # Store original mode for restoration
+        original_mode = context.active_object.mode if context.active_object else 'OBJECT'
+        
+        # Switch to Object Mode if not already there
+        if context.mode != 'OBJECT':
+            try:
+                bpy.ops.object.mode_set(mode='OBJECT')
+            except Exception as e:
+                self.report({'ERROR'}, f"Could not switch to Object Mode: {str(e)}")
+                return {'CANCELLED'}
         
         active_obj_backup = context.view_layer.objects.active
         selected_objs_backup = context.selected_objects[:]
@@ -259,7 +266,7 @@ class OBJECT_OT_UVToMesh(Operator):
         # --- VIEWPORT AND ISOLATION ENHANCEMENTS ---
         self.report({'INFO'}, "Configuring view and isolation for UV mesh and GP.")
         
-        # Deselect all, then select UV Mesh and GP object for local view and framing
+        # Select both objects for framing
         bpy.ops.object.mode_set(mode='OBJECT') # Ensure Object mode for selection
         bpy.ops.object.select_all(action='DESELECT')
         ob_uv.select_set(True)
@@ -291,23 +298,23 @@ class OBJECT_OT_UVToMesh(Operator):
 
                 with context.temp_override(**override_context):
                     bpy.ops.view3d.view_axis(type='TOP')
-                    bpy.ops.view3d.view_selected(use_all_regions=False) # Frames selected (ob_uv and gp_obj_uv_draw)
+                    bpy.ops.view3d.view_selected(use_all_regions=False) # Frames selected (both ob_uv and gp_obj_uv_draw)
                     bpy.ops.view3d.localview() # Isolates selected
                 self.report({'INFO'}, "Switched to Top Ortho, framed selection, and entered Local View.")
                 # Switch back to GP Draw mode after view ops
                 context.view_layer.objects.active = gp_obj_uv_draw
                 if gp_obj_uv_draw.mode != 'PAINT_GREASE_PENCIL':
                     bpy.ops.object.mode_set(mode='PAINT_GREASE_PENCIL')
+        
+                # Deselect the UV mesh after framing but keep it in local view
+                ob_uv.select_set(False)
+                
+                # Lock the UV mesh item to prevent selection
+                ob_uv.hide_select = True
 
             else: self.report({'WARNING'}, "Active space in 3D View area is not 'VIEW_3D'.")
         else: self.report({'WARNING'}, "Could not find 3D View area/region to set view.")
         
-        # Restore original selection and active object if it wasn't design_obj or uv_mesh_obj
-        # This part might need refinement based on desired final state.
-        # For now, we leave gp_obj_uv_draw active in PAINT_GREASE_PENCIL mode, isolated.
-        # The previous active/selected objects (before this operator) are not restored here
-        # as the workflow shifts to drawing on the new GP layer.
-
         self.report({'INFO'}, f"Created UV Mesh '{ob_uv.name}' and GP Layer '{gp_obj_uv_draw.name}'. Ready for UV drawing.")
         return {'FINISHED'}
 

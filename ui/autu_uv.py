@@ -28,7 +28,7 @@ class OBJECT_PT_autu_uv(bpy.types.Panel):
         uv_header.label(text="Shell UV Generation", icon="OUTLINER_OB_LIGHTPROBE")
         
         # Add light bulb icon for tooltip
-        tooltip_icon = 'LIGHT_SUN' if context.scene.spp_show_uv_gen_tooltip else 'LIGHT'
+        tooltip_icon = 'LIGHT_SUN' if context.scene.spp_show_uv_gen_tooltip else 'INFO'
         uv_header.prop(context.scene, "spp_show_uv_gen_tooltip", text="", icon=tooltip_icon, emboss=False)
         
         # Show tooltip if enabled
@@ -37,25 +37,26 @@ class OBJECT_PT_autu_uv(bpy.types.Panel):
             tip_box.alert = True  # Makes the box stand out with a different color
             tip_col = tip_box.column(align=True)
             tip_col.scale_y = 0.9  # Slightly smaller text
-            tip_col.label(text="Shell UV Generation Tips:", icon='HELP')
             tip_col.label(text="• Mark seams at Boundary and Heel Counter Edges")
-            tip_col.label(text="• Run Unwrap Shell")
-            tip_col.label(text="• Place 3D Cursor at Toe")
-            tip_col.label(text="• Run Define Toe")
-            tip_col.label(text="• Run Orient UV Island for consistent panel direction")
-            tip_col.label(text="• Can be used for any object with seams marked")
+            tip_col.label(text="• Run 'Unwrap Shell' to create UV layout")
+            tip_col.label(text="• Place 3D cursor at toe tip → Click 'Define Toe'")
+            tip_col.label(text="• Place cursor at direction point → Click 'Define Up Axis [Z+ Axis]'")
+            tip_col.label(text="• Run 'Orient UV Island' for precise orientation")
+            tip_col.label(text="• Direction point: tongue area or toward ankle")
             tip_col.operator("wm.url_open", text="View UV Setup Tutorial", icon='URL').url = "https://example.com/uv-setup-tutorial"
         
-        # Important note with better formatting
-        note_col = uv_box.column(align=True)
-        note_col.label(text="Before Starting: Mark Seams at Heel and Boundary Edges", icon="INFO")
         
         # Steps with better visual flow
         steps_col = uv_box.column(align=True)
         steps_col.scale_y = 1.1
         steps_col.operator("object.unwrap_shell", text="1. Unwrap Shell", icon="MOD_UVPROJECT")
-        steps_col.operator("object.define_toe", text="2. Define Toe", icon="CURVE_PATH")
-        steps_col.operator("object.orient_uv_island", text="3. Orient UV Island", icon="ORIENTATION_LOCAL")
+        
+        # Two-button system for toe direction
+        toe_row = steps_col.row(align=True)
+        toe_row.operator("object.define_toe", text="2a. Define Toe", icon="MESH_CIRCLE")
+        toe_row.operator("object.define_up_direction", text="2b. Define Up Axis [Z+ Axis]", icon="ORIENTATION_LOCAL")
+        
+        steps_col.operator("object.orient_uv_island", text="3. Orient UV Island", icon="SNAP_ON")
         
         
         

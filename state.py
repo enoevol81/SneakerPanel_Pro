@@ -6,11 +6,15 @@ def register():
     WM = bpy.types.WindowManager
     SC = bpy.types.Scene
 
-    # Workflow radio (exactly one)
+    # Workflow radio (exactly one; supports 'NONE' to hide all workflows)
     if not hasattr(WM, "spp_active_workflow"):
         WM.spp_active_workflow = EnumProperty(
             name="Active Workflow",
-            items=[('SURFACE_3D', 'Surface 3D', ''), ('UV_2D', 'UV 2D', '')],
+            items=[
+                ('SURFACE_3D', 'Surface 3D', ''),
+                ('UV_2D', 'UV 2D', ''),
+                ('NONE', 'None', 'Hide all workflow panels'),
+            ],
             default='SURFACE_3D'
         )
 

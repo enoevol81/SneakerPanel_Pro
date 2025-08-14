@@ -146,14 +146,24 @@ class CURVE_OT_SampleToPolyline(bpy.types.Operator):
         return (obj and obj.type == 'CURVE')
 
     def execute(self, context):
-        # Add undo checkpoint
-        bpy.ops.ed.undo_push(message=self.bl_label)
+        # Context-agnostic execution - automatically switch to required mode
+        original_curve_obj = context.active_object
+        if not (original_curve_obj and original_curve_obj.type == 'CURVE'):
+            self.report({'ERROR'}, "No active curve object")
+            return {'CANCELLED'}
+        
+        # Store original mode for restoration
+        original_mode = original_curve_obj.mode
+        
+        # Switch to Object Mode if not already there
+        if context.mode != 'OBJECT':
+            try:
+                bpy.ops.object.mode_set(mode='OBJECT')
+            except Exception as e:
+                self.report({'ERROR'}, f"Could not switch to Object Mode: {str(e)}")
+                return {'CANCELLED'}
         
         try:
-            original_curve_obj = context.active_object
-            if not (original_curve_obj and original_curve_obj.type == 'CURVE'):
-                self.report({'WARNING'}, "Please select a Curve object.")
-                return {'CANCELLED'}
             
             # Get desired sample count from the scene property
             samples_per_spline = int(context.scene.spp_sampler_fidelity)
@@ -227,9 +237,22 @@ class CURVE_OT_SampleToPolyline(bpy.types.Operator):
             context.view_layer.objects.active = created_objects[0]
             original_curve_obj.hide_viewport = True
             self.report({'INFO'}, f"Sampling complete. Created {len(created_objects)} outline object(s).")
+            # Restore original mode if it was different
+            if original_mode != 'OBJECT':
+                try:
+                    bpy.ops.object.mode_set(mode=original_mode)
+                except:
+                    pass  # Don't fail if mode restoration fails
+            
             return {'FINISHED'}
             
         except Exception as e:
+            # Restore original mode on error
+            if original_mode != 'OBJECT':
+                try:
+                    bpy.ops.object.mode_set(mode=original_mode)
+                except:
+                    pass
             self.report({'ERROR'}, f"Error during curve sampling: {str(e)}")
             return {'CANCELLED'}
 
