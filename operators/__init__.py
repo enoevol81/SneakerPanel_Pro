@@ -48,6 +48,7 @@ from . import boundary_edges
 from . import add_subsurf
 from . import set_edge_linear
 
+
 # Register/unregister functions
 def register():
     add_gp_draw.register()
@@ -84,6 +85,7 @@ def register():
     boundary_edges.register()
     add_subsurf.register()
     set_edge_linear.register()
+    
 
 def unregister():
     orient_uv_island.unregister()
