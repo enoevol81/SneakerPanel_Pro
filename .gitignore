@@ -1,6 +1,34 @@
+# Python
 __pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.egg-info/
+.pytest_cache/
+
+# OS cruft
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Editors/IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Build & packaging
+build/
+dist/
+*.log
+
+# Blender extras (keep .blend, ignore autosaves/backups)
 *.blend1
 *.blend2
+*.blend@
+*.blend[0-9]
+
+# Misc
+*.bak
 *.tmp
-*.log
-*.DS_Store
+*.orig
