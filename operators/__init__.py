@@ -44,6 +44,7 @@ from . import apply_shrinkwrap
 from . import quick_conform
 from . import boundary_edges
 from . import add_subsurf
+from . import set_edge_linear
 
 # Register/unregister functions
 def register():
@@ -78,6 +79,7 @@ def register():
     quick_conform.register()
     boundary_edges.register()
     add_subsurf.register()
+    set_edge_linear.register()
 
 def unregister():
     orient_uv_island.unregister()
@@ -111,3 +113,4 @@ def unregister():
     quick_conform.unregister()
     boundary_edges.unregister()
     add_subsurf.unregister()
+    set_edge_linear.unregister()

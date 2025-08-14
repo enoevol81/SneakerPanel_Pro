@@ -11,11 +11,31 @@ All workflow Steps (Create GP, Convert to Curve, Decimate, etc.) live in the wor
 """
 
 import bpy
+from bpy.types import Operator
+from bpy.props import EnumProperty
+
+
+class WM_OT_SPP_ToggleWorkflow(Operator):
+    bl_idname = "wm.spp_toggle_workflow"
+    bl_label = "Toggle Workflow"
+    bl_description = "Enable/disable a workflow. Clicking the active button toggles workflow off (None)."
+    bl_options = {'INTERNAL'}
+
+    mode: EnumProperty(
+        name="Mode",
+        items=[('SURFACE_3D', 'Surface 3D', ''), ('UV_2D', 'UV 2D', '')],
+    )
+
+    def execute(self, context):
+        wm = context.window_manager
+        current = getattr(wm, "spp_active_workflow", 'NONE')
+        wm.spp_active_workflow = 'NONE' if current == self.mode else self.mode
+        return {'FINISHED'}
 
 
 class OBJECT_PT_SneakerPanelProMain(bpy.types.Panel):
     bl_label = "Sneaker Panel Pro"
-    bl_idname = "OBJECT_PT_sneaker_panel_pro_main"
+    bl_idname = "OBJECT_PT_sneaker_panel_pro_main"      
     bl_space_type = 'VIEW_3D'
     bl_region_type = 'UI'
     bl_category = 'Sneaker Panel'
@@ -29,18 +49,18 @@ class OBJECT_PT_SneakerPanelProMain(bpy.types.Panel):
         seg = layout.row(align=True); seg.scale_y = 1.5
 
         left = seg.row(align=True)
-        b = left.operator("wm.context_set_enum",
+        b = left.operator("wm.spp_toggle_workflow",
                           text=" Surface Direct [3D] ",
                           icon='MESH_CUBE',
                           depress=(wm.spp_active_workflow == 'SURFACE_3D'))
-        b.data_path = "window_manager.spp_active_workflow"; b.value = 'SURFACE_3D'
+        b.mode = 'SURFACE_3D'
 
         right = seg.row(align=True)
-        b = right.operator("wm.context_set_enum",
+        b = right.operator("wm.spp_toggle_workflow",
                            text=" UV Workflow [2D] ",
                            icon='MESH_GRID',
                            depress=(wm.spp_active_workflow == 'UV_2D'))
-        b.data_path = "window_manager.spp_active_workflow"; b.value = 'UV_2D'
+        b.mode = 'UV_2D'
 
         layout.separator(factor=0.5)
 
@@ -71,22 +91,33 @@ class OBJECT_PT_SneakerPanelProMain(bpy.types.Panel):
         tools_header = tools_box.row()
         tools_header.label(text="Panel Helper Tools", icon="TOOL_SETTINGS")
 
-        tools_grid_edgeflow = tools_box.grid_flow(columns=2, align=True); tools_grid_edgeflow.scale_y = 1.1
-        tools_grid_edgeflow.operator("mesh.set_edge_flow", text="Set Edge Flow", icon="MOD_SMOOTH")
-        tools_grid_edgeflow.operator("mesh.edge_relax", text="Edge Relax", icon="MOD_SMOOTH")
-        tools_grid_edgeflow.operator("mesh.select_all", text="Select All", icon="SELECT_SET").action = 'SELECT'
-        tools_grid_edgeflow.operator("mesh.loop_multi_select", text="Select Edge Loops", icon="EDGESEL")
-        tools_grid_edgeflow.operator("mesh.select_boundary_edges", text="Select Boundary", icon="EDGESEL")
-        tools_grid_edgeflow.operator("mesh.deselect_boundary_edges", text="Deselect Boundary", icon="EDGESEL")
+        # Edge Select
+        select_box = tools_box.box()
+        select_box.label(text="Edge Select:")
+        sel_grid = select_box.grid_flow(columns=2, align=True); sel_grid.scale_y = 1.1
+        sel_grid.operator("mesh.select_all", text="Select All", icon="SELECT_SET").action = 'SELECT'
+        sel_grid.operator("mesh.loop_multi_select", text="Select Edge Loops", icon="EDGESEL")
+        sel_grid.operator("mesh.deselect_boundary_edges", text="Deselect Boundary", icon="EDGESEL")
+        sel_grid.operator("mesh.select_boundary_edges", text="Select Boundary", icon="EDGESEL")
 
-        tools_grid_mod = tools_box.grid_flow(columns=2, align=True); tools_grid_mod.scale_y = 1.1
-        tools_grid_mod.operator("mesh.mirror_panel", text="Mirror Panel", icon="MOD_MIRROR")
-        tools_grid_mod.operator("mesh.apply_shrinkwrap", text="Apply Shrinkwrap", icon="MOD_SHRINKWRAP")
+        # Edge Flow
+        flow_box = tools_box.box()
+        flow_box.label(text="Edge Flow:")
+        flow_grid = flow_box.grid_flow(columns=3, align=True); flow_grid.scale_y = 1.1
+        flow_grid.operator("mesh.set_edge_linear", text="Straighten", icon="IPO_LINEAR")
+        flow_grid.operator("mesh.edge_relax", text="Relax", icon="MOD_SMOOTH")
+        flow_grid.operator("mesh.set_edge_flow", text="Set Flow", icon="MOD_SMOOTH")
 
-        tools_grid_mod2 = tools_box.grid_flow(columns=1, align=True); tools_grid_mod2.scale_y = 1.1
-        # Add Subdivision button placed above Quick Conform as requested
-        tools_grid_mod2.operator("mesh.add_subsurf", text="Add Subdivision", icon="MOD_SUBSURF")
-        tools_grid_mod2.operator("mesh.quick_conform", text="Quick Conform", icon="SNAP_ON")
+        # Panel
+        panel_box = tools_box.box()
+        panel_box.label(text="Panel:")
+        panel_grid = panel_box.grid_flow(columns=3, align=True); panel_grid.scale_y = 1.1
+        panel_grid.operator("mesh.add_subsurf", text="Sub D", icon="MOD_SUBSURF")
+        panel_grid.operator("mesh.mirror_panel", text="Mirror", icon="MOD_MIRROR")
+        panel_grid.operator("mesh.apply_shrinkwrap", text="Shrinkwrap", icon="MOD_SHRINKWRAP")
+
+        # Quick Conform
+        tools_box.operator("mesh.quick_conform", text="Quick Conform", icon="SNAP_ON")
 
         # === Thicken Panel (Solidify) ===
         finalize = layout.box()
@@ -138,7 +169,7 @@ class OBJECT_PT_SneakerPanelProMain(bpy.types.Panel):
 
 
 # Registration
-classes = [OBJECT_PT_SneakerPanelProMain]
+classes = [WM_OT_SPP_ToggleWorkflow, OBJECT_PT_SneakerPanelProMain]
 
 def register():
     for cls in classes:
