@@ -198,7 +198,7 @@ class OBJECT_OT_OrientUVIsland(Operator):
                     uv_from_center = uv - center_target
                     uv_scaled = uv_from_center * max_scale
                     loop[uv_layer_bm].uv = center_target + uv_scaled
-
+    
             # Apply changes to the mesh
             bm.to_mesh(mesh)
             mesh.update()

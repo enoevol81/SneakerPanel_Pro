@@ -187,8 +187,19 @@ class OBJECT_PT_UVWorkflow(Panel):
         # --- Step 5: Fill Border with Grid ---
         box_fill = uv_box.box()
         box_fill.label(text="Step 5: Fill Border with Grid", icon='GRID')
+        
+        # Single reliable solution
         fill_row = box_fill.row(align=True); fill_row.scale_y = 1.2
-        fill_row.operator("mesh.fill_border_grid", text="Fill Panel Border", icon='MOD_TRIANGULATE')
+        fill_row.operator("mesh.simple_grid_fill", text="Fill Panel Border", icon='MOD_TRIANGULATE')
+        
+        # Optional smoothing step
+        smooth_row = box_fill.row(align=True)
+        smooth_row.operator("mesh.smooth_mesh", text="Smooth Mesh (Optional)", icon='MOD_SMOOTH')
+        
+        # Help text
+        help_col = box_fill.column(align=True); help_col.scale_y = 0.8
+        help_col.label(text="Fill Panel Border: Auto-closes edges, creates quads, includes smoothing")
+        help_col.label(text="Smooth Mesh: Additional smoothing with boundary preservation")
 
         # --- Step 6: Project To Surface ---
         box_proj = uv_box.box()

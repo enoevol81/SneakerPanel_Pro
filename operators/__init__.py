@@ -34,6 +34,8 @@ from . import sample_curve_to_polyline
 from . import create_quad_panel_from_outline
 from . import fill_quad_border
 from . import fill_border_grid
+from . import simple_grid_fill
+from . import smooth_mesh
 from . import overlay_panel_onto_shell
 from . import uv_boundary_checker
 from . import lace_from_curves
@@ -69,6 +71,8 @@ def register():
     create_quad_panel_from_outline.register()
     fill_quad_border.register()
     fill_border_grid.register()
+    simple_grid_fill.register()
+    smooth_mesh.register()
     overlay_panel_onto_shell.register()
     uv_boundary_checker.register()
     lace_from_curves.register()
@@ -103,6 +107,8 @@ def unregister():
     create_quad_panel_from_outline.unregister()
     fill_quad_border.unregister()
     fill_border_grid.unregister()
+    simple_grid_fill.unregister()
+    smooth_mesh.unregister()
     overlay_panel_onto_shell.unregister()
     uv_boundary_checker.unregister()
     lace_from_curves.unregister()
