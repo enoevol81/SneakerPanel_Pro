@@ -134,15 +134,16 @@ class OBJECT_PT_SneakerPanelProMain(bpy.types.Panel):
         shading_row.operator("object.shade_flat", text="Shade Flat", icon="SHADING_SOLID", depress=not is_smooth)
 
         # Object tools
-        panel_grid = panel_box.grid_flow(columns=3, align=True); panel_grid.scale_y = 1.1
+        panel_grid = panel_box.grid_flow(columns=3, align=True); panel_grid.scale_y = 1.1   
         panel_grid.operator("mesh.add_subsurf", text="SubD", icon="MOD_SUBSURF")
         panel_grid.operator("mesh.mirror_panel", text="Mirror", icon="MOD_MIRROR")
         panel_grid.operator("mesh.apply_shrinkwrap", text="Shrinkwrap", icon="MOD_SHRINKWRAP")
         
         
 
-        conform_row = panel_box.row(align=True)
-        conform_row.operator("mesh.quick_conform", text="Quick Conform", icon="SNAP_ON")
+        fitment_row = panel_box.row(align=True)
+        fitment_row.operator("mesh.quick_conform", text="Quick Conform", icon="SNAP_ON") 
+        fitment_row.operator("mesh.smooth_mesh", text="Smooth Mesh", icon="MOD_SMOOTH") 
         
         # Thicken Panel (Solidify) section
         panel_box.label(text="Thicken Panel:", icon='MOD_SOLIDIFY')
