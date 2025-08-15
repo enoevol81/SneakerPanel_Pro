@@ -6,10 +6,12 @@ from ..utils.panel_utils import apply_surface_snap
 
 
 class OBJECT_OT_ConvertToMesh(bpy.types.Operator):
-
+    """Convert selected curve to mesh and apply surface snapping."""
     bl_idname = "object.convert_to_mesh"
     bl_label = "Convert to Mesh"
-    bl_options = {"REGISTER", "UNDO"}
+    bl_options = {'REGISTER', 'UNDO'}
+    bl_description = "Convert the active Curve to a Mesh, apply surface snap, then organize into the proper panel collection"
+
 
     @classmethod
     def poll(cls, context):

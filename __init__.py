@@ -17,8 +17,8 @@ import bpy
 from . import prefs  
 from . import state  
 from . import operators, properties, ui
-from .utils import icons  
-
+from .utils import icons
+from .utils import audit_tooltips as _audit_tooltips
 # List of all classes for registration
 classes = []
 
@@ -44,6 +44,9 @@ def register():
         # Load custom icons
         icons.load_icons()
 
+        # Register audit tooltips
+        _audit_tooltips.register()
+
         # Register any classes defined directly in this file
         for cls in classes:
             bpy.utils.register_class(cls)
@@ -63,6 +66,9 @@ def unregister():
 
         # Unload custom icons
         icons.unload_icons()
+
+        # Unregister audit tooltips
+        _audit_tooltips.unregister()
 
         # Unregister UI components
         ui.unregister()

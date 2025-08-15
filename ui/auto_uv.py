@@ -25,14 +25,8 @@ class OBJECT_PT_autu_uv(bpy.types.Panel):
         uv_header.label(text="Shell UV Generation", icon="OUTLINER_OB_LIGHTPROBE")
 
         # Add light bulb icon for tooltip
-        tooltip_icon = "LIGHT_SUN" if context.scene.spp_show_uv_gen_tooltip else "INFO"
-        uv_header.prop(
-            context.scene,
-            "spp_show_uv_gen_tooltip",
-            text="",
-            icon=tooltip_icon,
-            emboss=False,
-        )
+        icon = "LIGHT_SUN" if context.scene.spp_show_uv_gen_tooltip else "INFO"
+        uv_header.prop(context.scene, "spp_show_uv_gen_tooltip", text="", toggle=True, icon=icon)
 
         # Show tooltip if enabled
         if context.scene.spp_show_uv_gen_tooltip:

@@ -113,6 +113,11 @@ def register_properties():
         default=False,
         description="Show helpful tips for drawing panels with Grease Pencil",
     )
+    bpy.types.Scene.spp_show_helper_tooltip = bpy.props.BoolProperty(
+        name="Show Helper Tooltip",
+        default=False,
+        description="Show helpful tips for the Helper Tools",
+    )
     bpy.types.Scene.spp_show_surface_workflow_tooltip = bpy.props.BoolProperty(
         name="Show Surface Workflow Tooltip",
         default=False,

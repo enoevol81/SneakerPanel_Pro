@@ -1,7 +1,7 @@
 import bpy
 
 from . import (
-    autu_uv,
+    auto_uv,
     lace_panel,
     main_panel,
     panel_nurbs_qd,
@@ -16,7 +16,7 @@ modules = [
     uv_workflow_panel,
     surface_workflow_panel,
     lace_panel,
-    autu_uv,
+    auto_uv,
     panel_nurbs_qd,
 ]
 

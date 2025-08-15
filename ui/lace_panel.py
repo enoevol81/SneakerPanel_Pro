@@ -35,16 +35,8 @@ class OBJECT_PT_SneakerPanelLace(bpy.types.Panel):
         lace_header.label(text="Lace Generator", icon="MOD_OUTLINE")
 
         # Add tooltip icon
-        tooltip_icon = (
-            "LIGHT_SUN" if context.scene.spp_show_lace_gen_tooltip else "INFO"
-        )
-        lace_header.prop(
-            context.scene,
-            "spp_show_lace_gen_tooltip",
-            text="",
-            icon=tooltip_icon,
-            emboss=False,
-        )
+        icon = "LIGHT_SUN" if context.scene.spp_show_lace_gen_tooltip else "INFO"
+        lace_header.prop(context.scene, "spp_show_lace_gen_tooltip", text="", toggle=True, icon=icon)
 
         # Show tooltip if enabled
         if context.scene.spp_show_lace_gen_tooltip:
