@@ -1,10 +1,12 @@
-"""UV Workflow UI panel (streamlined)"""
+# -------------------------------------------------------------------------
+# UV Workflow Panel UI
+# -------------------------------------------------------------------------
 
 import bpy
 from bpy.types import Panel
 
 
-# Properties used by this panel
+# UV Workflow Properties
 def register_properties():
     S = bpy.types.Scene
 
@@ -12,7 +14,7 @@ def register_properties():
         if not hasattr(S, name):
             setattr(S, name, prop)
 
-    # Only two actions now
+    # Boundary action options
     add(
         "spp_uv_boundary_action",
         bpy.props.EnumProperty(
@@ -26,12 +28,12 @@ def register_properties():
         ),
     )
 
-    # Single exposed control: Padding (UV)
+    # UV padding control
     add(
         "spp_uv_padding_uv",
         bpy.props.FloatProperty(
             name="Padding (UV)",
-            description="Minimum inward offset from UV boundary (0..1). Smart scaling is applied automatically.",
+            description="Minimum inward offset from UV boundary (0..1). Smart scaling is applied automatically",
             default=0.005,
             min=0.0,
             max=0.05,
@@ -86,6 +88,8 @@ class OBJECT_PT_UVWorkflow(Panel):
         uv_box = layout.box()
         uv_header = uv_box.row(align=True)
         uv_header.label(text="UV Workflow [2D]", icon="MOD_UVPROJECT")
+
+        # Tooltip toggle
         tooltip_icon = (
             "LIGHT_SUN" if context.scene.spp_show_uv_workflow_tooltip else "INFO"
         )
@@ -97,7 +101,9 @@ class OBJECT_PT_UVWorkflow(Panel):
             emboss=False,
         )
 
+        # Tooltip content
         if context.scene.spp_show_uv_workflow_tooltip:
+            uv_box.separator(factor=0.3)
             tip_box = uv_box.box()
             tip_box.alert = True
             tip_col = tip_box.column(align=True)
@@ -108,140 +114,246 @@ class OBJECT_PT_UVWorkflow(Panel):
                 "wm.url_open", text="View UV Workflow Tutorial", icon="URL"
             ).url = "https://example.com/uv-workflow-tutorial"
 
-        # Step 1
-        box = uv_box.box()
-        box.label(text="Step 1. UV to Mesh (Auto Add Grease Pencil)", icon="UV")
-        row = box.row()
-        row.operator("object.uv_to_mesh", icon="MESH_DATA")
+        # Step 1: UV to Mesh
+        uv_box.separator(factor=0.5)
+        step1_box = uv_box.box()
+        step1_box.label(text="Step 1: UV to Mesh (Auto Add Grease Pencil)", icon="UV")
 
-        # Step 2
-        curve_box = uv_box.box()
-        curve_box.label(text="Step 2: Create & Edit Curve", icon="OUTLINER_OB_CURVE")
-        col = curve_box.column(align=True)
-        col.scale_y = 1.1
-        col.operator("object.gp_to_curve", text="Convert to Curve", icon="IPO_BEZIER")
+        step1_box.separator(factor=0.3)
+        step1_row = step1_box.row(align=True)
+        step1_row.scale_y = 1.0
+        step1_row.operator("object.uv_to_mesh", icon="MESH_DATA")
 
-        tools = curve_box.box()
-        tools.label(text="Curve Editing Tools", icon="TOOL_SETTINGS")
-        dec = tools.column(align=True)
-        dec.label(text="Decimate Curve:", icon="MOD_DECIM")
-        r = dec.row(align=True)
-        r.prop(S, "spp_decimate_ratio", text="Ratio")
-        r.operator("object.decimate_curve", text="Apply", icon="CHECKMARK")
-        opts = tools.column(align=True)
-        opts.label(text="Curve Options:", icon="CURVE_DATA")
-        cyclic = opts.row()
-        cyclic.prop(S, "spp_curve_cyclic", text="")
-        cyclic.label(text="Cyclic Curve")
-        mir = tools.column(align=True)
-        mh = mir.row(align=True)
-        mh.label(text="Mirror Tools (Edit Mode):", icon="MOD_MIRROR")
-        mir.operator(
-            "curve.mirror_selected_points_at_cursor",
-            text="Mirror at Cursor",
-            icon="CURVE_BEZCIRCLE",
+        # Step 2: Create & Edit Curve (collapsible)
+        step2_header = uv_box.row(align=True)
+        step2_header.prop(
+            context.window_manager,
+            "spp_show_uv_step_2",
+            text="",
+            icon="TRIA_DOWN" if context.window_manager.spp_show_uv_step_2 else "TRIA_RIGHT",
+            emboss=False,
         )
+        step2_header.label(text="Step 2: Create & Edit Curve", icon="OUTLINER_OB_CURVE")
+        
+        if context.window_manager.spp_show_uv_step_2:
+            # Check requirements
+            obj = context.active_object
+            if not obj or obj.type not in {"GPENCIL", "CURVE"}:
+                req_box = uv_box.box()
+                req_box.alert = True
+                req_box.label(text="Requires: Select a Grease Pencil stroke or Curve", icon="INFO")
+            else:
+                curve_box = uv_box.box()
 
-        # Step 3
-        box_sample = uv_box.box()
-        box_sample.label(text="Step 3: Sample Curve to Polyline", icon="CURVE_DATA")
+                curve_box.separator(factor=0.3)
+                col = curve_box.column(align=True)
+                col.scale_y = 1.0
+                col.operator("object.gp_to_curve", text="Convert to Curve", icon="IPO_BEZIER")
+
+                # Curve editing tools
+                curve_box.separator(factor=0.3)
+                tools = curve_box.box()
+                tools.label(text="Curve Editing Tools", icon="TOOL_SETTINGS")
+                
+                # Decimate curve
+                tools.separator(factor=0.2)
+                dec = tools.column(align=True)
+                dec.label(text="Decimate Curve", icon="MOD_DECIM")
+                dec_row = dec.row(align=True)
+                dec_row.prop(S, "spp_decimate_ratio", text="Ratio")
+                dec_row.operator("object.decimate_curve", text="Apply", icon="CHECKMARK")
+
+                # Curve options
+                tools.separator(factor=0.2)
+                opts = tools.column(align=True)
+                opts.label(text="Curve Options", icon="CURVE_DATA")
+                cyclic_row = opts.row(align=True)
+                cyclic_row.prop(S, "spp_curve_cyclic", text="")
+                cyclic_row.label(text="Cyclic Curve")
+
+                # Mirror tools
+                tools.separator(factor=0.2)
+                mir = tools.column(align=True)
+                mir.label(text="Mirror Tools (Edit Mode)", icon="MOD_MIRROR")
+                mir.operator(
+                    "curve.mirror_selected_points_at_cursor",
+                    text="Mirror at Cursor",
+                    icon="CURVE_BEZCIRCLE",
+                )
+
+        # Step 3: Sample Curve to Polyline
+        sample_box = uv_box.box()
+        sample_box.label(text="Step 3: Sample Curve to Polyline", icon="CURVE_DATA")
+
         if hasattr(S, "spp_sampler_fidelity"):
-            col_sample = box_sample.column(align=True)
-            col_sample.prop(S, "spp_sampler_fidelity", text="Boundary Samples")
-        row = box_sample.row(align=True)
-        row.scale_y = 1.2
-        row.operator(
+            sample_box.separator(factor=0.3)
+            sample_box.prop(S, "spp_sampler_fidelity", text="Boundary Samples")
+
+        sample_box.separator(factor=0.3)
+        sample_row = sample_box.row(align=True)
+        sample_row.scale_y = 1.0
+        sample_row.operator(
             "curve.sample_to_polyline",
             text="Sample Curve to Polyline",
             icon="CURVE_BEZCURVE",
         )
 
-        # Step 4 — Boundary Check
-        box_boundary = uv_box.box()
-        boundary_header = box_boundary.row()
-        boundary_header.label(text="Step 4: Boundary Check", icon="CHECKMARK")
-
-        action_row = box_boundary.row(align=True)
-        action_row.prop(S, "spp_uv_boundary_action", text="Action")
-
-        # Padding (UV) slider
-        pad_row = box_boundary.row(align=True)
-        pad_row.prop(S, "spp_uv_padding_uv")
-
-        boundary_op_row = box_boundary.row(align=True)
-        boundary_op_row.scale_y = 1.2
-        boundary_op_row.operator(
-            "mesh.check_uv_boundary",
-            text="Check / Fix UV Boundary",
-            icon="ZOOM_SELECTED",
+        # Step 4: Boundary Check (collapsible)
+        step4_header = uv_box.row(align=True)
+        step4_header.prop(
+            context.window_manager,
+            "spp_show_uv_step_4",
+            text="",
+            icon="TRIA_DOWN" if context.window_manager.spp_show_uv_step_4 else "TRIA_RIGHT",
+            emboss=False,
         )
+        step4_header.label(text="Step 4: Boundary Check", icon="CHECKMARK")
+        
+        if context.window_manager.spp_show_uv_step_4:
+            # Check requirements
+            obj = context.active_object
+            if not obj or obj.type != "MESH":
+                req_box = uv_box.box()
+                req_box.alert = True
+                req_box.label(text="Requires: Select a Mesh", icon="INFO")
+            else:
+                boundary_box = uv_box.box()
 
-        help_col = box_boundary.column(align=True)
-        help_col.scale_y = 0.8
-        help_col.label(text="Checks for out-of-bounds & near-boundary verts")
-        help_col.label(
-            text="FIX: pushes violators safely inside (min = Padding (UV), plus smart scaling)"
-        )
+                boundary_box.separator(factor=0.3)
+                action_row = boundary_box.row(align=True)
+                action_row.prop(S, "spp_uv_boundary_action", text="Action")
 
-        status_row = box_boundary.row(align=True)
-        status_row.scale_y = 0.9
-        status = getattr(S, "spp_uv_boundary_status", "NONE")
-        if status == "PASS":
-            status_row.label(text="Status: PASS - No Violations", icon="CHECKMARK")
-        elif status == "VIOLATIONS":
-            status_row.alert = True
-            status_row.label(text="Status: VIOLATIONS - Found Issues", icon="ERROR")
-        elif status == "ERROR":
-            status_row.alert = True
-            status_row.label(text="Status: ERROR - Check Failed", icon="CANCEL")
-        else:
-            status_row.enabled = False
-            status_row.label(text="Status: NONE - Not Checked", icon="QUESTION")
+                boundary_box.separator(factor=0.2)
+                boundary_box.prop(S, "spp_uv_padding_uv")
 
-        # Re-select button (only if violation VG exists)
-        if context.active_object and context.active_object.type == "MESH":
-            has_vg = any(
-                vg.name == "UV_Violations" for vg in context.active_object.vertex_groups
-            )
-            if has_vg:
-                reselect_row = box_boundary.row(align=True)
-                reselect_row.operator(
-                    "mesh.reselect_uv_violations",
-                    text="Re-select Violations",
-                    icon="RESTRICT_SELECT_OFF",
+                boundary_box.separator(factor=0.3)
+                boundary_op_row = boundary_box.row(align=True)
+                boundary_op_row.scale_y = 1.0
+                boundary_op_row.operator(
+                    "mesh.check_uv_boundary",
+                    text="Check / Fix UV Boundary",
+                    icon="ZOOM_SELECTED",
                 )
 
-        # Step 5
-        box_fill = uv_box.box()
-        box_fill.label(text="Step 5: Fill Border with Grid", icon="GRID")
-        fill_row = box_fill.row(align=True)
-        fill_row.scale_y = 1.2
-        fill_row.operator(
-            "mesh.simple_grid_fill", text="Fill Panel Border", icon="MOD_TRIANGULATE"
-        )
-        smooth_row = box_fill.row(align=True)
-        smooth_row.operator(
-            "mesh.smooth_mesh", text="Smooth Mesh (Optional)", icon="MOD_SMOOTH"
-        )
-        help_col = box_fill.column(align=True)
-        help_col.scale_y = 0.8
-        help_col.label(
-            text="Fill Panel Border: Auto-closes edges, creates quads, includes smoothing"
-        )
-        help_col.label(
-            text="Smooth Mesh: Additional smoothing with boundary preservation"
-        )
+                # Help text
+                boundary_box.separator(factor=0.2)
+                help_col = boundary_box.column(align=True)
+                help_col.scale_y = 0.8
+                help_col.enabled = False
+                help_col.label(text="Checks for out-of-bounds & near-boundary verts")
+                help_col.label(
+                    text="FIX: pushes violators safely inside (min = Padding (UV), plus smart scaling)"
+                )
 
-        # Step 6
-        box_proj = uv_box.box()
-        box_proj.label(text="Step 6:  Project To Surface", icon="OUTLINER_OB_MESH")
-        proj_row = box_proj.row(align=True)
-        proj_row.scale_y = 1.2
-        proj_row.operator(
-            "mesh.overlay_panel_onto_shell",
-            text="Project 2D Panel to 3D Shell",
-            icon="UV_DATA",
+                # Status indicator
+                boundary_box.separator(factor=0.2)
+                status_row = boundary_box.row(align=True)
+                status_row.scale_y = 0.9
+
+                status = getattr(S, "spp_uv_boundary_status", "NONE")
+                if status == "PASS":
+                    status_row.label(text="✓ No Violations Found", icon="CHECKMARK")
+                elif status == "VIOLATIONS":
+                    status_row.alert = True
+                    status_row.label(text="⚠ Violations Detected", icon="ERROR")
+                elif status == "ERROR":
+                    status_row.alert = True
+                    status_row.label(text="✗ Check Failed", icon="CANCEL")
+                else:
+                    status_row.enabled = False
+                    status_row.label(text="? Not Checked", icon="QUESTION")
+
+                # Re-select violations button
+                if context.active_object and context.active_object.type == "MESH":
+                    has_vg = any(
+                        vg.name == "UV_Violations" for vg in context.active_object.vertex_groups
+                    )
+                    if has_vg:
+                        boundary_box.separator(factor=0.2)
+                        reselect_row = boundary_box.row(align=True)
+                        reselect_row.scale_y = 0.9
+                        reselect_row.operator(
+                            "mesh.reselect_uv_violations",
+                            text="Re-select Violations",
+                            icon="RESTRICT_SELECT_OFF",
+                        )
+
+        # Step 5: Fill Border with Grid (collapsible)
+        step5_header = uv_box.row(align=True)
+        step5_header.prop(
+            context.window_manager,
+            "spp_show_uv_step_5",
+            text="",
+            icon="TRIA_DOWN" if context.window_manager.spp_show_uv_step_5 else "TRIA_RIGHT",
+            emboss=False,
         )
+        step5_header.label(text="Step 5: Fill Border with Grid", icon="GRID")
+        
+        if context.window_manager.spp_show_uv_step_5:
+            # Check requirements
+            obj = context.active_object
+            if not obj or obj.type != "MESH":
+                req_box = uv_box.box()
+                req_box.alert = True
+                req_box.label(text="Requires: Select a Mesh", icon="INFO")
+            else:
+                fill_box = uv_box.box()
+
+                fill_box.separator(factor=0.3)
+                fill_row = fill_box.row(align=True)
+                fill_row.scale_y = 1.0
+                fill_row.operator(
+                    "mesh.simple_grid_fill", text="Fill Panel Border", icon="MOD_TRIANGULATE"
+                )
+
+                fill_box.separator(factor=0.2)
+                smooth_row = fill_box.row(align=True)
+                smooth_row.scale_y = 0.9
+                smooth_row.operator(
+                    "mesh.smooth_mesh", text="Smooth Mesh (Optional)", icon="MOD_SMOOTH"
+                )
+
+                # Help text
+                fill_box.separator(factor=0.2)
+                help_col = fill_box.column(align=True)
+                help_col.scale_y = 0.8
+                help_col.enabled = False
+                help_col.label(
+                    text="Fill Panel Border: Auto-closes edges, creates quads, includes smoothing"
+                )
+                help_col.label(
+                    text="Smooth Mesh: Additional smoothing with boundary preservation"
+                )
+
+        # Step 6: Project To Surface (collapsible)
+        step6_header = uv_box.row(align=True)
+        step6_header.prop(
+            context.window_manager,
+            "spp_show_uv_step_6",
+            text="",
+            icon="TRIA_DOWN" if context.window_manager.spp_show_uv_step_6 else "TRIA_RIGHT",
+            emboss=False,
+        )
+        step6_header.label(text="Step 6: Project To Surface", icon="OUTLINER_OB_MESH")
+        
+        if context.window_manager.spp_show_uv_step_6:
+            # Check requirements
+            obj = context.active_object
+            if not obj or obj.type != "MESH":
+                req_box = uv_box.box()
+                req_box.alert = True
+                req_box.label(text="Requires: Select a Mesh", icon="INFO")
+            else:
+                proj_box = uv_box.box()
+
+                proj_box.separator(factor=0.3)
+                proj_row = proj_box.row(align=True)
+                proj_row.scale_y = 1.0
+                proj_row.operator(
+                    "mesh.overlay_panel_onto_shell",
+                    text="Project 2D Panel to 3D Shell",
+                    icon="UV_DATA",
+                )
 
 
 from . import workflow_operators  # noqa: F401
