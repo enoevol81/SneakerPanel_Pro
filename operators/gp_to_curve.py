@@ -6,6 +6,7 @@ from ..utils.collections import add_object_to_panel_collection
 class OBJECT_OT_GPToCurve(bpy.types.Operator):
     bl_idname = "object.gp_to_curve"
     bl_label = "GP To Curve"
+    bl_description = "Convert a Grease Pencil stroke into a cyclic Bezier curve with automatic surface snapping"
 
     def execute(self, context):
         # Add undo checkpoint
