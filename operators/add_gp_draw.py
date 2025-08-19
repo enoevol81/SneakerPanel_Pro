@@ -9,6 +9,7 @@ class OBJECT_OT_AddGPDraw(bpy.types.Operator):
 
     bl_idname = "object.add_gp_draw"
     bl_label = "Add GPDraw Grease Pencil"
+    bl_description = "Create a new Grease Pencil object for drawing panel outlines"
     bl_options = {"REGISTER", "UNDO"}
 
     @classmethod

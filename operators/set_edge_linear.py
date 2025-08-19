@@ -10,6 +10,7 @@ class MESH_OT_set_edge_linear(bpy.types.Operator):
 
     bl_idname = "mesh.set_edge_linear"
     bl_label = "Set Edge Linear"
+    bl_description = "Straighten selected edges by placing vertices along a straight line between endpoints"
     bl_options = {"REGISTER", "UNDO"}
 
     space_evenly: bpy.props.BoolProperty(

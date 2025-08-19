@@ -97,6 +97,7 @@ def _collapse_n_shortest_edges(obj, count):
 class MESH_OT_MakeEvenVerts(bpy.types.Operator):
     bl_idname = "mesh.make_even_verts"
     bl_label = "Make Even"
+    bl_description = "Reduce Verts"
     bl_options = {"REGISTER", "UNDO"}
 
     def execute(self, context):

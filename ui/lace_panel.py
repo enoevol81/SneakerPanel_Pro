@@ -1,17 +1,8 @@
-"""Lace Generator panel for the Sneaker Panel Pro addon.
-
-This module defines the panel that appears in the 3D View sidebar under the 'Sneaker Panel' category
-for applying the shoelace nodegroup to curve objects.
-"""
-
 import bpy
+from ..utils import icons
 
 
 class OBJECT_PT_SneakerPanelLace(bpy.types.Panel):
-    """Lace Generator panel for Sneaker Panel Pro addon.
-
-    This panel provides a button to apply the lace geometry node group to selected curve objects.
-    """
 
     bl_label = "Lace Generator"
     bl_idname = "OBJECT_PT_sneaker_panel_pro_lace"
@@ -22,17 +13,25 @@ class OBJECT_PT_SneakerPanelLace(bpy.types.Panel):
     @classmethod
     def poll(cls, context):
         return bool(context.window_manager.spp_show_lace_gen)
+        
+    def draw_header(self, context):
+        """Draw custom header with icon."""
+        layout = self.layout
+        # Get the custom icon ID
+        icon_id = icons.get_icon("laces")
+        layout.label(text="", icon_value=icon_id)
 
     def draw(self, context):
         layout = self.layout
         scene = context.scene
+        icon_id = icons.get_icon("laces")
         obj = context.active_object
 
         lace_box = layout.box()
         lace_header = lace_box.row(align=True)
 
         # Panel header
-        lace_header.label(text="Lace Generator", icon="MOD_OUTLINE")
+        lace_header.label(text="Lace Generator", icon_value=icon_id)
 
         # Add tooltip icon
         icon = "LIGHT_SUN" if context.scene.spp_show_lace_gen_tooltip else "INFO"

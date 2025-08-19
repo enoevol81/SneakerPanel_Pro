@@ -456,6 +456,7 @@ class OBJECT_OT_add_lace_nodegroup(bpy.types.Operator):
     """Attach LaceFromCurves Geometry Nodes to selected curve"""
 
     bl_idname = "object.apply_lace_nodegroup"
+    bl_description = "Apply procedural lace geometry to selected curve using geometry nodes"
     bl_label = "Apply Lace Node Group"
     bl_options = {"REGISTER", "UNDO"}
 

@@ -1,9 +1,10 @@
 import bpy
+from ..utils import icons
 
 
 class OBJECT_PT_autu_uv(bpy.types.Panel):
 
-    bl_label = "Auto UV"
+    bl_label = " Auto UV"
     bl_idname = "OBJECT_PT_sneaker_panel_pro_autu_uv"
     bl_space_type = "VIEW_3D"
     bl_region_type = "UI"
@@ -13,16 +14,24 @@ class OBJECT_PT_autu_uv(bpy.types.Panel):
     def poll(cls, context):
         return bool(context.window_manager.spp_show_auto_uv)
 
+    def draw_header(self, context):
+        """Draw custom header with icon."""
+        layout = self.layout
+        # Get the custom icon ID
+        icon_id = icons.get_icon("auto_uv")
+        layout.label(text="", icon_value=icon_id)
+
     def draw(self, context):
         layout = self.layout
         scene = context.scene
+        icon_id = icons.get_icon("auto_uv")
         obj = context.active_object
 
         uv_box = layout.box()
         uv_header = uv_box.row(align=True)
 
         # Panel header
-        uv_header.label(text="Shell UV Generation", icon="OUTLINER_OB_LIGHTPROBE")
+        uv_header.label(text="Shell UV Generation", icon_value=icon_id)
 
         # Add light bulb icon for tooltip
         icon = "LIGHT_SUN" if context.scene.spp_show_uv_gen_tooltip else "INFO"

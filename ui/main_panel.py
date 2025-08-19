@@ -25,7 +25,7 @@ class WM_OT_SPP_ToggleWorkflow(Operator):
 
 
 class OBJECT_PT_SneakerPanelProMain(bpy.types.Panel):
-    bl_label = "Sneaker Panel Pro"
+    bl_label = " Sneaker Panel Pro"
     bl_idname = "OBJECT_PT_sneaker_panel_pro_main"
     bl_space_type = "VIEW_3D"
     bl_region_type = "UI"
@@ -35,9 +35,8 @@ class OBJECT_PT_SneakerPanelProMain(bpy.types.Panel):
         """Draw custom header with icon."""
         layout = self.layout
         # Get the custom icon ID
-        icon_id = icons.get_icon("spp_lime_32")
-        if icon_id:
-            layout.label(text="", icon_value=icon_id)
+        icon_id = icons.get_icon("logo")
+        layout.label(text="", icon_value=icon_id)
 
     def draw(self, context):
         layout = self.layout
@@ -105,7 +104,7 @@ class OBJECT_PT_SneakerPanelProMain(bpy.types.Panel):
         # === Panel Helper Tools ===
         tools_box = layout.box()
         tools_header = tools_box.row()
-        icon_id = icons.get_icon("UI_Icons-01")
+        icon_id = icons.get_icon("tools")
         if icon_id:
             tools_header.label(text="Panel Helper Tools", icon_value=icon_id)
             icon = 'LIGHT_SUN' if context.window_manager.spp_show_helper_tooltip else 'INFO'
