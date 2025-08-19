@@ -35,7 +35,7 @@ class OBJECT_PT_SneakerPanelProMain(bpy.types.Panel):
         """Draw custom header with icon."""
         layout = self.layout
         # Get the custom icon ID
-        icon_id = icons.get_icon("uv_checker")
+        icon_id = icons.get_icon("spp_lime_32")
         if icon_id:
             layout.label(text="", icon_value=icon_id)
 
@@ -105,9 +105,11 @@ class OBJECT_PT_SneakerPanelProMain(bpy.types.Panel):
         # === Panel Helper Tools ===
         tools_box = layout.box()
         tools_header = tools_box.row()
-        tools_header.label(text="Panel Helper Tools", icon="TOOL_SETTINGS")
-        icon = 'LIGHT_SUN' if context.window_manager.spp_show_helper_tooltip else 'INFO'
-        tools_header.prop(context.window_manager, "spp_show_helper_tooltip", text="", toggle=True, icon=icon)
+        icon_id = icons.get_icon("UI_Icons-01")
+        if icon_id:
+            tools_header.label(text="Panel Helper Tools", icon_value=icon_id)
+            icon = 'LIGHT_SUN' if context.window_manager.spp_show_helper_tooltip else 'INFO'
+            tools_header.prop(context.window_manager, "spp_show_helper_tooltip", text="", toggle=True, icon=icon)
 
         # When toggled on, show compact tips
         if context.window_manager.spp_show_helper_tooltip:
