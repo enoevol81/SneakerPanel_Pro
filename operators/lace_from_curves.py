@@ -1,67 +1,492 @@
 import bpy
-from ..utils.collections import add_object_to_panel_collection
+import mathutils
 
-class OBJECT_OT_GPToCurveAlt(bpy.types.Operator):
-    bl_idname = "object.gp_to_curve_alt"
-    bl_label = "GP To Curve (Alt)"
-    bl_description = "Alternative GP to Curve conversion with panel workflow integration"
+
+# initialize lacefromcurves node group
+def lacefromcurves_node_group():
+    # If the group already exists, return it
+    if "LaceFromCurves" in bpy.data.node_groups:
+        return bpy.data.node_groups["LaceFromCurves"]
+    lacefromcurves = bpy.data.node_groups.new(
+        type="GeometryNodeTree", name="LaceFromCurves"
+    )
+
+    lacefromcurves.color_tag = "NONE"
+    lacefromcurves.description = ""
+    lacefromcurves.default_group_node_width = 140
+
+    lacefromcurves.is_modifier = True
+
+    # lacefromcurves interface
+    # Socket Geometry
+    geometry_socket = lacefromcurves.interface.new_socket(
+        name="Geometry", in_out="OUTPUT", socket_type="NodeSocketGeometry"
+    )
+    geometry_socket.attribute_domain = "POINT"
+
+    # Socket Geometry
+    geometry_socket_1 = lacefromcurves.interface.new_socket(
+        name="Geometry", in_out="INPUT", socket_type="NodeSocketGeometry"
+    )
+    geometry_socket_1.attribute_domain = "POINT"
+
+    # Socket Lace Profile
+    lace_profile_socket = lacefromcurves.interface.new_socket(
+        name="Lace Profile", in_out="INPUT", socket_type="NodeSocketInt"
+    )
+    lace_profile_socket.default_value = 0
+    lace_profile_socket.min_value = 0
+    lace_profile_socket.max_value = 2
+    lace_profile_socket.subtype = "NONE"
+    lace_profile_socket.attribute_domain = "POINT"
+    lace_profile_socket.description = "Def = Circle, 1 = Flat, 2 = Custom"
+
+    # Socket Scale
+    scale_socket = lacefromcurves.interface.new_socket(
+        name="Scale", in_out="INPUT", socket_type="NodeSocketFloat"
+    )
+    scale_socket.default_value = 0.004999999888241291
+    scale_socket.min_value = 0.0
+    scale_socket.max_value = 3.4028234663852886e38
+    scale_socket.subtype = "DISTANCE"
+    scale_socket.attribute_domain = "POINT"
+
+    # Socket Resample
+    resample__socket = lacefromcurves.interface.new_socket(
+        name="Resample ", in_out="INPUT", socket_type="NodeSocketInt"
+    )
+    resample__socket.default_value = 110
+    resample__socket.min_value = 1
+    resample__socket.max_value = 100000
+    resample__socket.subtype = "NONE"
+    resample__socket.attribute_domain = "POINT"
+
+    # Socket Tilt
+    tilt_socket = lacefromcurves.interface.new_socket(
+        name="Tilt", in_out="INPUT", socket_type="NodeSocketFloat"
+    )
+    tilt_socket.default_value = -0.11344639211893082
+    tilt_socket.min_value = -3.4028234663852886e38
+    tilt_socket.max_value = 3.4028234663852886e38
+    tilt_socket.subtype = "ANGLE"
+    tilt_socket.attribute_domain = "POINT"
+
+    # Socket Normal Mode
+    normal_mode_socket = lacefromcurves.interface.new_socket(
+        name="Normal Mode", in_out="INPUT", socket_type="NodeSocketInt"
+    )
+    normal_mode_socket.default_value = 0
+    normal_mode_socket.min_value = 0
+    normal_mode_socket.max_value = 2
+    normal_mode_socket.subtype = "NONE"
+    normal_mode_socket.attribute_domain = "POINT"
+    normal_mode_socket.description = "Def = Min Twist, 1 = Z Up, 2 = Free"
+
+    # Socket Custom Profile
+    custom_profile_socket = lacefromcurves.interface.new_socket(
+        name="Custom Profile", in_out="INPUT", socket_type="NodeSocketObject"
+    )
+    custom_profile_socket.attribute_domain = "POINT"
+
+    # Socket Material
+    material_socket = lacefromcurves.interface.new_socket(
+        name="Material", in_out="INPUT", socket_type="NodeSocketMaterial"
+    )
+    material_socket.attribute_domain = "POINT"
+
+    # Socket Shade Smooth
+    shade_smooth_socket = lacefromcurves.interface.new_socket(
+        name="Shade Smooth", in_out="INPUT", socket_type="NodeSocketBool"
+    )
+    shade_smooth_socket.default_value = True
+    shade_smooth_socket.attribute_domain = "POINT"
+
+    # initialize lacefromcurves nodes
+    # node Group Input.001
+    group_input_001 = lacefromcurves.nodes.new("NodeGroupInput")
+    group_input_001.name = "Group Input.001"
+
+    # node Group Output.001
+    group_output_001 = lacefromcurves.nodes.new("NodeGroupOutput")
+    group_output_001.name = "Group Output.001"
+    group_output_001.is_active_output = True
+
+    # node Resample Curve.001
+    resample_curve_001 = lacefromcurves.nodes.new("GeometryNodeResampleCurve")
+    resample_curve_001.name = "Resample Curve.001"
+    resample_curve_001.keep_last_segment = False
+    resample_curve_001.mode = "COUNT"
+    # Selection
+    resample_curve_001.inputs[1].default_value = True
+
+    # node Curve to Mesh.001
+    curve_to_mesh_001 = lacefromcurves.nodes.new("GeometryNodeCurveToMesh")
+    curve_to_mesh_001.name = "Curve to Mesh.001"
+    # Fill Caps
+    curve_to_mesh_001.inputs[2].default_value = False
+
+    # node Quadrilateral.001
+    quadrilateral_001 = lacefromcurves.nodes.new(
+        "GeometryNodeCurvePrimitiveQuadrilateral"
+    )
+    quadrilateral_001.name = "Quadrilateral.001"
+    quadrilateral_001.mode = "RECTANGLE"
+    # Width
+    quadrilateral_001.inputs[0].default_value = 0.0020000000949949026
+    # Height
+    quadrilateral_001.inputs[1].default_value = 0.0010000000474974513
+
+    # node Set Shade Smooth.001
+    set_shade_smooth_001 = lacefromcurves.nodes.new("GeometryNodeSetShadeSmooth")
+    set_shade_smooth_001.name = "Set Shade Smooth.001"
+    set_shade_smooth_001.domain = "EDGE"
+    # Selection
+    set_shade_smooth_001.inputs[1].default_value = True
+
+    # node Set Curve Normal.003
+    set_curve_normal_003 = lacefromcurves.nodes.new("GeometryNodeSetCurveNormal")
+    set_curve_normal_003.name = "Set Curve Normal.003"
+    set_curve_normal_003.mode = "FREE"
+    # Selection
+    set_curve_normal_003.inputs[1].default_value = True
+    # Normal
+    set_curve_normal_003.inputs[2].default_value = (0.0, 0.0, 1.0)
+
+    # node Set Curve Tilt.001
+    set_curve_tilt_001 = lacefromcurves.nodes.new("GeometryNodeSetCurveTilt")
+    set_curve_tilt_001.name = "Set Curve Tilt.001"
+    # Selection
+    set_curve_tilt_001.inputs[1].default_value = True
+
+    # node Set Curve Normal.004
+    set_curve_normal_004 = lacefromcurves.nodes.new("GeometryNodeSetCurveNormal")
+    set_curve_normal_004.name = "Set Curve Normal.004"
+    set_curve_normal_004.mode = "MINIMUM_TWIST"
+    # Selection
+    set_curve_normal_004.inputs[1].default_value = True
+
+    # node Set Curve Normal.005
+    set_curve_normal_005 = lacefromcurves.nodes.new("GeometryNodeSetCurveNormal")
+    set_curve_normal_005.name = "Set Curve Normal.005"
+    set_curve_normal_005.mode = "Z_UP"
+    # Selection
+    set_curve_normal_005.inputs[1].default_value = True
+
+    # node Switch.002
+    switch_002 = lacefromcurves.nodes.new("GeometryNodeSwitch")
+    switch_002.name = "Switch.002"
+    switch_002.input_type = "GEOMETRY"
+
+    # node Compare.004
+    compare_004 = lacefromcurves.nodes.new("FunctionNodeCompare")
+    compare_004.name = "Compare.004"
+    compare_004.data_type = "INT"
+    compare_004.mode = "ELEMENT"
+    compare_004.operation = "EQUAL"
+    # A_INT
+    compare_004.inputs[2].default_value = 1
+
+    # node Compare.005
+    compare_005 = lacefromcurves.nodes.new("FunctionNodeCompare")
+    compare_005.name = "Compare.005"
+    compare_005.data_type = "INT"
+    compare_005.mode = "ELEMENT"
+    compare_005.operation = "EQUAL"
+    # A_INT
+    compare_005.inputs[2].default_value = 0
+
+    # node Switch.003
+    switch_003 = lacefromcurves.nodes.new("GeometryNodeSwitch")
+    switch_003.name = "Switch.003"
+    switch_003.input_type = "GEOMETRY"
+
+    # node Set Curve Radius
+    set_curve_radius = lacefromcurves.nodes.new("GeometryNodeSetCurveRadius")
+    set_curve_radius.name = "Set Curve Radius"
+    # Selection
+    set_curve_radius.inputs[1].default_value = True
+
+    # node Object Info
+    object_info = lacefromcurves.nodes.new("GeometryNodeObjectInfo")
+    object_info.name = "Object Info"
+    object_info.transform_space = "ORIGINAL"
+    # As Instance
+    object_info.inputs[1].default_value = False
+
+    # node Curve Circle
+    curve_circle = lacefromcurves.nodes.new("GeometryNodeCurvePrimitiveCircle")
+    curve_circle.name = "Curve Circle"
+    curve_circle.mode = "RADIUS"
+    # Resolution
+    curve_circle.inputs[0].default_value = 19
+    # Radius
+    curve_circle.inputs[4].default_value = 0.0010000000474974513
+
+    # node Compare.006
+    compare_006 = lacefromcurves.nodes.new("FunctionNodeCompare")
+    compare_006.name = "Compare.006"
+    compare_006.data_type = "INT"
+    compare_006.mode = "ELEMENT"
+    compare_006.operation = "EQUAL"
+    # A_INT
+    compare_006.inputs[2].default_value = 1
+
+    # node Compare.007
+    compare_007 = lacefromcurves.nodes.new("FunctionNodeCompare")
+    compare_007.name = "Compare.007"
+    compare_007.data_type = "INT"
+    compare_007.mode = "ELEMENT"
+    compare_007.operation = "EQUAL"
+    # A_INT
+    compare_007.inputs[2].default_value = 0
+
+    # node Switch.004
+    switch_004 = lacefromcurves.nodes.new("GeometryNodeSwitch")
+    switch_004.name = "Switch.004"
+    switch_004.input_type = "GEOMETRY"
+
+    # node Switch.005
+    switch_005 = lacefromcurves.nodes.new("GeometryNodeSwitch")
+    switch_005.name = "Switch.005"
+    switch_005.input_type = "GEOMETRY"
+
+    # node Reroute
+    reroute = lacefromcurves.nodes.new("NodeReroute")
+    reroute.name = "Reroute"
+    reroute.socket_idname = "NodeSocketInt"
+    # node Reroute.001
+    reroute_001 = lacefromcurves.nodes.new("NodeReroute")
+    reroute_001.name = "Reroute.001"
+    reroute_001.socket_idname = "NodeSocketInt"
+    # node Reroute.002
+    reroute_002 = lacefromcurves.nodes.new("NodeReroute")
+    reroute_002.name = "Reroute.002"
+    reroute_002.socket_idname = "NodeSocketFloatDistance"
+    # node Reroute.003
+    reroute_003 = lacefromcurves.nodes.new("NodeReroute")
+    reroute_003.name = "Reroute.003"
+    reroute_003.socket_idname = "NodeSocketFloatAngle"
+    # node Reroute.004
+    reroute_004 = lacefromcurves.nodes.new("NodeReroute")
+    reroute_004.name = "Reroute.004"
+    reroute_004.socket_idname = "NodeSocketInt"
+    # node Reroute.005
+    reroute_005 = lacefromcurves.nodes.new("NodeReroute")
+    reroute_005.name = "Reroute.005"
+    reroute_005.socket_idname = "NodeSocketInt"
+    # node Reroute.006
+    reroute_006 = lacefromcurves.nodes.new("NodeReroute")
+    reroute_006.name = "Reroute.006"
+    reroute_006.socket_idname = "NodeSocketGeometry"
+    # node Reroute.007
+    reroute_007 = lacefromcurves.nodes.new("NodeReroute")
+    reroute_007.name = "Reroute.007"
+    reroute_007.socket_idname = "NodeSocketGeometry"
+    # node Reroute.008
+    reroute_008 = lacefromcurves.nodes.new("NodeReroute")
+    reroute_008.name = "Reroute.008"
+    reroute_008.socket_idname = "NodeSocketInt"
+    # node Set Material
+    set_material = lacefromcurves.nodes.new("GeometryNodeSetMaterial")
+    set_material.name = "Set Material"
+    # Selection
+    set_material.inputs[1].default_value = True
+
+    # Set locations
+    group_input_001.location = (-888.1896362304688, 1756.08251953125)
+    group_output_001.location = (1801.0384521484375, 1118.3560791015625)
+    resample_curve_001.location = (-499.40673828125, 2107.26318359375)
+    curve_to_mesh_001.location = (765.59326171875, 779.2630615234375)
+    quadrilateral_001.location = (-499.40673828125, 653.2630615234375)
+    set_shade_smooth_001.location = (955.59326171875, 779.2630615234375)
+    set_curve_normal_003.location = (145.59323120117188, 1444.9296875)
+    set_curve_tilt_001.location = (-69.40673828125, 1254.596435546875)
+    set_curve_normal_004.location = (348.09326171875, 947.9297485351562)
+    set_curve_normal_005.location = (145.59326171875, 1196.9296875)
+    switch_002.location = (348.09326171875, 1377.596435546875)
+    compare_004.location = (145.59327697753906, 1637.596435546875)
+    compare_005.location = (348.09326171875, 1695.596435546875)
+    switch_003.location = (563.09326171875, 967.2630615234375)
+    set_curve_radius.location = (-296.90673828125, 2039.9296875)
+    object_info.location = (-499.40673828125, 905.2630615234375)
+    curve_circle.location = (-296.90673828125, 685.2630615234375)
+    compare_006.location = (-499.4067687988281, 1859.2630615234375)
+    compare_007.location = (-296.90673828125, 2232.596435546875)
+    switch_004.location = (-296.90673828125, 873.2630615234375)
+    switch_005.location = (-69.40673828125, 779.2630615234375)
+    reroute.location = (-499.40673828125, 2232.596435546875)
+    reroute_001.location = (-359.40673828125, 2232.596435546875)
+    reroute_002.location = (-499.40673828125, 1940.023681640625)
+    reroute_003.location = (-499.40673828125, 1154.6260986328125)
+    reroute_004.location = (-499.40673828125, 1695.596435546875)
+    reroute_005.location = (70.59326171875, 1695.596435546875)
+    reroute_006.location = (145.59326171875, 867.0772094726562)
+    reroute_007.location = (703.09326171875, 746.0640869140625)
+    reroute_008.location = (285.59326171875, 1695.596435546875)
+    set_material.location = (1331.2320556640625, 904.7224731445312)
+
+    # Set dimensions
+    group_input_001.width, group_input_001.height = 140.0, 100.0
+    group_output_001.width, group_output_001.height = 140.0, 100.0
+    resample_curve_001.width, resample_curve_001.height = 140.0, 100.0
+    curve_to_mesh_001.width, curve_to_mesh_001.height = 140.0, 100.0
+    quadrilateral_001.width, quadrilateral_001.height = 140.0, 100.0
+    set_shade_smooth_001.width, set_shade_smooth_001.height = 140.0, 100.0
+    set_curve_normal_003.width, set_curve_normal_003.height = 140.0, 100.0
+    set_curve_tilt_001.width, set_curve_tilt_001.height = 140.0, 100.0
+    set_curve_normal_004.width, set_curve_normal_004.height = 140.0, 100.0
+    set_curve_normal_005.width, set_curve_normal_005.height = 140.0, 100.0
+    switch_002.width, switch_002.height = 140.0, 100.0
+    compare_004.width, compare_004.height = 140.0, 100.0
+    compare_005.width, compare_005.height = 140.0, 100.0
+    switch_003.width, switch_003.height = 140.0, 100.0
+    set_curve_radius.width, set_curve_radius.height = 140.0, 100.0
+    object_info.width, object_info.height = 140.0, 100.0
+    curve_circle.width, curve_circle.height = 140.0, 100.0
+    compare_006.width, compare_006.height = 140.0, 100.0
+    compare_007.width, compare_007.height = 140.0, 100.0
+    switch_004.width, switch_004.height = 140.0, 100.0
+    switch_005.width, switch_005.height = 140.0, 100.0
+    reroute.width, reroute.height = 14.5, 100.0
+    reroute_001.width, reroute_001.height = 14.5, 100.0
+    reroute_002.width, reroute_002.height = 14.5, 100.0
+    reroute_003.width, reroute_003.height = 14.5, 100.0
+    reroute_004.width, reroute_004.height = 14.5, 100.0
+    reroute_005.width, reroute_005.height = 14.5, 100.0
+    reroute_006.width, reroute_006.height = 14.5, 100.0
+    reroute_007.width, reroute_007.height = 14.5, 100.0
+    reroute_008.width, reroute_008.height = 14.5, 100.0
+    set_material.width, set_material.height = 140.0, 100.0
+
+    # initialize lacefromcurves links
+    # set_material.Geometry -> group_output_001.Geometry
+    lacefromcurves.links.new(set_material.outputs[0], group_output_001.inputs[0])
+    # set_curve_radius.Curve -> set_curve_tilt_001.Curve
+    lacefromcurves.links.new(set_curve_radius.outputs[0], set_curve_tilt_001.inputs[0])
+    # set_curve_tilt_001.Curve -> set_curve_normal_005.Curve
+    lacefromcurves.links.new(
+        set_curve_tilt_001.outputs[0], set_curve_normal_005.inputs[0]
+    )
+    # set_curve_tilt_001.Curve -> set_curve_normal_003.Curve
+    lacefromcurves.links.new(
+        set_curve_tilt_001.outputs[0], set_curve_normal_003.inputs[0]
+    )
+    # compare_004.Result -> switch_002.Switch
+    lacefromcurves.links.new(compare_004.outputs[0], switch_002.inputs[0])
+    # group_input_001.Resample  -> resample_curve_001.Count
+    lacefromcurves.links.new(group_input_001.outputs[3], resample_curve_001.inputs[2])
+    # group_input_001.Geometry -> resample_curve_001.Curve
+    lacefromcurves.links.new(group_input_001.outputs[0], resample_curve_001.inputs[0])
+    # resample_curve_001.Curve -> set_curve_radius.Curve
+    lacefromcurves.links.new(resample_curve_001.outputs[0], set_curve_radius.inputs[0])
+    # compare_005.Result -> switch_003.Switch
+    lacefromcurves.links.new(compare_005.outputs[0], switch_003.inputs[0])
+    # switch_002.Output -> switch_003.False
+    lacefromcurves.links.new(switch_002.outputs[0], switch_003.inputs[1])
+    # set_curve_normal_003.Curve -> switch_002.False
+    lacefromcurves.links.new(set_curve_normal_003.outputs[0], switch_002.inputs[1])
+    # set_curve_normal_005.Curve -> switch_002.True
+    lacefromcurves.links.new(set_curve_normal_005.outputs[0], switch_002.inputs[2])
+    # set_curve_normal_004.Curve -> switch_003.True
+    lacefromcurves.links.new(set_curve_normal_004.outputs[0], switch_003.inputs[2])
+    # switch_003.Output -> curve_to_mesh_001.Curve
+    lacefromcurves.links.new(switch_003.outputs[0], curve_to_mesh_001.inputs[0])
+    # group_input_001.Custom Profile -> object_info.Object
+    lacefromcurves.links.new(group_input_001.outputs[6], object_info.inputs[0])
+    # curve_to_mesh_001.Mesh -> set_shade_smooth_001.Geometry
+    lacefromcurves.links.new(
+        curve_to_mesh_001.outputs[0], set_shade_smooth_001.inputs[0]
+    )
+    # switch_004.Output -> switch_005.False
+    lacefromcurves.links.new(switch_004.outputs[0], switch_005.inputs[1])
+    # compare_007.Result -> switch_005.Switch
+    lacefromcurves.links.new(compare_007.outputs[0], switch_005.inputs[0])
+    # curve_circle.Curve -> switch_005.True
+    lacefromcurves.links.new(curve_circle.outputs[0], switch_005.inputs[2])
+    # group_input_001.Scale -> compare_006.B
+    lacefromcurves.links.new(group_input_001.outputs[2], compare_006.inputs[3])
+    # compare_006.Result -> switch_004.Switch
+    lacefromcurves.links.new(compare_006.outputs[0], switch_004.inputs[0])
+    # object_info.Geometry -> switch_004.False
+    lacefromcurves.links.new(object_info.outputs[4], switch_004.inputs[1])
+    # quadrilateral_001.Curve -> switch_004.True
+    lacefromcurves.links.new(quadrilateral_001.outputs[0], switch_004.inputs[2])
+    # group_input_001.Lace Profile -> reroute.Input
+    lacefromcurves.links.new(group_input_001.outputs[1], reroute.inputs[0])
+    # reroute.Output -> reroute_001.Input
+    lacefromcurves.links.new(reroute.outputs[0], reroute_001.inputs[0])
+    # reroute_001.Output -> compare_007.B
+    lacefromcurves.links.new(reroute_001.outputs[0], compare_007.inputs[3])
+    # group_input_001.Scale -> reroute_002.Input
+    lacefromcurves.links.new(group_input_001.outputs[2], reroute_002.inputs[0])
+    # reroute_002.Output -> set_curve_radius.Radius
+    lacefromcurves.links.new(reroute_002.outputs[0], set_curve_radius.inputs[2])
+    # group_input_001.Tilt -> reroute_003.Input
+    lacefromcurves.links.new(group_input_001.outputs[4], reroute_003.inputs[0])
+    # reroute_003.Output -> set_curve_tilt_001.Tilt
+    lacefromcurves.links.new(reroute_003.outputs[0], set_curve_tilt_001.inputs[2])
+    # group_input_001.Normal Mode -> reroute_004.Input
+    lacefromcurves.links.new(group_input_001.outputs[5], reroute_004.inputs[0])
+    # reroute_004.Output -> reroute_005.Input
+    lacefromcurves.links.new(reroute_004.outputs[0], reroute_005.inputs[0])
+    # reroute_005.Output -> compare_004.B
+    lacefromcurves.links.new(reroute_005.outputs[0], compare_004.inputs[3])
+    # set_curve_tilt_001.Curve -> reroute_006.Input
+    lacefromcurves.links.new(set_curve_tilt_001.outputs[0], reroute_006.inputs[0])
+    # reroute_006.Output -> set_curve_normal_004.Curve
+    lacefromcurves.links.new(reroute_006.outputs[0], set_curve_normal_004.inputs[0])
+    # switch_005.Output -> reroute_007.Input
+    lacefromcurves.links.new(switch_005.outputs[0], reroute_007.inputs[0])
+    # reroute_007.Output -> curve_to_mesh_001.Profile Curve
+    lacefromcurves.links.new(reroute_007.outputs[0], curve_to_mesh_001.inputs[1])
+    # reroute_005.Output -> reroute_008.Input
+    lacefromcurves.links.new(reroute_005.outputs[0], reroute_008.inputs[0])
+    # reroute_008.Output -> compare_005.B
+    lacefromcurves.links.new(reroute_008.outputs[0], compare_005.inputs[3])
+    # group_input_001.Shade Smooth -> set_shade_smooth_001.Shade Smooth
+    lacefromcurves.links.new(group_input_001.outputs[8], set_shade_smooth_001.inputs[2])
+    # set_shade_smooth_001.Geometry -> set_material.Geometry
+    lacefromcurves.links.new(set_shade_smooth_001.outputs[0], set_material.inputs[0])
+    # group_input_001.Material -> set_material.Material
+    lacefromcurves.links.new(group_input_001.outputs[7], set_material.inputs[2])
+    return lacefromcurves
+
+
+class OBJECT_OT_add_lace_nodegroup(bpy.types.Operator):
+    """Attach LaceFromCurves Geometry Nodes to selected curve"""
+
+    bl_idname = "object.apply_lace_nodegroup"
+    bl_label = "Apply Lace Node Group"
+    bl_options = {"REGISTER", "UNDO"}
 
     def execute(self, context):
-        bpy.ops.ed.undo_push(message="Convert GP to Curve")
-        bpy.ops.object.gpto_simple_curve_convert()
-        curve_obj = bpy.context.object
-        curve_data = curve_obj.data
+        obj = context.active_object
+        if not obj or obj.type != "CURVE":
+            self.report({"ERROR"}, "Select a curve object")
+            return {"CANCELLED"}
 
-        panel_count = context.scene.spp_panel_count if hasattr(context.scene, "spp_panel_count") else 1
-        panel_name = context.scene.spp_panel_name if hasattr(context.scene, "spp_panel_name") else "Panel"
+        node_group = lacefromcurves_node_group()
+        if not node_group:
+            self.report(
+                {"ERROR"}, "LaceFromCurves node group not found or failed to create"
+            )
+            return {"CANCELLED"}
 
-        if panel_name and panel_name.strip():
-            curve_obj.name = f"{panel_name}_Curve_{panel_count}"
-        else:
-            curve_obj.name = f"Curve_{panel_count}"
+        modifier = obj.modifiers.new(name="Lace Modifier", type="NODES")
+        modifier.node_group = node_group
 
-        add_object_to_panel_collection(curve_obj, panel_count, panel_name)
-
-        for spline in curve_data.splines:
-            spline.type = 'BEZIER'
-            spline.use_cyclic_u = True
-            for bp in spline.bezier_points:
-                bp.handle_left_type = 'AUTO'
-                bp.handle_right_type = 'AUTO'
-
-        bpy.ops.object.editmode_toggle()
-        bpy.context.tool_settings.use_snap = True
-        bpy.context.tool_settings.snap_elements = {'FACE_NEAREST'}
-        bpy.context.tool_settings.snap_target = 'CLOSEST'
-
-        bpy.ops.curve.select_all(action='SELECT')
-        bpy.ops.transform.translate(
-            value=(0, 0, 0),
-            orient_type='GLOBAL',
-            orient_matrix=((1, 0, 0), (0, 1, 0), (0, 0, 1)),
-            orient_matrix_type='GLOBAL',
-            mirror=False,
-            use_proportional_edit=False,
-            proportional_edit_falloff='SMOOTH',
-            proportional_size=1,
-            use_proportional_connected=False,
-            use_proportional_projected=False,
-            snap=True,
-            snap_elements={'FACE_NEAREST'},
-            use_snap_project=False,
-            snap_target='CLOSEST',
-            use_snap_self=True,
-            use_snap_edit=True,
-            use_snap_nonedit=True,
-            use_snap_selectable=False
-        )
-
-        self.report({'INFO'}, f"Grease Pencil converted to cyclic Bezier Curve '{curve_obj.name}'. Edit as needed.")
-        return {'FINISHED'}
+        self.report({"INFO"}, "LaceFromCurves modifier added")
+        return {"FINISHED"}
 
 
 def register():
-    bpy.utils.register_class(OBJECT_OT_GPToCurveAlt)
+    bpy.utils.register_class(OBJECT_OT_add_lace_nodegroup)
+
 
 def unregister():
-    bpy.utils.unregister_class(OBJECT_OT_GPToCurveAlt)
+    bpy.utils.unregister_class(OBJECT_OT_add_lace_nodegroup)
+
+
+if __name__ == "__main__":
+    register()
+    bpy.ops.object.apply_lace_nodegroup()
