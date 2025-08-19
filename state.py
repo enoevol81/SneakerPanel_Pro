@@ -3,6 +3,89 @@ import bpy
 from bpy.props import EnumProperty, BoolProperty
 
 
+def update_surface_step_1(self, context):
+    """Ensure only one surface step is open at a time"""
+    if self.spp_show_surface_step_1:
+        self.spp_show_surface_step_2 = False
+        self.spp_show_surface_step_3 = False
+        self.spp_show_surface_step_4 = False
+
+def update_surface_step_2(self, context):
+    """Ensure only one surface step is open at a time"""
+    if self.spp_show_surface_step_2:
+        self.spp_show_surface_step_1 = False
+        self.spp_show_surface_step_3 = False
+        self.spp_show_surface_step_4 = False
+
+def update_surface_step_3(self, context):
+    """Ensure only one surface step is open at a time"""
+    if self.spp_show_surface_step_3:
+        self.spp_show_surface_step_1 = False
+        self.spp_show_surface_step_2 = False
+        self.spp_show_surface_step_4 = False
+
+def update_surface_step_4(self, context):
+    """Ensure only one surface step is open at a time"""
+    if self.spp_show_surface_step_4:
+        self.spp_show_surface_step_1 = False
+        self.spp_show_surface_step_2 = False
+        self.spp_show_surface_step_3 = False
+
+def update_uv_step_1(self, context):
+    """Ensure only one UV step is open at a time"""
+    if self.spp_show_uv_step_1:
+        self.spp_show_uv_step_2 = False
+        self.spp_show_uv_step_3 = False
+        self.spp_show_uv_step_4 = False
+        self.spp_show_uv_step_5 = False
+        self.spp_show_uv_step_6 = False
+
+def update_uv_step_2(self, context):
+    """Ensure only one UV step is open at a time"""
+    if self.spp_show_uv_step_2:
+        self.spp_show_uv_step_1 = False
+        self.spp_show_uv_step_3 = False
+        self.spp_show_uv_step_4 = False
+        self.spp_show_uv_step_5 = False
+        self.spp_show_uv_step_6 = False
+
+def update_uv_step_3(self, context):
+    """Ensure only one UV step is open at a time"""
+    if self.spp_show_uv_step_3:
+        self.spp_show_uv_step_1 = False
+        self.spp_show_uv_step_2 = False
+        self.spp_show_uv_step_4 = False
+        self.spp_show_uv_step_5 = False
+        self.spp_show_uv_step_6 = False
+
+def update_uv_step_4(self, context):
+    """Ensure only one UV step is open at a time"""
+    if self.spp_show_uv_step_4:
+        self.spp_show_uv_step_1 = False
+        self.spp_show_uv_step_2 = False
+        self.spp_show_uv_step_3 = False
+        self.spp_show_uv_step_5 = False
+        self.spp_show_uv_step_6 = False
+
+def update_uv_step_5(self, context):
+    """Ensure only one UV step is open at a time"""
+    if self.spp_show_uv_step_5:
+        self.spp_show_uv_step_1 = False
+        self.spp_show_uv_step_2 = False
+        self.spp_show_uv_step_3 = False
+        self.spp_show_uv_step_4 = False
+        self.spp_show_uv_step_6 = False
+
+def update_uv_step_6(self, context):
+    """Ensure only one UV step is open at a time"""
+    if self.spp_show_uv_step_6:
+        self.spp_show_uv_step_1 = False
+        self.spp_show_uv_step_2 = False
+        self.spp_show_uv_step_3 = False
+        self.spp_show_uv_step_4 = False
+        self.spp_show_uv_step_5 = False
+
+
 def register():
     WM = bpy.types.WindowManager
     SC = bpy.types.Scene
@@ -45,22 +128,26 @@ def register():
     if not hasattr(WM, "spp_show_surface_step_1"):
         WM.spp_show_surface_step_1 = BoolProperty(
             name="Show Surface Step 1", default=True,
-            description="Toggle visibility of Surface Step 1"
+            description="Toggle visibility of Surface Step 1",
+            update=update_surface_step_1
         )
     if not hasattr(WM, "spp_show_surface_step_2"):
         WM.spp_show_surface_step_2 = BoolProperty(
-            name="Show Surface Step 2", default=True,
-            description="Toggle visibility of Surface Step 2"
+            name="Show Surface Step 2", default=False,
+            description="Toggle visibility of Surface Step 2",
+            update=update_surface_step_2
         )
     if not hasattr(WM, "spp_show_surface_step_3"):
         WM.spp_show_surface_step_3 = BoolProperty(
-            name="Show Surface Step 3", default=True,
-            description="Toggle visibility of Surface Step 3"
+            name="Show Surface Step 3", default=False,
+            description="Toggle visibility of Surface Step 3",
+            update=update_surface_step_3
         )
     if not hasattr(WM, "spp_show_surface_step_4"):
         WM.spp_show_surface_step_4 = BoolProperty(
-            name="Show Surface Step 4", default=True,
-            description="Toggle visibility of Surface Step 4"
+            name="Show Surface Step 4", default=False,
+            description="Toggle visibility of Surface Step 4",
+            update=update_surface_step_4
         )
 
     # -------------------------------------------------------------------------
@@ -70,32 +157,38 @@ def register():
     if not hasattr(WM, "spp_show_uv_step_1"):
         WM.spp_show_uv_step_1 = BoolProperty(
             name="Show UV Step 1", default=True,
-            description="Toggle visibility of UV Step 1"
+            description="Toggle visibility of UV Step 1",
+            update=update_uv_step_1
         )
     if not hasattr(WM, "spp_show_uv_step_2"):
         WM.spp_show_uv_step_2 = BoolProperty(
-            name="Show UV Step 2", default=True,
-            description="Toggle visibility of UV Step 2"
+            name="Show UV Step 2", default=False,
+            description="Toggle visibility of UV Step 2",
+            update=update_uv_step_2
         )
     if not hasattr(WM, "spp_show_uv_step_3"):
         WM.spp_show_uv_step_3 = BoolProperty(
-            name="Show UV Step 3", default=True,
-            description="Toggle visibility of UV Step 3"
+            name="Show UV Step 3", default=False,
+            description="Toggle visibility of UV Step 3",
+            update=update_uv_step_3
         )
     if not hasattr(WM, "spp_show_uv_step_4"):
         WM.spp_show_uv_step_4 = BoolProperty(
-            name="Show UV Step 4", default=True,
-            description="Toggle visibility of UV Step 4"
+            name="Show UV Step 4", default=False,
+            description="Toggle visibility of UV Step 4",
+            update=update_uv_step_4
         )
     if not hasattr(WM, "spp_show_uv_step_5"):
         WM.spp_show_uv_step_5 = BoolProperty(
-            name="Show UV Step 5", default=True,
-            description="Toggle visibility of UV Step 5"
+            name="Show UV Step 5", default=False,
+            description="Toggle visibility of UV Step 5",
+            update=update_uv_step_5
         )
     if not hasattr(WM, "spp_show_uv_step_6"):
         WM.spp_show_uv_step_6 = BoolProperty(
-            name="Show UV Step 6", default=True,
-            description="Toggle visibility of UV Step 6"
+            name="Show UV Step 6", default=False,
+            description="Toggle visibility of UV Step 6",
+            update=update_uv_step_6
         )
 
     # -------------------------------------------------------------------------
