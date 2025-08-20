@@ -27,7 +27,8 @@ def load_icons():
         "logo.png",
         "spp_tile_32.png",
         "spp_tile_64.png",
-        "tools.png"
+        "tools.png",
+        "mesh.png"
     ]
 
     for icon_name in ui_icons:

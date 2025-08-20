@@ -1,4 +1,5 @@
 import bpy
+from ..utils import icons
 
 
 class OBJECT_PT_SurfaceWorkflow(bpy.types.Panel):
@@ -10,6 +11,11 @@ class OBJECT_PT_SurfaceWorkflow(bpy.types.Panel):
     bl_region_type = "UI"
     bl_category = "Sneaker Panel"
     bl_options = {"DEFAULT_CLOSED"}
+
+    def draw_header(self, context):
+        layout = self.layout
+        icon_id = icons.get_icon("3d")
+        layout.label(text="", icon_value=icon_id)
 
     @classmethod
     def poll(cls, context):
@@ -24,7 +30,7 @@ class OBJECT_PT_SurfaceWorkflow(bpy.types.Panel):
         surface_header = surface_box.row(align=True)
 
         # Panel header
-        surface_header.label(text="Surface Direct Workflow [3D]", icon="MESH_CUBE")
+        surface_header.label(text="Draw Direct To Shell", icon_value=icons.get_icon("3d"))
 
         # Tooltip icon
         icon = "LIGHT_SUN" if getattr(context.scene, "spp_show_surface_workflow_tooltip", False) else "INFO"

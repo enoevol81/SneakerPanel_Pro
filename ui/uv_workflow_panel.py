@@ -2,6 +2,7 @@
 
 import bpy
 from bpy.types import Panel
+from ..utils import icons
 
 
 # Keep (or create) the Scene properties this panel uses
@@ -60,6 +61,11 @@ class OBJECT_PT_UVWorkflow(Panel):
     bl_category = 'Sneaker Panel'
     bl_order = 2
 
+    def draw_header(self, context):
+        layout = self.layout
+        icon_id = icons.get_icon("2d")
+        layout.label(text="", icon_value=icon_id)
+
     @classmethod
     def poll(cls, context):
         return getattr(context.window_manager, "spp_active_workflow", 'UV_2D') == 'UV_2D'
@@ -71,7 +77,7 @@ class OBJECT_PT_UVWorkflow(Panel):
 
         uv_box = layout.box()
         uv_header = uv_box.row(align=True)
-        uv_header.label(text="UV Workflow [2D]", icon="MOD_UVPROJECT")
+        uv_header.label(text="Draw Direct To UV",icon_value=icons.get_icon("2d"))
 
         # Optional workflow tooltip (pattern used elsewhere in your UI)
         tooltip_icon = 'LIGHT_SUN' if getattr(context.scene, "spp_show_uv_workflow_tooltip", False) else 'INFO'
