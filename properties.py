@@ -133,6 +133,11 @@ def register_properties():
         default=False,
         description="Show helpful tips for the Lace Generator",
     )
+    bpy.types.Scene.spp_show_profile_proj_tooltip = bpy.props.BoolProperty(
+        name="Show Profile Projection Tooltip",
+        default=False,
+        description="Show helpful tips for the Profile Projection",
+    )
 
     # -------------------------------------------------------------------------
     # Target object properties
@@ -410,6 +415,11 @@ def unregister_properties():
         "spp_show_mirror_tooltip",
         "spp_show_uv_gen_tooltip",
         "spp_show_gp_tooltip",
+        "spp_show_helper_tooltip",
+        "spp_show_surface_workflow_tooltip",
+        "spp_show_uv_workflow_tooltip",
+        "spp_show_lace_gen_tooltip",
+        "spp_show_profile_proj_tooltip",
         # Grease Pencil stabilizer
         "spp_use_stabilizer",
         "spp_stabilizer_radius",

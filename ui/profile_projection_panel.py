@@ -27,18 +27,58 @@ class PP_PT_Main(Panel):
         return getattr(wm, "spp_show_profile_projection", False)
 
     def draw(self, context):
-        props = context.scene.profile_proj
         layout = self.layout
+        scene = context.scene
+        props = context.scene.profile_proj
+        icon_id = icons.get_icon("ref_image")
         
-        layout.prop(props, "image_path")
-        layout.prop(props, "projection_uv")
-        layout.prop(props, "main_uv")
-        layout.prop(props, "dest_size")
-        layout.separator()
-        layout.operator("pp.create_projection_uv", icon='IMAGE_PLANE')
-        layout.operator("pp.create_dest_and_material", icon='MATERIAL')
-        layout.separator()
-        layout.operator("pp.auto_clone_transfer", icon='BRUSH_DATA')
+        # Main box for the panel content
+        main_box = layout.box()
+        main_header = main_box.row(align=True)
+        
+        # Panel header
+        main_header.label(text="Profile Projection", icon_value=icon_id)
+        
+        # Add tooltip icon
+        icon = "LIGHT_SUN" if context.scene.spp_show_profile_proj_tooltip else "INFO"
+        main_header.prop(context.scene, "spp_show_profile_proj_tooltip", text="", toggle=True, icon=icon)
+        
+        # Show tooltip if enabled
+        if context.scene.spp_show_profile_proj_tooltip:
+            tip_box = main_box.box()
+            tip_box.alert = True  # Makes the box stand out with a different color
+            tip_col = tip_box.column(align=True)
+            tip_col.scale_y = 0.9  # Slightly smaller text
+            tip_col.label(text="Profile Projection Tips:", icon="HELP")
+            tip_col.label(text="• Select source mesh with projection UV map")
+            tip_col.label(text="• Select destination mesh with main UV map")
+            tip_col.label(text="• Set destination mesh size in cm")
+            tip_col.label(text="• Run auto clone transfer to project profile")
+            tip_col.operator(
+                "wm.url_open", text="View Profile Projection Tutorial", icon="URL"
+            ).url = "https://example.com/profile-projection-tutorial"
+        
+        # Parameters section
+        params_box = main_box.box()
+        params_box.label(text="Parameters:", icon="PROPERTIES")
+        params_col = params_box.column(align=True)
+        params_col.scale_y = 1.1
+        
+        params_col.prop(props, "image_path")
+        params_col.prop(props, "projection_uv")
+        params_col.prop(props, "main_uv")
+        params_col.prop(props, "dest_size")
+        
+        # Actions section
+        actions_box = main_box.box()
+        actions_box.label(text="Actions:", icon="PLAY")
+        actions_col = actions_box.column(align=True)
+        actions_col.scale_y = 1.1
+        
+        actions_col.operator("pp.create_projection_uv", icon='IMAGE_PLANE')
+        actions_col.operator("pp.create_dest_and_material", icon='MATERIAL')
+        actions_col.separator()
+        actions_col.operator("pp.auto_clone_transfer", icon='BRUSH_DATA')
 
 
 # Registration
