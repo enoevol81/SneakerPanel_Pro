@@ -33,6 +33,7 @@ from . import (
     panel_generator,
     quick_conform,
     reduce_verts,
+    ref_image_gen,
     sample_curve_to_polyline,
     set_edge_linear,
     shell_uv_to_panel,
@@ -82,6 +83,7 @@ def register():
     boundary_edges.register()
     add_subsurf.register()
     set_edge_linear.register()
+    ref_image_gen.register()
 
 
 def unregister():
@@ -119,3 +121,4 @@ def unregister():
     boundary_edges.unregister()
     add_subsurf.unregister()
     set_edge_linear.unregister()
+    ref_image_gen.unregister()

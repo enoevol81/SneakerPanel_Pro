@@ -81,6 +81,13 @@ class OBJECT_PT_SneakerPanelProMain(bpy.types.Panel):
             depress=wm.spp_show_lace_gen,
         )
         t.data_path = "window_manager.spp_show_lace_gen"
+        t = toggles.operator(
+            "wm.context_toggle",
+            text=" Profile Projection",
+            icon_value=icons.get_icon("ref_image"),
+            depress=wm.spp_show_profile_projection,
+        )
+        t.data_path = "window_manager.spp_show_profile_projection"
 
         # === Panel Configuration ===
         main_box = layout.box()

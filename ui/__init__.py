@@ -5,6 +5,7 @@ from . import (
     lace_panel,
     main_panel,
     panel_nurbs_qd,
+    profile_projection_panel,
     surface_workflow_panel,
     uv_workflow_panel,
     workflow_operators,
@@ -18,6 +19,7 @@ modules = [
     lace_panel,
     auto_uv,
     panel_nurbs_qd,
+    profile_projection_panel,
 ]
 
 

@@ -111,6 +111,8 @@ def register():
         WM.spp_show_auto_uv = BoolProperty(name="Show Auto UV", default=False)
     if not hasattr(WM, "spp_show_lace_gen"):
         WM.spp_show_lace_gen = BoolProperty(name="Show Lace Generator", default=False)
+    if not hasattr(WM, "spp_show_profile_projection"):
+        WM.spp_show_profile_projection = BoolProperty(name="Show Profile Projection", default=False)
 
     # -------------------------------------------------------------------------
     # NEW: Helper Tooltips toggle for "Panel Helper Tools"
@@ -219,6 +221,7 @@ def unregister():
         "spp_show_helper_tooltip",
         "spp_show_surface_step_1", "spp_show_surface_step_2", "spp_show_surface_step_3", "spp_show_surface_step_4",
         "spp_show_uv_step_1", "spp_show_uv_step_2", "spp_show_uv_step_3", "spp_show_uv_step_4", "spp_show_uv_step_5", "spp_show_uv_step_6",
+        "spp_show_profile_projection",
     ):
         if rmW and hasattr(rmW, name):
             delattr(rmW, name)
