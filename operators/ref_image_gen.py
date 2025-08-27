@@ -35,11 +35,12 @@ def ensure_uv_layer(obj, name):
     return uv
 
 def get_or_active_main_uv(obj, name_hint):
+    """Get the main UV layer - always use the top UV slot (first in list)"""
     me = obj.data
-    uv = me.uv_layers.get(name_hint) if name_hint else None
-    if uv is None:
-        uv = me.uv_layers.active if me.uv_layers.active else (me.uv_layers[0] if me.uv_layers else None)
-    return uv.name if uv else None
+    if not me.uv_layers:
+        return None
+    # Always return the first UV layer (top slot) regardless of name hint
+    return me.uv_layers[0].name
 
 def ensure_reference_material_on_main_uv(obj, baked_image, main_uv_name):
     """Material 'Reference Image' maps baked_image by MAIN UV into Base Color only."""
@@ -57,10 +58,13 @@ def ensure_reference_material_on_main_uv(obj, baked_image, main_uv_name):
     if not out.inputs['Surface'].is_linked:
         links.new(bsdf.outputs['BSDF'], out.inputs['Surface'])
 
-    uvn = nodes.get("SPP_MainUV") or nodes.new("ShaderNodeUVMap"); uvn.name = "SPP_MainUV"; uvn.uv_map = main_uv_name
+    uvn = nodes.get("SPP_MainUV") or nodes.new("ShaderNodeUVMap"); uvn.name = "SPP_MainUV"
+    # Set UV map to the actual main UV layer name (top slot)
+    uvn.uv_map = main_uv_name
     itex = nodes.get("SPP_BakedImage") or nodes.new("ShaderNodeTexImage"); itex.name = "SPP_BakedImage"; itex.image = baked_image
 
-    # Wire baked image into Base Color using Main UV
+    # Wire baked image into Base Color using Main UV (not Projection)
+    uvn.location = (-400, 0); itex.location = (-200, 0)
     if itex.inputs['Vector'].is_linked:
         for l in list(itex.inputs['Vector'].links):
             nt.links.remove(l)
@@ -116,7 +120,7 @@ def build_stroke_line(x0, y, x1, steps, size_px, pressure=1.0):
         })
     return pts
 
-def set_clone_context(obj, src_img, proj_uv_name, main_uv_name, brush_size=60, strength=1.0):
+def set_clone_context(obj, src_img, proj_uv_name, main_uv_name, dest_img, brush_size=60, strength=1.0):
     # Activate Texture Paint mode
     try:
         bpy.ops.object.mode_set(mode='TEXTURE_PAINT')
@@ -124,18 +128,19 @@ def set_clone_context(obj, src_img, proj_uv_name, main_uv_name, brush_size=60, s
         pass
 
     me = obj.data
+    # Set active UV to main UV (for painting)
     if me.uv_layers.get(main_uv_name):
         me.uv_layers.active = me.uv_layers.get(main_uv_name)
+    # Set clone UV to projection UV
     for uv in me.uv_layers:
         uv.active_clone = (uv.name == proj_uv_name)
 
     # Tool settings → Single Image mode targeting "Projected Design"
     ts = bpy.context.scene.tool_settings
     ip = ts.image_paint
-    ip.mode = 'IMAGE'          # <-- Single Image
+    ip.mode = 'IMAGE'          # <-- Single Image mode
     ip.canvas = dest_img       # <-- Texture Slot image = Projected Design
     ip.seam_bleed = 2
-    ip.clone_image = src_img   # Clone from Illustrator export
 
     # Switch to Clone tool (minimal override to avoid context errors)
     area, region, space = find_view3d_area_region()
@@ -146,16 +151,35 @@ def set_clone_context(obj, src_img, proj_uv_name, main_uv_name, brush_size=60, s
         except Exception:
             pass
 
-    # Ensure a brush and sensible defaults
-    if not ts.image_paint.brush:
+    # Configure clone settings using correct API paths
+    # Set clone image on image paint settings (not brush)
+    if hasattr(ip, 'clone_image'):
+        ip.clone_image = src_img  # Clone Image = 2D profile image
+    
+    # Enable Clone From Paint Slot
+    if hasattr(ip, 'use_clone_layer'):
+        ip.use_clone_layer = True  # Clone From Paint Slot = True
+    
+    # Find or create clone brush and set it active
+    clone_brush = None
+    for brush in bpy.data.brushes:
+        if brush.image_tool == 'CLONE':
+            clone_brush = brush
+            break
+    
+    if not clone_brush:
         try:
-            ts.image_paint.brush = bpy.data.brushes.new("SPP_Clone")
+            clone_brush = bpy.data.brushes.new("SPP_Clone", mode='TEXTURE_PAINT')
+            clone_brush.image_tool = 'CLONE'
         except Exception:
             pass
-    br = ts.image_paint.brush
-    br.strength = 1.0
-    br.size = 64  # px
-    return br
+    
+    if clone_brush:
+        # Configure basic brush settings
+        clone_brush.strength = strength
+        clone_brush.size = brush_size
+    
+    return clone_brush
 
 # -------------------------
 # Properties & UI
@@ -264,7 +288,42 @@ class PP_OT_AutoCloneTransfer(Operator):
         ensure_reference_material_on_main_uv(obj, dest_img, main_uv)
 
         # Prepare clone context (Single Image mode + canvas=Projected Design + clone_image=src)
-        set_clone_context(obj, src_img, proj_uv, main_uv, dest_img)
+        clone_brush = set_clone_context(obj, src_img, proj_uv, main_uv, dest_img)
+        
+        # Additional brush configuration for clone painting
+        if clone_brush:
+            ts = bpy.context.scene.tool_settings
+            # Ensure clone settings are properly configured
+            if hasattr(ts.image_paint, 'use_clone_layer'):
+                ts.image_paint.use_clone_layer = True
+
+        # Switch to Texture Paint workspace/context
+        try:
+            # Switch to Texture Painting workspace if available
+            for workspace in bpy.data.workspaces:
+                if 'Texture' in workspace.name or 'Paint' in workspace.name:
+                    bpy.context.window.workspace = workspace
+                    break
+        except Exception:
+            pass
+
+        # Configure Image Editor to show Projected Design in VIEW mode
+        for area in bpy.context.window.screen.areas:
+            if area.type == 'IMAGE_EDITOR':
+                for space in area.spaces:
+                    if space.type == 'IMAGE_EDITOR':
+                        # Set the image and ensure it's properly loaded
+                        space.image = dest_img  # Set to Projected Design
+                        space.mode = 'VIEW'     # Set mode to VIEW
+                        # Force update the area
+                        area.tag_redraw()
+                        break
+        
+        # Also set the image in tool settings for texture paint context
+        try:
+            bpy.context.scene.tool_settings.image_paint.canvas = dest_img
+        except Exception:
+            pass
 
         # Find a 3D view to paint into
         area, region, space = find_view3d_area_region()
