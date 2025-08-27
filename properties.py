@@ -397,15 +397,9 @@ def register_properties():
     # -------------------------------------------------------------------------
     # Main panel collapsible section properties
     # -------------------------------------------------------------------------
-    bpy.types.Scene.spp_show_edge_select = bpy.props.BoolProperty(
-        name="Show Edge Select",
-        description="Show/hide edge select section",
-        default=False
-    )
-
-    bpy.types.Scene.spp_show_edge_flow = bpy.props.BoolProperty(
-        name="Show Edge Flow",
-        description="Show/hide edge flow section",
+    bpy.types.Scene.spp_show_edge_refinement = bpy.props.BoolProperty(
+        name="Show Edge & Loop Refinement",
+        description="Show/hide edge and loop refinement section",
         default=False
     )
 
@@ -565,8 +559,7 @@ def unregister_properties():
         # Retopology viewport helper
         "spp_show_retopology",
         # Main panel collapsible sections
-        "spp_show_edge_select",
-        "spp_show_edge_flow",
+        "spp_show_edge_refinement",
         "spp_show_mesh_object",
         # UV workflow collapsible sections
         "spp_show_uv_stabilizer_settings",

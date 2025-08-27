@@ -48,7 +48,7 @@ class OBJECT_PT_SneakerPanelProMain(bpy.types.Panel):
 
         # === Top: Segmented workflow selector ===
         seg = workflow_box.row()
-        seg.scale_y = 1.5
+        seg.scale_y = 1.75
 
         left = seg.row()
         b = left.operator(
@@ -70,6 +70,7 @@ class OBJECT_PT_SneakerPanelProMain(bpy.types.Panel):
 
         # === Compact toggles ===
         toggles = workflow_box.row()
+        toggles.scale_y = 1.3
         t = toggles.operator(
             "wm.context_toggle", text=" Auto UV", icon_value=icons.get_icon("auto_uv"), depress=wm.spp_show_auto_uv
         )
@@ -130,13 +131,15 @@ class OBJECT_PT_SneakerPanelProMain(bpy.types.Panel):
                 "wm.url_open", text="View Helper Tooltips Tutorial", icon="URL"
             ).url = "https://example.com/helper-tooltips-tutorial"
             
-        # Edge Select (collapsible)
-        select_box = tools_box.box()
-        select_header = select_box.row(align=True)
-        select_header.prop(scn, "spp_show_edge_select", toggle=True, text="Edge Select", icon="TRIA_DOWN" if getattr(scn, "spp_show_edge_select", False) else "TRIA_RIGHT")
+        # Edge & Loop Refinement (collapsible)
+        refinement_box = tools_box.box()
+        refinement_header = refinement_box.row(align=True)
+        refinement_header.prop(scn, "spp_show_edge_refinement", toggle=True, text="Edge & Loop Refinement", icon="TRIA_DOWN" if getattr(scn, "spp_show_edge_refinement", False) else "TRIA_RIGHT")
         
-        if getattr(scn, "spp_show_edge_select", False):
-            sel_grid = select_box.grid_flow(columns=2, align=True)
+        if getattr(scn, "spp_show_edge_refinement", False):
+            # Selection tools
+            refinement_box.label(text="Selection:", icon="SELECT_SET")
+            sel_grid = refinement_box.grid_flow(columns=2, align=True)
             sel_grid.scale_y = 1.1
             sel_grid.operator(
                 "mesh.select_all", text="Select All", icon="SELECT_SET"
@@ -150,15 +153,13 @@ class OBJECT_PT_SneakerPanelProMain(bpy.types.Panel):
             sel_grid.operator(
                 "mesh.select_boundary_edges", text="Select Boundary", icon="EDGESEL"
             )
-
-        # Edge Flow (collapsible)
-        flow_box = tools_box.box()
-        flow_header = flow_box.row(align=True)
-        flow_header.prop(scn, "spp_show_edge_flow", toggle=True, text="Edge Flow", icon="TRIA_DOWN" if getattr(scn, "spp_show_edge_flow", False) else "TRIA_RIGHT")
-        
-        if getattr(scn, "spp_show_edge_flow", False):
-            flow_grid = flow_box.grid_flow(columns=3, align=True)
-            flow_grid.scale_y = 1.1
+            
+            refinement_box.separator(factor=0.1)
+            
+            # Flow tools
+            refinement_box.label(text="Edge Flow:", icon="FORCE_FORCE")
+            flow_grid = refinement_box.grid_flow(columns=3, align=True)
+            flow_grid.scale_y = 1.4
             flow_grid.operator("mesh.set_edge_linear", text="Straighten", icon="IPO_LINEAR")
             flow_grid.operator("mesh.edge_relax", text="Relax", icon="MOD_SMOOTH")
             flow_grid.operator("mesh.set_edge_flow", text="Set Flow", icon="FORCE_FORCE")
