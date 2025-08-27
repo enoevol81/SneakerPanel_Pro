@@ -42,6 +42,7 @@ def register_properties():
     ))
 
 
+
 def unregister_properties():
     S = bpy.types.Scene
     for name in (
@@ -89,6 +90,7 @@ class OBJECT_PT_UVWorkflow(Panel):
             tip_col = tip_box.column(align=True); tip_col.scale_y = 0.9
             tip_col.label(text="UV Workflow Tips:", icon='HELP')
             tip_col.label(text="• Use Stabilizer for pencil control")
+            tip_col.label(text="• Mirror curve in edit mode")
             tip_col.operator("wm.url_open", text="View UV Workflow Tutorial", icon='URL').url = "https://example.com/uv-workflow-tutorial"
 
         # -----------------------------
@@ -100,7 +102,15 @@ class OBJECT_PT_UVWorkflow(Panel):
                   text="Step 1: UV to Mesh (Auto Add Grease Pencil)", icon='UV')
 
         if W.spp_show_uv_step_1:
-            step1.row().operator("object.uv_to_mesh", icon='MESH_DATA')
+            row = step1.row(align=True); row.scale_y = 1.2
+            row.operator("object.uv_to_mesh", text="UV to Mesh", icon='MESH_DATA')
+            ref_row = step1.row(align=True)
+            ref_row.prop(S, "spp_use_reference_image_overlay", text="Apply Reference Image")
+            
+            # Show opacity control when reference image is enabled
+            if getattr(S, "spp_use_reference_image_overlay", False):
+                opacity_row = step1.row(align=True)
+                opacity_row.prop(S, "spp_reference_image_opacity", text="Opacity", slider=True)
 
         # -----------------------------
         # Step 2 (collapsible, always-on)

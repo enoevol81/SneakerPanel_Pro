@@ -4,6 +4,30 @@ import bpy
 from .utils.panel_utils import update_stabilizer, update_stabilizer_ui
 
 
+def _update_reference_image_opacity(self, context):
+    """Update opacity of reference image materials in real-time"""
+    opacity_value = getattr(context.scene, "spp_reference_image_opacity", 1.0)
+    
+    # Find all UV-specific reference materials and update their opacity
+    for material in bpy.data.materials:
+        if material.name.startswith("Reference Image UV -") and material.use_nodes:
+            nodes = material.node_tree.nodes
+            bsdf = nodes.get("Principled BSDF")
+            if bsdf and "Alpha" in bsdf.inputs:
+                bsdf.inputs["Alpha"].default_value = opacity_value
+            
+            # Also update math node if it exists (for image alpha multiplication)
+            for node in nodes:
+                if node.type == 'MATH' and node.operation == 'MULTIPLY':
+                    if len(node.inputs) > 1:
+                        node.inputs[1].default_value = opacity_value
+    
+    # Force viewport update
+    for area in context.screen.areas:
+        if area.type == 'VIEW_3D':
+            area.tag_redraw()
+
+
 # Group properties by functionality for better organization
 def register_properties():
     """Register all properties used by the SneakerPanel Pro addon."""
@@ -316,8 +340,28 @@ def register_properties():
         name="Fidelity (Samples)",
         description="Number of evenly spaced samples to create on the curve outline",
         default=64,
-        min=8,
-        max=512,
+        min=3,
+        max=256,
+    )
+
+    # -------------------------------------------------------------------------
+    # Reference image overlay properties
+    # -------------------------------------------------------------------------
+    bpy.types.Scene.spp_use_reference_image_overlay = bpy.props.BoolProperty(
+        name="Apply Reference Image",
+        description="Apply 'Reference Image' material to UV mesh if available",
+        default=False
+    )
+
+    bpy.types.Scene.spp_reference_image_opacity = bpy.props.FloatProperty(
+        name="Opacity",
+        description="Opacity of the reference image overlay",
+        default=0.5,
+        min=0.0,
+        max=1.0,
+        step=0.01,
+        precision=2,
+        update=_update_reference_image_opacity
     )
 
 
@@ -445,6 +489,9 @@ def unregister_properties():
         "spp_panel_shade_smooth",
         # Curve sampling
         "spp_sampler_fidelity",
+        # Reference image overlay
+        "spp_use_reference_image_overlay",
+        "spp_reference_image_opacity",
     ]
 
     for prop in props:
