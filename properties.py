@@ -364,6 +364,72 @@ def register_properties():
         update=_update_reference_image_opacity
     )
 
+    # -------------------------------------------------------------------------
+    # Surface workflow collapsible section properties
+    # -------------------------------------------------------------------------
+    bpy.types.Scene.spp_show_stabilizer_settings = bpy.props.BoolProperty(
+        name="Show Stabilizer Settings",
+        description="Show/hide stabilizer settings section",
+        default=False
+    )
+
+    bpy.types.Scene.spp_show_curve_editing_tools = bpy.props.BoolProperty(
+        name="Show Curve Editing Tools",
+        description="Show/hide curve editing tools section",
+        default=False
+    )
+
+    bpy.types.Scene.spp_show_refine_mesh = bpy.props.BoolProperty(
+        name="Show Refine Mesh",
+        description="Show/hide refine mesh section",
+        default=False
+    )
+
+    # -------------------------------------------------------------------------
+    # Retopology viewport helper properties
+    # -------------------------------------------------------------------------
+    bpy.types.Scene.spp_show_retopology = bpy.props.BoolProperty(
+        name="Show Retopology",
+        description="Show/hide retopology section",
+        default=False
+    )
+
+    # -------------------------------------------------------------------------
+    # Main panel collapsible section properties
+    # -------------------------------------------------------------------------
+    bpy.types.Scene.spp_show_edge_select = bpy.props.BoolProperty(
+        name="Show Edge Select",
+        description="Show/hide edge select section",
+        default=False
+    )
+
+    bpy.types.Scene.spp_show_edge_flow = bpy.props.BoolProperty(
+        name="Show Edge Flow",
+        description="Show/hide edge flow section",
+        default=False
+    )
+
+    bpy.types.Scene.spp_show_mesh_object = bpy.props.BoolProperty(
+        name="Show Mesh Object",
+        description="Show/hide mesh object section",
+        default=False
+    )
+
+    # -------------------------------------------------------------------------
+    # UV workflow collapsible section properties
+    # -------------------------------------------------------------------------
+    bpy.types.Scene.spp_show_uv_stabilizer_settings = bpy.props.BoolProperty(
+        name="Show UV Stabilizer Settings",
+        description="Show/hide UV stabilizer settings section",
+        default=False
+    )
+
+    bpy.types.Scene.spp_show_uv_curve_editing_tools = bpy.props.BoolProperty(
+        name="Show UV Curve Editing Tools",
+        description="Show/hide UV curve editing tools section",
+        default=False
+    )
+
 
 def _update_modifier_if_exists(context, modifier_name, property_name, value):
     """
@@ -492,6 +558,19 @@ def unregister_properties():
         # Reference image overlay
         "spp_use_reference_image_overlay",
         "spp_reference_image_opacity",
+        # Surface workflow collapsible sections
+        "spp_show_stabilizer_settings",
+        "spp_show_curve_editing_tools", 
+        "spp_show_refine_mesh",
+        # Retopology viewport helper
+        "spp_show_retopology",
+        # Main panel collapsible sections
+        "spp_show_edge_select",
+        "spp_show_edge_flow",
+        "spp_show_mesh_object",
+        # UV workflow collapsible sections
+        "spp_show_uv_stabilizer_settings",
+        "spp_show_uv_curve_editing_tools",
     ]
 
     for prop in props:

@@ -130,143 +130,168 @@ class OBJECT_PT_SneakerPanelProMain(bpy.types.Panel):
                 "wm.url_open", text="View Helper Tooltips Tutorial", icon="URL"
             ).url = "https://example.com/helper-tooltips-tutorial"
             
-        # Edge Select
+        # Edge Select (collapsible)
         select_box = tools_box.box()
-        select_box.label(text="Edge Select:", icon="UV_EDGESEL")
-        sel_grid = select_box.grid_flow(columns=2, align=True)
-        sel_grid.scale_y = 1.1
-        sel_grid.operator(
-            "mesh.select_all", text="Select All", icon="SELECT_SET"
-        ).action = "SELECT"
-        sel_grid.operator(
-            "mesh.loop_multi_select", text="Select Edge Loops", icon="EDGESEL"
-        )
-        sel_grid.operator(
-            "mesh.deselect_boundary_edges", text="Deselect Boundary", icon="EDGESEL"
-        )
-        sel_grid.operator(
-            "mesh.select_boundary_edges", text="Select Boundary", icon="EDGESEL"
-        )
+        select_header = select_box.row(align=True)
+        select_header.prop(scn, "spp_show_edge_select", toggle=True, text="Edge Select", icon="TRIA_DOWN" if getattr(scn, "spp_show_edge_select", False) else "TRIA_RIGHT")
+        
+        if getattr(scn, "spp_show_edge_select", False):
+            sel_grid = select_box.grid_flow(columns=2, align=True)
+            sel_grid.scale_y = 1.1
+            sel_grid.operator(
+                "mesh.select_all", text="Select All", icon="SELECT_SET"
+            ).action = "SELECT"
+            sel_grid.operator(
+                "mesh.loop_multi_select", text="Select Edge Loops", icon="EDGESEL"
+            )
+            sel_grid.operator(
+                "mesh.deselect_boundary_edges", text="Deselect Boundary", icon="EDGESEL"
+            )
+            sel_grid.operator(
+                "mesh.select_boundary_edges", text="Select Boundary", icon="EDGESEL"
+            )
 
-        # Edge Flow
+        # Edge Flow (collapsible)
         flow_box = tools_box.box()
-        flow_box.label(text="Edge Flow:", icon="VIEW_PERSPECTIVE")
-        flow_grid = flow_box.grid_flow(columns=3, align=True)
-        flow_grid.scale_y = 1.1
-        flow_grid.operator("mesh.set_edge_linear", text="Straighten", icon="IPO_LINEAR")
-        flow_grid.operator("mesh.edge_relax", text="Relax", icon="MOD_SMOOTH")
-        flow_grid.operator("mesh.set_edge_flow", text="Set Flow", icon="FORCE_FORCE")
+        flow_header = flow_box.row(align=True)
+        flow_header.prop(scn, "spp_show_edge_flow", toggle=True, text="Edge Flow", icon="TRIA_DOWN" if getattr(scn, "spp_show_edge_flow", False) else "TRIA_RIGHT")
+        
+        if getattr(scn, "spp_show_edge_flow", False):
+            flow_grid = flow_box.grid_flow(columns=3, align=True)
+            flow_grid.scale_y = 1.1
+            flow_grid.operator("mesh.set_edge_linear", text="Straighten", icon="IPO_LINEAR")
+            flow_grid.operator("mesh.edge_relax", text="Relax", icon="MOD_SMOOTH")
+            flow_grid.operator("mesh.set_edge_flow", text="Set Flow", icon="FORCE_FORCE")
 
-        # Mesh Object Tools
+        # Mesh Object Tools (collapsible)
         panel_box = tools_box.box()
-        panel_box.label(text="Mesh Object:", icon_value=icons.get_icon("mesh"))
+        panel_header = panel_box.row(align=True)
+        panel_header.prop(scn, "spp_show_mesh_object", toggle=True, text="Mesh Object", icon="TRIA_DOWN" if getattr(scn, "spp_show_mesh_object", False) else "TRIA_RIGHT")
+        
+        if getattr(scn, "spp_show_mesh_object", False):
+            # Shading controls
+            obj = context.active_object
+            shading_row = panel_box.row()
 
-        # Shading controls
-        obj = context.active_object
-        shading_row = panel_box.row()
+            # Check current shading mode
+            is_smooth = False
+            if obj and obj.type == "MESH" and obj.data.polygons:
+                # Check if any face is smooth (if any face is smooth, consider object as smooth)
+                is_smooth = any(poly.use_smooth for poly in obj.data.polygons)
 
-        # Check current shading mode
-        is_smooth = False
-        if obj and obj.type == "MESH" and obj.data.polygons:
-            # Check if any face is smooth (if any face is smooth, consider object as smooth)
-            is_smooth = any(poly.use_smooth for poly in obj.data.polygons)
-
-        shading_row.operator(
-            "object.shade_smooth",
-            text="Shade Smooth",
-            icon="SHADING_RENDERED",
-            depress=is_smooth,
-        )
-        shading_row.operator(
-            "object.shade_flat",
-            text="Shade Flat",
-            icon="SHADING_SOLID",
-            depress=not is_smooth,
-        )
-
-        # Object tools
-        panel_grid = panel_box.grid_flow(columns=3, align=True)
-        panel_grid.scale_y = 1.1
-        panel_grid.operator("mesh.add_subsurf", text="SubD", icon="MOD_SUBSURF")
-        panel_grid.operator("mesh.mirror_panel", text="Mirror", icon="MOD_MIRROR")
-        panel_grid.operator(
-            "mesh.apply_shrinkwrap", text="Shrinkwrap", icon="MOD_SHRINKWRAP"
-        )
-
-        fitment_row = panel_box.row(align=True)
-        fitment_row.operator("mesh.quick_conform", text="Quick Conform", icon="SNAP_ON")
-        fitment_row.operator("mesh.smooth_mesh", text="Smooth Mesh", icon="MOD_SMOOTH")
-
-        # Thicken Panel (Solidify) section
-        panel_box.label(text="Thicken Panel:", icon="MOD_SOLIDIFY")
-
-        obj = context.active_object
-        if obj and obj.type == "MESH":
-            # Get existing Solidify modifier and sync scene props if present
-            mod = obj.modifiers.get("Solidify")
-            if mod:
-                try:
-                    if (
-                        hasattr(scn, "spp_solidify_thickness")
-                        and getattr(mod, "thickness", None) is not None
-                        and scn.spp_solidify_thickness != mod.thickness
-                    ):
-                        scn.spp_solidify_thickness = mod.thickness
-                    if (
-                        hasattr(scn, "spp_solidify_offset")
-                        and hasattr(mod, "offset")
-                        and scn.spp_solidify_offset != mod.offset
-                    ):
-                        scn.spp_solidify_offset = mod.offset
-                    if (
-                        hasattr(scn, "spp_solidify_even_thickness")
-                        and hasattr(mod, "use_even_offset")
-                        and scn.spp_solidify_even_thickness != mod.use_even_offset
-                    ):
-                        scn.spp_solidify_even_thickness = mod.use_even_offset
-                    if (
-                        hasattr(scn, "spp_solidify_rim")
-                        and hasattr(mod, "use_rim")
-                        and scn.spp_solidify_rim != mod.use_rim
-                    ):
-                        scn.spp_solidify_rim = mod.use_rim
-                    if (
-                        hasattr(scn, "spp_solidify_rim_only")
-                        and hasattr(mod, "use_rim_only")
-                        and scn.spp_solidify_rim_only != mod.use_rim_only
-                    ):
-                        scn.spp_solidify_rim_only = mod.use_rim_only
-                except Exception:
-                    pass
-
-            # Always show Add Solidify button when a mesh is selected
-            buttons = panel_box.row(align=True)
-            add = buttons.operator(
-                "object.solidify_panel", text="Add Solidify", icon="MODIFIER"
+            shading_row.operator(
+                "object.shade_smooth",
+                text="Shade Smooth",
+                icon="SHADING_RENDERED",
+                depress=is_smooth,
             )
-            add.thickness = scn.spp_solidify_thickness
+            shading_row.operator(
+                "object.shade_flat",
+                text="Shade Flat",
+                icon="SHADING_SOLID",
+                depress=not is_smooth,
+            )
 
-            # Show parameters and Finalize only when a Solidify modifier exists
-            if mod:
-                panel_box.separator(factor=0.4)
-                # Parameter controls (live update via property callbacks)
-                panel_box.prop(scn, "spp_solidify_thickness", text="Thickness")
-                row = panel_box.row(align=True)
-                row.prop(scn, "spp_solidify_offset", text="Offset")
-                toggles = panel_box.row(align=True)
-                toggles.prop(scn, "spp_solidify_even_thickness", text="Even")
-                toggles.prop(scn, "spp_solidify_rim", text="Fill Rim")
-                toggles.prop(scn, "spp_solidify_rim_only", text="Only Rim")
+            # Object tools
+            panel_grid = panel_box.grid_flow(columns=3, align=True)
+            panel_grid.scale_y = 1.1
+            panel_grid.operator("mesh.add_subsurf", text="SubD", icon="MOD_SUBSURF")
+            panel_grid.operator("mesh.mirror_panel", text="Mirror", icon="MOD_MIRROR")
+            panel_grid.operator(
+                "mesh.apply_shrinkwrap", text="Shrinkwrap", icon="MOD_SHRINKWRAP"
+            )
 
-                # Finalize (Apply) button
-                apply_row = panel_box.row(align=True)
-                apply_row.operator(
-                    "object.apply_solidify", text="Finalize", icon="CHECKMARK"
+            fitment_row = panel_box.row(align=True)
+            fitment_row.operator("mesh.quick_conform", text="Quick Conform", icon="SNAP_ON")
+            fitment_row.operator("mesh.smooth_mesh", text="Smooth Mesh", icon="MOD_SMOOTH")
+
+            # Thicken Panel (Solidify) section
+            panel_box.label(text="Thicken Panel:", icon="MOD_SOLIDIFY")
+
+            obj = context.active_object
+            if obj and obj.type == "MESH":
+                # Get existing Solidify modifier and sync scene props if present
+                mod = obj.modifiers.get("Solidify")
+                if mod:
+                    try:
+                        if (
+                            hasattr(scn, "spp_solidify_thickness")
+                            and getattr(mod, "thickness", None) is not None
+                            and scn.spp_solidify_thickness != mod.thickness
+                        ):
+                            scn.spp_solidify_thickness = mod.thickness
+                        if (
+                            hasattr(scn, "spp_solidify_offset")
+                            and hasattr(mod, "offset")
+                            and scn.spp_solidify_offset != mod.offset
+                        ):
+                            scn.spp_solidify_offset = mod.offset
+                        if (
+                            hasattr(scn, "spp_solidify_even_thickness")
+                            and hasattr(mod, "use_even_offset")
+                            and scn.spp_solidify_even_thickness != mod.use_even_offset
+                        ):
+                            scn.spp_solidify_even_thickness = mod.use_even_offset
+                        if (
+                            hasattr(scn, "spp_solidify_rim")
+                            and hasattr(mod, "use_rim")
+                            and scn.spp_solidify_rim != mod.use_rim
+                        ):
+                            scn.spp_solidify_rim = mod.use_rim
+                        if (
+                            hasattr(scn, "spp_solidify_rim_only")
+                            and hasattr(mod, "use_rim_only")
+                            and scn.spp_solidify_rim_only != mod.use_rim_only
+                        ):
+                            scn.spp_solidify_rim_only = mod.use_rim_only
+                    except Exception:
+                        pass
+
+                # Always show Add Solidify button when a mesh is selected
+                buttons = panel_box.row(align=True)
+                add = buttons.operator(
+                    "object.solidify_panel", text="Add Solidify", icon="MODIFIER"
                 )
-        else:
-            panel_box.label(
-                text="Select a mesh object to enable solidify controls.", icon="INFO"
-            )
+                add.thickness = scn.spp_solidify_thickness
+
+                # Show parameters and Finalize only when a Solidify modifier exists
+                if mod:
+                    panel_box.separator(factor=0.4)
+                    # Parameter controls (live update via property callbacks)
+                    panel_box.prop(scn, "spp_solidify_thickness", text="Thickness")
+                    row = panel_box.row(align=True)
+                    row.prop(scn, "spp_solidify_offset", text="Offset")
+                    toggles = panel_box.row(align=True)
+                    toggles.prop(scn, "spp_solidify_even_thickness", text="Even")
+                    toggles.prop(scn, "spp_solidify_rim", text="Fill Rim")
+                    toggles.prop(scn, "spp_solidify_rim_only", text="Only Rim")
+
+                    # Finalize (Apply) button
+                    apply_row = panel_box.row(align=True)
+                    apply_row.operator(
+                        "object.apply_solidify", text="Finalize", icon="CHECKMARK"
+                    )
+            else:
+                panel_box.label(
+                    text="Select a mesh object to enable solidify controls.", icon="INFO"
+                )
+                
+        # Retopology section (only visible in edit mode)
+        if context.mode == 'EDIT_MESH':
+            retopo_box = tools_box.box()
+            retopo_header = retopo_box.row(align=True)
+            retopo_header.prop(scn, "spp_show_retopology", toggle=True, text="Retopology ViewPort Context", icon="TRIA_DOWN" if getattr(scn, "spp_show_retopology", False) else "TRIA_RIGHT")
+            
+            if getattr(scn, "spp_show_retopology", False):
+                retopo_content = retopo_box.column(align=True)
+                
+                # Enable/disable retopology overlay
+                overlay = context.space_data.overlay
+                retopo_content.prop(overlay, "show_retopology", text="Show Retopology")
+                
+                if overlay.show_retopology:
+                    # Retopology opacity slider
+                    retopo_content.prop(overlay, "retopology_offset", text="Offset", slider=True)
 
 
 # Registration
