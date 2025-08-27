@@ -175,7 +175,7 @@ class ProfileProjProps(PropertyGroup):
 # -------------------------
 class PP_OT_CreateProjectionUV(Operator):
     bl_idname = "pp.create_projection_uv"
-    bl_label = "Create 'Projection' UV + From View"
+    bl_label = "1. Create 'Projection' UV + From View"
     bl_options = {'REGISTER', 'UNDO'}
 
     def execute(self, context):
@@ -208,7 +208,7 @@ class PP_OT_CreateProjectionUV(Operator):
 
 class PP_OT_CreateDestMaterial(Operator):
     bl_idname = "pp.create_dest_and_material"
-    bl_label = "Create Dest Image + Material"
+    bl_label = "2. Create Img Texture + Material"
     bl_options = {'REGISTER', 'UNDO'}
 
     def execute(self, context):
@@ -237,7 +237,7 @@ class PP_OT_CreateDestMaterial(Operator):
 
 class PP_OT_AutoCloneTransfer(Operator):
     bl_idname = "pp.auto_clone_transfer"
-    bl_label = "Auto Clone Transfer (Current View)"
+    bl_label = "3. Transfer Image UV"
     bl_options = {'REGISTER', 'UNDO'}
 
     def execute(self, context):

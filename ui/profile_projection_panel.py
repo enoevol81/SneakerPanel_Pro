@@ -50,13 +50,21 @@ class PP_PT_Main(Panel):
             tip_col = tip_box.column(align=True)
             tip_col.scale_y = 0.9  # Slightly smaller text
             tip_col.label(text="Profile Projection Tips:", icon="HELP")
-            tip_col.label(text="• Select source mesh with projection UV map")
-            tip_col.label(text="• Select destination mesh with main UV map")
-            tip_col.label(text="• Set destination mesh size in cm")
-            tip_col.label(text="• Run auto clone transfer to project profile")
+            tip_col.label(text="• Select reference image to be projected")
+            tip_col.label(text="• Pick preferred orthographic view")
+            tip_col.label(text="• Run 'Create Projection UV' to create 'Projection' UV map")
+            tip_col.label(text="• Switch to UV Editor and scale UV to cover reference image")
+            tip_col.label(text="• Select output size")
+            tip_col.label(text="• Run 'Create Image Texture and Material'")
+            tip_col.label(text="• Run 'Auto Clone Transfer'")
+            tip_col.label(text="• Switch to Texture Paint mode to paint mesh with reference image")
+            tip_col.label(text="• Make sure 'Clone tool' is active and set to 'Single Image' with 'Projected Design' as 'Clone image' - Active UV is 'UV Mesh'")
+            tip_col.label(text="• In brush settings make sure 'Clone From Paint Slot' is ticked and 'Clone Image' is set to your reference drawing, and 'Source UV' is set to 'Projection'")
+            tip_col.label(text="• Paint mesh with the reference image")
+            tip_col.label(text="• Remember to save images")
             tip_col.operator(
-                "wm.url_open", text="View Profile Projection Tutorial", icon="URL"
-            ).url = "https://example.com/profile-projection-tutorial"
+                "wm.url_open", text="View Reference Image Projection Tutorial", icon="URL"
+            ).url = "https://example.com/ref-image-projection-tutorial"
         
         # Parameters section
         params_box = main_box.box()
@@ -76,6 +84,7 @@ class PP_PT_Main(Panel):
         actions_col.scale_y = 1.1
         
         actions_col.operator("pp.create_projection_uv", icon='IMAGE_PLANE')
+        actions_col.separator()
         actions_col.operator("pp.create_dest_and_material", icon='MATERIAL')
         actions_col.separator()
         actions_col.operator("pp.auto_clone_transfer", icon='BRUSH_DATA')
