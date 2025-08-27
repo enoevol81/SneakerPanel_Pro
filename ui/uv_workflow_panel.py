@@ -112,6 +112,19 @@ class OBJECT_PT_UVWorkflow(Panel):
                 opacity_row = step1.row(align=True)
                 opacity_row.prop(S, "spp_reference_image_opacity", text="Opacity", slider=True)
 
+            # Stabilizer (optional)
+            stab = step1.box()
+            r = stab.row(align=True)
+            if hasattr(S, "spp_use_stabilizer"):
+                r.prop(S, "spp_use_stabilizer", text="")
+            r.label(text="Stabilizer Settings")
+            if getattr(S, "spp_use_stabilizer", False):
+                c = stab.column(align=True)
+                if hasattr(S, "spp_stabilizer_radius"):
+                    c.prop(S, "spp_stabilizer_radius", text="Radius")
+                if hasattr(S, "spp_stabilizer_strength_ui"):
+                    c.prop(S, "spp_stabilizer_strength_ui", text="Strength")
+
         # -----------------------------
         # Step 2 (collapsible, always-on)
         # -----------------------------
