@@ -144,42 +144,7 @@ class OBJECT_PT_SurfaceWorkflow(bpy.types.Panel):
             smooth_row = step4.row(align=True)
             smooth_row.operator("mesh.smooth_mesh", text="Smooth Mesh (Optional)", icon="MOD_SMOOTH")
 
-        # ---------- Step 5: Relax/Conform (Optional) ----------
-        step5 = surface_box.box()
-        hdr5 = step5.row(align=True)
-        hdr5.prop(W, "spp_show_surface_step_5", toggle=True, text="Step 5: Relax/Conform (Optional)", icon="MOD_SHRINKWRAP")
-
-        if W.spp_show_surface_step_5:
-            # Quick Conform
-            conform_col = step5.column(align=True)
-            conform_col.label(text="Surface Conformity:", icon="SNAP_ON")
-            conform_col.operator("mesh.quick_conform", text="Quick Conform", icon="SNAP_ON")
-            
-            # Smoothing
-            sm = step5.column(align=True)
-            sm.label(text="Smoothing:", icon="MOD_SMOOTH")
-            rr = sm.row(align=True)
-            if hasattr(S, "spp_smooth_factor"):
-                rr.prop(S, "spp_smooth_factor", text="Factor")
-            rr.operator("object.smooth_vertices", text="Apply", icon="CHECKMARK")
-            
-            # Retopology section (only visible in edit mode)
-            if context.mode == 'EDIT_MESH':
-                retopo_box = step4.box()
-                retopo_header = retopo_box.row(align=True)
-                retopo_header.prop(S, "spp_show_retopology", toggle=True, text="Retopology", icon="TRIA_DOWN" if getattr(S, "spp_show_retopology", False) else "TRIA_RIGHT")
-                
-                if getattr(S, "spp_show_retopology", False):
-                    retopo_content = retopo_box.column(align=True)
-                    
-                    # Enable/disable retopology overlay
-                    overlay = context.space_data.overlay
-                    retopo_content.prop(overlay, "show_retopology", text="Show Retopology")
-                    
-                    if overlay.show_retopology:
-                        # Retopology opacity slider
-                        retopo_content.prop(overlay, "retopology_offset", text="Offset", slider=True)
-
+           
 
 classes = [OBJECT_PT_SurfaceWorkflow]
 
