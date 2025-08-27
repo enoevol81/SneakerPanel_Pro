@@ -10,6 +10,7 @@ from ..utils.collections import add_object_to_panel_collection
 class MESH_OT_FillQuadBorder(bpy.types.Operator):
     bl_idname = "mesh.fill_quad_border"
     bl_label = "Fill Quad Border"
+    bl_description = "Fill boundary edges with quad topology using inset border technique"
     bl_options = {"REGISTER", "UNDO"}
 
     inset_thickness: FloatProperty(

@@ -9,6 +9,7 @@ from ..utils.collections import add_object_to_panel_collection
 class MESH_OT_CreateQuadPanelFromOutline(Operator):
     bl_idname = "mesh.create_quad_panel_from_outline"
     bl_label = "Create Quad Panel from Outline"
+    bl_description = "Generate a quad-filled panel mesh from a closed curve outline with clean border insets"
     bl_options = {"REGISTER", "UNDO"}
 
     inset_thickness: FloatProperty(

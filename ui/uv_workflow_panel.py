@@ -2,6 +2,7 @@
 
 import bpy
 from bpy.types import Panel
+from ..utils import icons
 
 
 # Keep (or create) the Scene properties this panel uses
@@ -41,6 +42,7 @@ def register_properties():
     ))
 
 
+
 def unregister_properties():
     S = bpy.types.Scene
     for name in (
@@ -60,6 +62,11 @@ class OBJECT_PT_UVWorkflow(Panel):
     bl_category = 'Sneaker Panel'
     bl_order = 2
 
+    def draw_header(self, context):
+        layout = self.layout
+        icon_id = icons.get_icon("2d")
+        layout.label(text="", icon_value=icon_id)
+
     @classmethod
     def poll(cls, context):
         return getattr(context.window_manager, "spp_active_workflow", 'UV_2D') == 'UV_2D'
@@ -71,7 +78,7 @@ class OBJECT_PT_UVWorkflow(Panel):
 
         uv_box = layout.box()
         uv_header = uv_box.row(align=True)
-        uv_header.label(text="UV Workflow [2D]", icon="MOD_UVPROJECT")
+        uv_header.label(text="Draw Direct To UV",icon_value=icons.get_icon("2d"))
 
         # Optional workflow tooltip (pattern used elsewhere in your UI)
         tooltip_icon = 'LIGHT_SUN' if getattr(context.scene, "spp_show_uv_workflow_tooltip", False) else 'INFO'
@@ -83,6 +90,7 @@ class OBJECT_PT_UVWorkflow(Panel):
             tip_col = tip_box.column(align=True); tip_col.scale_y = 0.9
             tip_col.label(text="UV Workflow Tips:", icon='HELP')
             tip_col.label(text="• Use Stabilizer for pencil control")
+            tip_col.label(text="• Mirror curve in edit mode")
             tip_col.operator("wm.url_open", text="View UV Workflow Tutorial", icon='URL').url = "https://example.com/uv-workflow-tutorial"
 
         # -----------------------------
@@ -94,7 +102,15 @@ class OBJECT_PT_UVWorkflow(Panel):
                   text="Step 1: UV to Mesh (Auto Add Grease Pencil)", icon='UV')
 
         if W.spp_show_uv_step_1:
-            step1.row().operator("object.uv_to_mesh", icon='MESH_DATA')
+            row = step1.row(align=True); row.scale_y = 1.2
+            row.operator("object.uv_to_mesh", text="UV to Mesh", icon='MESH_DATA')
+            ref_row = step1.row(align=True)
+            ref_row.prop(S, "spp_use_reference_image_overlay", text="Apply Reference Image")
+            
+            # Show opacity control when reference image is enabled
+            if getattr(S, "spp_use_reference_image_overlay", False):
+                opacity_row = step1.row(align=True)
+                opacity_row.prop(S, "spp_reference_image_opacity", text="Opacity", slider=True)
 
         # -----------------------------
         # Step 2 (collapsible, always-on)

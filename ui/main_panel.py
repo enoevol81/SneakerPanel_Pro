@@ -25,7 +25,7 @@ class WM_OT_SPP_ToggleWorkflow(Operator):
 
 
 class OBJECT_PT_SneakerPanelProMain(bpy.types.Panel):
-    bl_label = "Sneaker Panel Pro"
+    bl_label = " Sneaker Panel Pro"
     bl_idname = "OBJECT_PT_sneaker_panel_pro_main"
     bl_space_type = "VIEW_3D"
     bl_region_type = "UI"
@@ -35,9 +35,8 @@ class OBJECT_PT_SneakerPanelProMain(bpy.types.Panel):
         """Draw custom header with icon."""
         layout = self.layout
         # Get the custom icon ID
-        icon_id = icons.get_icon("uv_checker")
-        if icon_id:
-            layout.label(text="", icon_value=icon_id)
+        icon_id = icons.get_icon("logo")
+        layout.label(text="", icon_value=icon_id)
 
     def draw(self, context):
         layout = self.layout
@@ -55,7 +54,7 @@ class OBJECT_PT_SneakerPanelProMain(bpy.types.Panel):
         b = left.operator(
             "wm.spp_toggle_workflow",
             text=" Surface Direct [3D] ",
-            icon="MESH_CUBE",
+            icon_value=icons.get_icon("3d"),
             depress=(wm.spp_active_workflow == "SURFACE_3D"),
         )
         b.mode = "SURFACE_3D"
@@ -64,7 +63,7 @@ class OBJECT_PT_SneakerPanelProMain(bpy.types.Panel):
         b = right.operator(
             "wm.spp_toggle_workflow",
             text=" UV Workflow [2D] ",
-            icon="MESH_GRID",
+            icon_value=icons.get_icon("2d"),
             depress=(wm.spp_active_workflow == "UV_2D"),
         )
         b.mode = "UV_2D"
@@ -72,16 +71,23 @@ class OBJECT_PT_SneakerPanelProMain(bpy.types.Panel):
         # === Compact toggles ===
         toggles = workflow_box.row()
         t = toggles.operator(
-            "wm.context_toggle", text=" Auto UV", icon="UV", depress=wm.spp_show_auto_uv
+            "wm.context_toggle", text=" Auto UV", icon_value=icons.get_icon("auto_uv"), depress=wm.spp_show_auto_uv
         )
         t.data_path = "window_manager.spp_show_auto_uv"
         t = toggles.operator(
             "wm.context_toggle",
             text=" Lace Generator",
-            icon="CURVE_NCURVE",
+            icon_value=icons.get_icon("laces"),
             depress=wm.spp_show_lace_gen,
         )
         t.data_path = "window_manager.spp_show_lace_gen"
+        t = toggles.operator(
+            "wm.context_toggle",
+            text=" Profile Projection",
+            icon_value=icons.get_icon("ref_image"),
+            depress=wm.spp_show_profile_projection,
+        )
+        t.data_path = "window_manager.spp_show_profile_projection"
 
         # === Panel Configuration ===
         main_box = layout.box()
@@ -105,9 +111,11 @@ class OBJECT_PT_SneakerPanelProMain(bpy.types.Panel):
         # === Panel Helper Tools ===
         tools_box = layout.box()
         tools_header = tools_box.row()
-        tools_header.label(text="Panel Helper Tools", icon="TOOL_SETTINGS")
-        icon = 'LIGHT_SUN' if context.window_manager.spp_show_helper_tooltip else 'INFO'
-        tools_header.prop(context.window_manager, "spp_show_helper_tooltip", text="", toggle=True, icon=icon)
+        icon_id = icons.get_icon("tools")
+        if icon_id:
+            tools_header.label(text="Panel Helper Tools", icon_value=icon_id)
+            icon = 'LIGHT_SUN' if context.window_manager.spp_show_helper_tooltip else 'INFO'
+            tools_header.prop(context.window_manager, "spp_show_helper_tooltip", text="", toggle=True, icon=icon)
 
         # When toggled on, show compact tips
         if context.window_manager.spp_show_helper_tooltip:
@@ -151,7 +159,7 @@ class OBJECT_PT_SneakerPanelProMain(bpy.types.Panel):
 
         # Mesh Object Tools
         panel_box = tools_box.box()
-        panel_box.label(text="Mesh Object:", icon="OUTLINER_OB_MESH")
+        panel_box.label(text="Mesh Object:", icon_value=icons.get_icon("mesh"))
 
         # Shading controls
         obj = context.active_object

@@ -34,6 +34,7 @@ def is_boundary_vert(vert):
 class OBJECT_OT_set_edge_flow(bpy.types.Operator):
     bl_idname = "mesh.set_edge_flow"
     bl_label = "Set Edge Flow"
+    bl_description = "Smooth edge flow by repositioning vertices along selected edges using hermite interpolation"
     bl_options = {"REGISTER", "UNDO"}
 
     tension: bpy.props.FloatProperty(name="Tension", default=1.8, min=0.0, max=10.0)

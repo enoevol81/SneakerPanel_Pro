@@ -8,6 +8,7 @@ class MESH_OT_FillBorderGrid(Operator):
 
     bl_idname = "mesh.fill_border_grid"
     bl_label = "Fill Border with Grid"
+    bl_description = "Fill selected boundary edges with a grid pattern using specified span count"
     bl_options = {"REGISTER", "UNDO"}
 
     span: IntProperty(

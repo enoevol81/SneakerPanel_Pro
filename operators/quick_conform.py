@@ -6,6 +6,7 @@ class OBJECT_OT_quick_conform(Operator):
     
     bl_idname = "mesh.quick_conform"
     bl_label = "Quick Conform"
+    bl_description = "Quickly snap the selected mesh to conform to the shell surface"
     bl_options = {"REGISTER", "UNDO"}
 
     def execute(self, context):

@@ -1,4 +1,3 @@
-
 import os
 
 import bpy
@@ -16,17 +15,32 @@ def load_icons():
     # Create a new preview collection
     pcoll = bpy.utils.previews.new()
 
-    # Path to the icons directory
-    icons_dir = os.path.join(
-        os.path.dirname(os.path.dirname(__file__)), "operators", "icons"
-    )
+    # Use relative path for icons directory
+    icons_dir = os.path.join(os.path.dirname(__file__), "..", "operators", "icons")
 
-    # Load the UV checker icon
-    uv_checker_path = os.path.join(icons_dir, "uv_checker_32.png")
-    if os.path.exists(uv_checker_path):
-        pcoll.load("uv_checker", uv_checker_path, "IMAGE")
-    else:
-        print(f"Warning: Icon not found at {uv_checker_path}")
+    # Load additional icons
+    ui_icons = [
+        "2d.png",
+        "3d.png",
+        "auto_uv.png",
+        "laces.png",
+        "logo.png",
+        "spp_tile_32.png",
+        "spp_tile_64.png",
+        "tools.png",
+        "mesh.png",
+        "ref_image.png",
+        "profile.png"
+
+
+    ]
+
+    for icon_name in ui_icons:
+        icon_path = os.path.join(icons_dir, icon_name)
+        if os.path.exists(icon_path):
+            pcoll.load(icon_name.split('.')[0], icon_path, "IMAGE")
+        else:
+            print(f"Warning: Icon not found at {icon_path}")
 
     # Store the preview collection
     preview_collections["main"] = pcoll

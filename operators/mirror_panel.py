@@ -6,6 +6,7 @@ from bpy.types import Operator
 class OBJECT_OT_mirror_panel(Operator):
     bl_idname = "mesh.mirror_panel"
     bl_label = "Mirror Panel"
+    bl_description = "Add a mirror modifier to the selected mesh object across the specified axis"
     bl_options = {"REGISTER", "UNDO"}
 
     mirror_axis: EnumProperty(
