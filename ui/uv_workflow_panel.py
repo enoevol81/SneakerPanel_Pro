@@ -136,7 +136,7 @@ class OBJECT_PT_UVWorkflow(Panel):
                   text="Step 2: Create & Edit Curve", icon='OUTLINER_OB_CURVE')
 
         if W.spp_show_uv_step_2:
-            col = step2.column(align=True); col.scale_y = 1.1
+            col = step2.column(align=True); col.scale_y = 1.2
             col.operator("object.gp_to_curve", text="Convert to Curve", icon='IPO_BEZIER')
 
             # Curve Editing Tools (collapsible)
