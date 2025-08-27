@@ -140,7 +140,7 @@ class OBJECT_PT_SneakerPanelProMain(bpy.types.Panel):
             # Selection tools
             refinement_box.label(text="Selection:", icon="SELECT_SET")
             sel_grid = refinement_box.grid_flow(columns=2, align=True)
-            sel_grid.scale_y = 1.1
+            sel_grid.scale_y = 1.3
             sel_grid.operator(
                 "mesh.select_all", text="Select All", icon="SELECT_SET"
             ).action = "SELECT"
@@ -154,12 +154,10 @@ class OBJECT_PT_SneakerPanelProMain(bpy.types.Panel):
                 "mesh.select_boundary_edges", text="Select Boundary", icon="EDGESEL"
             )
             
-            refinement_box.separator(factor=0.1)
-            
             # Flow tools
             refinement_box.label(text="Edge Flow:", icon="FORCE_FORCE")
             flow_grid = refinement_box.grid_flow(columns=3, align=True)
-            flow_grid.scale_y = 1.4
+            flow_grid.scale_y = 1.3
             flow_grid.operator("mesh.set_edge_linear", text="Straighten", icon="IPO_LINEAR")
             flow_grid.operator("mesh.edge_relax", text="Relax", icon="MOD_SMOOTH")
             flow_grid.operator("mesh.set_edge_flow", text="Set Flow", icon="FORCE_FORCE")
@@ -195,7 +193,7 @@ class OBJECT_PT_SneakerPanelProMain(bpy.types.Panel):
 
             # Object tools
             panel_grid = panel_box.grid_flow(columns=3, align=True)
-            panel_grid.scale_y = 1.1
+            panel_grid.scale_y = 1.2    
             panel_grid.operator("mesh.add_subsurf", text="SubD", icon="MOD_SUBSURF")
             panel_grid.operator("mesh.mirror_panel", text="Mirror", icon="MOD_MIRROR")
             panel_grid.operator(
