@@ -15,7 +15,6 @@ from . import (
     apply_shrinkwrap,
     boundary_edges,
     convert_bezier_to_surface,
-    convert_to_mesh,
     create_quad_panel_from_outline,
     decimate_curve,
     define_toe,
@@ -29,8 +28,6 @@ from . import (
     mirror_panel,
     orient_uv_island,
     overlay_panel_onto_shell,
-    panel_generate,
-    panel_generator,
     quick_conform,
     reduce_verts,
     ref_image_gen,
@@ -53,12 +50,9 @@ def register():
     gp_to_curve.register()
     decimate_curve.register()
     convert_bezier_to_surface.register()
-    convert_to_mesh.register()
     surface_resolution.register()
     smooth_vertices.register()
     reduce_verts.register()
-    panel_generate.register()
-    panel_generator.register()
     shell_uv_to_panel.register()
     solidify_panel.register()
     uv_to_mesh.register()
@@ -93,12 +87,9 @@ def unregister():
     uv_to_mesh.unregister()
     solidify_panel.unregister()
     shell_uv_to_panel.unregister()
-    panel_generator.unregister()
-    panel_generate.unregister()
     reduce_verts.unregister()
     smooth_vertices.unregister()
     surface_resolution.unregister()
-    convert_to_mesh.unregister()
     convert_bezier_to_surface.unregister()
     decimate_curve.unregister()
     gp_to_curve.unregister()

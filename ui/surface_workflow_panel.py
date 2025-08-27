@@ -122,79 +122,63 @@ class OBJECT_PT_SurfaceWorkflow(bpy.types.Panel):
                 mir = tools.column(align=True)
                 mir.operator("curve.mirror_selected_points_at_cursor", text="Mirror Curve", icon="MOD_MIRROR")
 
-        # ---------- Step 3: Convert Curve to Boundary Mesh ----------
+        # ---------- Step 3: Sample Curve to Polyline ----------
         step3 = surface_box.box()
         hdr3 = step3.row(align=True)
-        hdr3.prop(W, "spp_show_surface_step_3", toggle=True, text="Step 3: Convert Curve to Boundary Mesh", icon="OUTLINER_OB_MESH")
+        hdr3.prop(W, "spp_show_surface_step_3", toggle=True, text="Step 3: Sample Curve to Polyline", icon="CURVE_DATA")
 
         if W.spp_show_surface_step_3:
-            r = step3.row(align=True); r.scale_y = 1.1
-            r.operator("object.convert_to_mesh", text="Create Mesh", icon="MESH_DATA")
+            if hasattr(S, "spp_sampler_fidelity"):
+                step3.column(align=True).prop(S, "spp_sampler_fidelity", text="Boundary Samples")
+            row = step3.row(align=True); row.scale_y = 1.2
+            row.operator("curve.sample_to_polyline", text="Sample Curve to Polyline", icon="CURVE_BEZCURVE")
 
-            # Step 3a – Refine Mesh (collapsible)
-            refine = step3.box()
-            refine_header = refine.row(align=True)
-            refine_header.prop(S, "spp_show_refine_mesh", toggle=True, text="Step 3a: Refine Mesh", icon="TRIA_DOWN" if getattr(S, "spp_show_refine_mesh", False) else "TRIA_RIGHT")
-            
-            if getattr(S, "spp_show_refine_mesh", False):
-                # Smoothing
-                sm = refine.column(align=True)
-                sm.label(text="Smoothing:", icon="MOD_SMOOTH")
-                rr = sm.row(align=True)
-                if hasattr(S, "spp_smooth_factor"):
-                    rr.prop(S, "spp_smooth_factor", text="Factor")
-                rr.operator("object.smooth_vertices", text="Apply", icon="CHECKMARK")
-
-                # Vertex Reduction (show current verts and even-count previews)
-                vr = refine.column(align=True)
-                vr.label(text="Vertex Reduction:", icon="VERTEXSEL")
-
-                obj = context.active_object
-                vert_count = 0
-                if obj and obj.type == "MESH":
-                    vert_count = len(obj.data.vertices)
-
-                info = vr.row(); info.alignment = "CENTER"
-                info.label(text=f"Current: {vert_count} vertices", icon="INFO")
-
-                def even_after(original, factor):
-                    n = int(original * (1.0 - factor))
-                    return n if n % 2 == 0 else max(0, n - 1)
-
-                # Parity status and quick-fix
-                if obj and obj.type == "MESH":
-                    if vert_count % 2 != 0:
-                        warn = vr.row(align=True)
-                        warn.alert = True
-                        warn.label(text="Odd vertex count", icon="ERROR")
-                        warn.operator("mesh.make_even_verts", text="Make Even", icon="AUTOMERGE_ON")
-                    elif vert_count > 0:
-                        ok = vr.row(align=True)
-                        ok.label(text="Even vertex count", icon="CHECKMARK")
-
-                row1 = vr.row(align=True)
-                b = row1.operator("object.reduce_verts", text=f"20% ({even_after(vert_count, 0.2)} verts)")
-                b.factor = 0.2
-                b = row1.operator("object.reduce_verts", text=f"40% ({even_after(vert_count, 0.4)} verts)")
-                b.factor = 0.4
-
-                row2 = vr.row(align=True)
-                b = row2.operator("object.reduce_verts", text=f"60% ({even_after(vert_count, 0.6)} verts)")
-                b.factor = 0.6
-                b = row2.operator("object.reduce_verts", text=f"80% ({even_after(vert_count, 0.8)} verts)")
-                b.factor = 0.8
-
-        # ---------- Step 4: Generate Boundary Fill ----------
+        # ---------- Step 4: Fill Border with Grid ----------
         step4 = surface_box.box()
         hdr4 = step4.row(align=True)
-        hdr4.prop(W, "spp_show_surface_step_4", toggle=True, text="Step 4: Generate Boundary Fill", icon="MESH_GRID")
+        hdr4.prop(W, "spp_show_surface_step_4", toggle=True, text="Step 4: Fill Border with Grid", icon="GRID")
 
         if W.spp_show_surface_step_4:
-            if hasattr(S, "spp_grid_fill_span"):
-                step4.prop(S, "spp_grid_fill_span", text="Grid Fill Span")
-            r = step4.row(align=True); r.scale_y = 1.2
-            r.operator("object.panel_generate", text="Generate Panel", icon="MOD_MESHDEFORM")
+            fill_row = step4.row(align=True); fill_row.scale_y = 1.2
+            fill_row.operator("mesh.simple_grid_fill", text="Fill Panel Border", icon="MOD_TRIANGULATE")
+            smooth_row = step4.row(align=True)
+            smooth_row.operator("mesh.smooth_mesh", text="Smooth Mesh (Optional)", icon="MOD_SMOOTH")
+
+        # ---------- Step 5: Relax/Conform (Optional) ----------
+        step5 = surface_box.box()
+        hdr5 = step5.row(align=True)
+        hdr5.prop(W, "spp_show_surface_step_5", toggle=True, text="Step 5: Relax/Conform (Optional)", icon="MOD_SHRINKWRAP")
+
+        if W.spp_show_surface_step_5:
+            # Quick Conform
+            conform_col = step5.column(align=True)
+            conform_col.label(text="Surface Conformity:", icon="SNAP_ON")
+            conform_col.operator("mesh.quick_conform", text="Quick Conform", icon="SNAP_ON")
             
+            # Smoothing
+            sm = step5.column(align=True)
+            sm.label(text="Smoothing:", icon="MOD_SMOOTH")
+            rr = sm.row(align=True)
+            if hasattr(S, "spp_smooth_factor"):
+                rr.prop(S, "spp_smooth_factor", text="Factor")
+            rr.operator("object.smooth_vertices", text="Apply", icon="CHECKMARK")
+            
+            # Retopology section (only visible in edit mode)
+            if context.mode == 'EDIT_MESH':
+                retopo_box = step4.box()
+                retopo_header = retopo_box.row(align=True)
+                retopo_header.prop(S, "spp_show_retopology", toggle=True, text="Retopology", icon="TRIA_DOWN" if getattr(S, "spp_show_retopology", False) else "TRIA_RIGHT")
+                
+                if getattr(S, "spp_show_retopology", False):
+                    retopo_content = retopo_box.column(align=True)
+                    
+                    # Enable/disable retopology overlay
+                    overlay = context.space_data.overlay
+                    retopo_content.prop(overlay, "show_retopology", text="Show Retopology")
+                    
+                    if overlay.show_retopology:
+                        # Retopology opacity slider
+                        retopo_content.prop(overlay, "retopology_offset", text="Offset", slider=True)
 
 
 classes = [OBJECT_PT_SurfaceWorkflow]
