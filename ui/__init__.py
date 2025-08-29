@@ -2,7 +2,7 @@ import bpy
 
 from . import (
     auto_uv,
-    lace_panel,
+    lace_panel,  # Re-enabled with new asset-based lace system
     main_panel,
     panel_nurbs_qd,
     profile_projection_panel,
@@ -16,7 +16,7 @@ modules = [
     workflow_operators,
     uv_workflow_panel,
     surface_workflow_panel,
-    lace_panel,
+    lace_panel,  # Re-enabled with new asset-based lace system
     auto_uv,
     panel_nurbs_qd,
     profile_projection_panel,

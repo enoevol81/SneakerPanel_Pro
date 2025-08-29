@@ -4,6 +4,86 @@ import bpy
 from .utils.panel_utils import update_stabilizer, update_stabilizer_ui
 
 
+def _update_lace_modifier_live(self, context):
+    """Live update callback for lace modifier parameters"""
+    obj = context.active_object
+    if not obj or obj.type != 'CURVE':
+        return
+    
+    # Find the lace modifier
+    modifier = None
+    for mod in obj.modifiers:
+        if mod.type == 'NODES' and mod.node_group and 'spp_lace' in mod.node_group.name:
+            modifier = mod
+            break
+    
+    if not modifier:
+        return
+    
+    try:
+        scene = context.scene
+        
+        # Handle profile type changes first - need to switch node group
+        if hasattr(scene, 'spp_lace_profile'):
+            node_group_map = {
+                'ROUND': 'spp_lace_round',
+                'OVAL': 'spp_lace_oval',
+                'FLAT': 'spp_lace_flat',
+                'CUSTOM': 'spp_lace_custom'
+            }
+            
+            target_group = node_group_map.get(scene.spp_lace_profile)
+            if target_group and target_group in bpy.data.node_groups:
+                if modifier.node_group.name != target_group:
+                    modifier.node_group = bpy.data.node_groups[target_group]
+        
+        # Update modifier inputs - use direct modifier input access
+        input_mappings = {
+            "Resample": ("spp_lace_resample", lambda x: x),
+            "Scale": ("spp_lace_scale", lambda x: x),
+            "Tilt": ("spp_lace_tilt", lambda x: x),
+            "Normal Mode": ("spp_lace_normal_mode", lambda x: int(x)),
+            "Free Normal Control": ("spp_lace_free_normal", lambda x: x if scene.spp_lace_normal_mode == '2' else None),
+            "Flip V": ("spp_lace_flip_v", lambda x: x),
+            "Flip Normal": ("spp_lace_flip_normal", lambda x: x),
+            "Shade Smooth": ("spp_lace_shade_smooth", lambda x: x),
+            "Lace Color": ("spp_lace_color", lambda x: x),
+            "Custom Profile": ("spp_lace_custom_profile", lambda x: x if scene.spp_lace_profile == 'CUSTOM' else None),
+        }
+        
+        # Update each input that exists in the modifier
+        for input_name, (scene_prop, transform_func) in input_mappings.items():
+            if input_name in modifier and hasattr(scene, scene_prop):
+                try:
+                    value = getattr(scene, scene_prop)
+                    transformed_value = transform_func(value)
+                    if transformed_value is not None:
+                        modifier[input_name] = transformed_value
+                except Exception as input_error:
+                    print(f"Error setting input {input_name}: {input_error}")
+                    continue
+        
+        # Handle material assignment separately
+        if "Material" in modifier:
+            try:
+                if hasattr(scene, 'spp_lace_use_custom_material') and scene.spp_lace_use_custom_material and hasattr(scene, 'spp_lace_custom_material') and scene.spp_lace_custom_material:
+                    modifier["Material"] = scene.spp_lace_custom_material
+                else:
+                    # Use default material
+                    default_material = bpy.data.materials.get("spp_lace_material")
+                    if default_material:
+                        modifier["Material"] = default_material
+            except Exception as material_error:
+                print(f"Error setting material: {material_error}")
+        
+        # Force viewport update
+        if hasattr(context, 'view_layer'):
+            context.view_layer.update()
+        
+    except Exception as e:
+        print(f"Error updating lace modifier live: {e}")
+
+
 def _update_reference_image_opacity(self, context):
     """Update opacity of reference image materials in real-time"""
     opacity_value = getattr(context.scene, "spp_reference_image_opacity", 1.0)
@@ -38,23 +118,21 @@ def register_properties():
         name="Lace Profile",
         description="Shape profile to use for the lace",
         items=[
-            ("0", "Circle", "Circular lace profile"),
-            ("1", "Flat", "Flat rectangular lace profile"),
-            ("2", "Custom", "Custom profile from another object"),
+            ('ROUND', "Round", "Circular lace profile"),
+            ('OVAL', "Oval", "Oval/elliptical lace profile"),
+            ('FLAT', "Flat", "Flat rectangular lace profile"),
+            ('CUSTOM', "Custom", "Custom profile from another object"),
         ],
-        default="0",
-        update=_update_lace_modifier,
+        default='ROUND',
     )
 
     bpy.types.Scene.spp_lace_scale = bpy.props.FloatProperty(
         name="Scale",
         description="Size of the lace profile",
-        default=0.005,
-        min=0.0001,
-        max=0.1,
-        precision=4,
-        subtype="DISTANCE",
-        update=_update_lace_modifier,
+        default=1.0,
+        min=0.001,
+        max=10.0,
+        precision=3,
     )
 
     bpy.types.Scene.spp_lace_resample = bpy.props.IntProperty(
@@ -63,7 +141,6 @@ def register_properties():
         default=110,
         min=1,
         max=1000,
-        update=_update_lace_modifier,
     )
 
     bpy.types.Scene.spp_lace_tilt = bpy.props.FloatProperty(
@@ -71,40 +148,72 @@ def register_properties():
         description="Rotation around the curve tangent",
         default=0.0,
         subtype="ANGLE",
-        update=_update_lace_modifier,
     )
 
     bpy.types.Scene.spp_lace_normal_mode = bpy.props.EnumProperty(
         name="Normal Mode",
         description="Method to calculate normals along the curve",
         items=[
-            ("0", "Minimum Twist", "Use minimum twist for curve normals"),
-            ("1", "Z Up", "Align normals with Z-up direction"),
-            ("2", "Free", "Free normal direction"),
+            ('0', "Minimum Twist", "Use minimum twist for curve normals"),
+            ('1', "Z Up", "Align normals with Z-up direction"),
+            ('2', "Free", "Free normal direction"),
         ],
-        default="0",
-        update=_update_lace_modifier,
+        default='0',
     )
 
     bpy.types.Scene.spp_lace_custom_profile = bpy.props.PointerProperty(
         name="Custom Profile",
         description="Object to use as custom profile (only used when Lace Profile is set to Custom)",
         type=bpy.types.Object,
-        update=_update_lace_modifier,
     )
 
-    bpy.types.Scene.spp_lace_material = bpy.props.PointerProperty(
-        name="Material",
-        description="Material to apply to the lace",
+    bpy.types.Scene.spp_lace_custom_material = bpy.props.PointerProperty(
+        name="Custom Material",
+        description="Custom material to apply to the lace",
         type=bpy.types.Material,
-        update=_update_lace_modifier,
     )
 
     bpy.types.Scene.spp_lace_shade_smooth = bpy.props.BoolProperty(
         name="Shade Smooth",
         description="Apply smooth shading to the generated mesh",
         default=True,
-        update=_update_lace_modifier,
+    )
+    
+    # Additional lace properties for new asset-based system
+    bpy.types.Scene.spp_lace_free_normal = bpy.props.FloatVectorProperty(
+        name="Free Normal",
+        description="Free normal control vector",
+        default=(0.0, 0.0, 1.0),
+        subtype='DIRECTION',
+        size=3,
+    )
+    
+    bpy.types.Scene.spp_lace_flip_v = bpy.props.BoolProperty(
+        name="Flip V",
+        description="Flip UV V coordinate",
+        default=False,
+    )
+    
+    bpy.types.Scene.spp_lace_flip_normal = bpy.props.BoolProperty(
+        name="Flip Normal",
+        description="Flip face normals",
+        default=False,
+    )
+    
+    bpy.types.Scene.spp_lace_color = bpy.props.FloatVectorProperty(
+        name="Lace Color",
+        description="Color tint for the lace",
+        default=(0.8, 0.8, 0.8, 1.0),
+        subtype='COLOR',
+        size=4,
+        min=0.0,
+        max=1.0,
+    )
+    
+    bpy.types.Scene.spp_lace_use_custom_material = bpy.props.BoolProperty(
+        name="Use Custom Material",
+        description="Use custom material instead of default",
+        default=False,
     )
 
     # -------------------------------------------------------------------------
@@ -454,45 +563,6 @@ def _update_modifier_if_exists(context, modifier_name, property_name, value):
     return None
 
 
-def _update_lace_modifier(self, context):
-    """Callback to update Lace modifier inputs when scene properties change."""
-    obj = context.active_object
-    if not obj or obj.type != "CURVE":
-        return
-
-    modifier = None
-    for mod in obj.modifiers:
-        if mod.type == "NODES" and mod.name.startswith("Lace"):
-            modifier = mod
-            break
-
-    if modifier:
-        try:
-            scene = context.scene
-            if hasattr(scene, "spp_lace_profile"):
-                modifier["Socket_2"] = int(scene.spp_lace_profile)
-            if hasattr(scene, "spp_lace_scale"):
-                modifier["Socket_3"] = scene.spp_lace_scale
-            if hasattr(scene, "spp_lace_resample"):
-                modifier["Socket_4"] = scene.spp_lace_resample
-            if hasattr(scene, "spp_lace_tilt"):
-                modifier["Socket_5"] = scene.spp_lace_tilt
-            if hasattr(scene, "spp_lace_normal_mode"):
-                modifier["Socket_6"] = int(scene.spp_lace_normal_mode)
-            if hasattr(scene, "spp_lace_custom_profile"):
-                modifier["Socket_7"] = scene.spp_lace_custom_profile
-            if hasattr(scene, "spp_lace_material"):
-                modifier["Socket_8"] = scene.spp_lace_material
-            if hasattr(scene, "spp_lace_shade_smooth"):
-                modifier["Socket_9"] = scene.spp_lace_shade_smooth
-
-            # Force refresh
-            modifier.show_viewport = False
-            modifier.show_viewport = True
-
-        except Exception as e:
-            print(f"Error updating Lace modifier: {e}")
-
 
 def _update_curve_cyclic(self, context):
     """Callback to update curve cyclic property when scene property changes."""
@@ -511,6 +581,20 @@ def _update_curve_cyclic(self, context):
 def unregister_properties():
     """Unregister all properties used by the SneakerPanel Pro addon."""
     props = [
+        # Lace generator properties
+        "spp_lace_profile",
+        "spp_lace_scale", 
+        "spp_lace_resample",
+        "spp_lace_tilt",
+        "spp_lace_normal_mode",
+        "spp_lace_custom_profile",
+        "spp_lace_custom_material",
+        "spp_lace_shade_smooth",
+        "spp_lace_free_normal",
+        "spp_lace_flip_v",
+        "spp_lace_flip_normal",
+        "spp_lace_color",
+        "spp_lace_use_custom_material",
         # Panel identification
         "spp_panel_count",
         "spp_panel_name",

@@ -23,7 +23,7 @@ from . import (
     fill_border_grid,
     fill_quad_border,
     gp_to_curve,
-    lace_from_curves,
+    # lace_from_curves,  # Disabled - replaced by new asset-based system
     mirror_curve_points,
     mirror_panel,
     orient_uv_island,
@@ -38,6 +38,9 @@ from . import (
     smooth_mesh,
     smooth_vertices,
     solidify_panel,
+    spp_lace_apply,  # New asset-based lace system
+    spp_lace_loader,  # New asset loader
+    # spp_lace_panel,   # Disabled - UI moved to ui/lace_panel.py
     surface_resolution,
     unwrap_shell,
     uv_boundary_checker,
@@ -68,7 +71,8 @@ def register():
     smooth_mesh.register()
     overlay_panel_onto_shell.register()
     uv_boundary_checker.register()
-    lace_from_curves.register()
+    # lace_from_curves.register()  # Disabled - replaced by new asset-based system
+    spp_lace_apply.register()  # New asset-based lace system
     edge_flow.register()
     mirror_panel.register()
     edge_relax.register()
@@ -103,7 +107,9 @@ def unregister():
     smooth_mesh.unregister()
     overlay_panel_onto_shell.unregister()
     uv_boundary_checker.unregister()
-    lace_from_curves.unregister()
+    # lace_from_curves.unregister()  # Disabled - replaced by new asset-based system
+    # spp_lace_panel.unregister()  # Disabled - UI moved to ui/lace_panel.py
+    spp_lace_apply.unregister()  # New asset-based lace system
     edge_flow.unregister()
     mirror_panel.unregister()
     edge_relax.unregister()
