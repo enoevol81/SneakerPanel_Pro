@@ -242,8 +242,6 @@ class OBJECT_PT_UVWorkflow(Panel):
         if W.spp_show_uv_step_5:
             fill_row = step5.row(align=True); fill_row.scale_y = 1.2
             fill_row.operator("mesh.simple_grid_fill", text="Fill Panel Border", icon='MOD_TRIANGULATE')
-            smooth_row = step5.row(align=True)
-            smooth_row.operator("mesh.smooth_mesh", text="Smooth Mesh (Optional)", icon='MOD_SMOOTH')
 
         # -----------------------------
         # Step 6 (collapsible, always-on)

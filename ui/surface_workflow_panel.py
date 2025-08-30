@@ -141,8 +141,6 @@ class OBJECT_PT_SurfaceWorkflow(bpy.types.Panel):
         if W.spp_show_surface_step_4:
             fill_row = step4.row(align=True); fill_row.scale_y = 1.2
             fill_row.operator("mesh.simple_grid_fill", text="Fill Panel Border", icon="MOD_TRIANGULATE")
-            smooth_row = step4.row(align=True)
-            smooth_row.operator("mesh.smooth_mesh", text="Smooth Mesh (Optional)", icon="MOD_SMOOTH")
 
            
 

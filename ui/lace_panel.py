@@ -66,6 +66,16 @@ class OBJECT_PT_SneakerPanelLace(bpy.types.Panel):
             error_col.label(text="Select a curve object to apply lace", icon="ERROR")
             return
         
+        # Find lace modifier for direct socket control
+        lace_modifier = None
+        if obj:
+            for mod in obj.modifiers:
+                if mod.type == 'NODES' and mod.node_group:
+                    # Check for both old naming and new asset-based node group
+                    if 'LaceFromCurves' in mod.node_group.name or 'spp_lace' in mod.node_group.name or 'Lace' in mod.name:
+                        lace_modifier = mod
+                        break
+        
         # Main controls column
         col = lace_box.column(align=True)
         
@@ -74,29 +84,56 @@ class OBJECT_PT_SneakerPanelLace(bpy.types.Panel):
         col.prop(scene, "spp_lace_profile", text="")
         
         # Custom Profile Object (only show for Custom type)
-        if scene.spp_lace_profile == 'CUSTOM':
-            col.prop(scene, "spp_lace_custom_profile", text="Custom Profile")
-        
-        # Find lace modifier for direct socket control
-        lace_modifier = None
-        if obj:
-            for mod in obj.modifiers:
-                if mod.type == 'NODES' and mod.node_group and 'spp_lace' in mod.node_group.name:
-                    lace_modifier = mod
-                    break
+        # Accept multiple representations of the custom profile enum (e.g. 'CUSTOM', '2', etc.)
+        if scene.spp_lace_profile in {'CUSTOM', 'Custom', 'custom', '2', 2}:
+            # If a lace modifier has already been applied, expose socket 12 directly.
+            # According to the asset file, the custom profile lives on Socket_12.
+            if lace_modifier:
+                try:
+                    if "Socket_12" in lace_modifier:
+                        col.prop(lace_modifier, '["Socket_12"]', text="Custom Profile")
+                    else:
+                        # Fallback to scene property when socket 12 is not yet available
+                        col.prop(scene, "spp_lace_custom_profile", text="Custom Profile")
+                except Exception:
+                    # Fallback to scene property if direct access fails
+                    col.prop(scene, "spp_lace_custom_profile", text="Custom Profile")
+            else:
+                # No modifier yet, show scene property so the user can choose a profile before applying
+                col.prop(scene, "spp_lace_custom_profile", text="Custom Profile")
         
         # Geometry Controls - direct socket control
         col.separator()
         col.label(text="Geometry Settings:")
         
         if lace_modifier:
-            # Direct modifier socket control
-            if "Socket_8" in lace_modifier:  # Resample
-                col.prop(lace_modifier, '["Socket_8"]', text="Resample")
-            if "Socket_2" in lace_modifier:  # Scale
-                col.prop(lace_modifier, '["Socket_2"]', text="Scale")
-            if "Socket_3" in lace_modifier:  # Tilt
-                col.prop(lace_modifier, '["Socket_3"]', text="Tilt")
+            # Direct modifier socket control with fallback
+            try:
+                if "Socket_8" in lace_modifier:  # Resample
+                    col.prop(lace_modifier, '["Socket_8"]', text="Resample")
+                elif "Resample" in lace_modifier:
+                    col.prop(lace_modifier, '["Resample"]', text="Resample")
+                else:
+                    col.prop(scene, "spp_lace_resample", text="Resample")
+                    
+                if "Socket_2" in lace_modifier:  # Scale
+                    col.prop(lace_modifier, '["Socket_2"]', text="Scale")
+                elif "Scale" in lace_modifier:
+                    col.prop(lace_modifier, '["Scale"]', text="Scale")
+                else:
+                    col.prop(scene, "spp_lace_scale", text="Scale")
+                    
+                if "Socket_3" in lace_modifier:  # Tilt
+                    col.prop(lace_modifier, '["Socket_3"]', text="Tilt")
+                elif "Tilt" in lace_modifier:
+                    col.prop(lace_modifier, '["Tilt"]', text="Tilt")
+                else:
+                    col.prop(scene, "spp_lace_tilt", text="Tilt")
+            except:
+                # Fallback to scene properties if socket access fails
+                col.prop(scene, "spp_lace_resample", text="Resample")
+                col.prop(scene, "spp_lace_scale", text="Scale")
+                col.prop(scene, "spp_lace_tilt", text="Tilt")
         else:
             # Fallback to scene properties when no modifier exists
             col.prop(scene, "spp_lace_resample", text="Resample")
@@ -107,84 +144,54 @@ class OBJECT_PT_SneakerPanelLace(bpy.types.Panel):
         col.separator()
         col.label(text="Normal Settings:")
         
-        if lace_modifier:
-            if "Socket_4" in lace_modifier:  # Normal Mode
-                # Create a custom enum property for the normal mode dropdown
-                normal_mode_value = lace_modifier.get("Socket_4", 0)
-                
-                # Custom dropdown for normal mode
-                row = col.row()
-                row.label(text="Normal Mode:")
-                
-                # Create enum items based on the geometry node setup
-                enum_items = [
-                    ("0", "Minimum Twist", "Use minimum twist for curve normals"),
-                    ("1", "Z Up", "Align normals with Z-up direction"), 
-                    ("2", "Free", "Free normal direction")
-                ]
-                
-                # Use scene property for the dropdown but sync with socket
-                col.prop(scene, "spp_lace_normal_mode", text="")
-                
-                # Sync scene property to socket when changed
-                if str(scene.spp_lace_normal_mode) != str(normal_mode_value):
-                    lace_modifier["Socket_4"] = int(scene.spp_lace_normal_mode)
-                
-            # Free Normal Controls (Socket_10 with X=0, Y=1, Z=2) - only show when Free mode selected
-            if "Socket_10" in lace_modifier and scene.spp_lace_normal_mode == '2':
-                col.separator()
-                col.label(text="Free Normal:")
+        # Normal Mode - always use scene property to prevent collapse
+        col.prop(scene, "spp_lace_normal_mode", text="Normal Mode")
+        
+        # Free Normal Controls - show when Free mode is selected
+        if scene.spp_lace_normal_mode == '2':
+            col.separator()
+            col.label(text="Free Normal Direction:")
+            if lace_modifier and "Socket_10" in lace_modifier:
+                # Direct socket control for Free Normal vector
                 row = col.row(align=True)
                 row.prop(lace_modifier, '["Socket_10"]', index=0, text="X")
                 row.prop(lace_modifier, '["Socket_10"]', index=1, text="Y")
                 row.prop(lace_modifier, '["Socket_10"]', index=2, text="Z")
-        else:
-            col.prop(scene, "spp_lace_normal_mode", text="")
-            if scene.spp_lace_normal_mode == '2':
-                col.prop(scene, "spp_lace_free_normal", text="Free Normal")
+            else:
+                col.prop(scene, "spp_lace_free_normal", text="")
+        # This else block is no longer needed as we always use scene properties for normal mode
         
-        # Flip Options
-        col.separator()
-        if lace_modifier:
-            if "Socket_6" in lace_modifier:  # Flip Normal
-                col.prop(lace_modifier, '["Socket_6"]', text="Flip Normal")
-            if "Socket_9" in lace_modifier:  # Shade Smooth
-                col.prop(lace_modifier, '["Socket_9"]', text="Shade Smooth")
-        else:
-            row = col.row(align=True)
-            row.prop(scene, "spp_lace_flip_v", text="Flip V")
-            row.prop(scene, "spp_lace_flip_normal", text="Flip Normal")
-            col.prop(scene, "spp_lace_shade_smooth", text="Shade Smooth")
-        
-        # Color and Material
+        # Flip Options and Material
         col.separator()
         col.label(text="Appearance:")
+        
         if lace_modifier:
-            if "Socket_11" in lace_modifier:  # Lace Color
-                col.prop(lace_modifier, '["Socket_11"]', text="Lace Color")
-            
-            # Material Selection - make it user-definable
-            col.separator()
-            col.label(text="Material:")
-            row = col.row(align=True)
-            row.prop(scene, "spp_lace_use_custom_material", text="Custom")
-            if scene.spp_lace_use_custom_material:
-                col.prop(scene, "spp_lace_custom_material", text="")
-                # Apply custom material to socket when selected
-                if scene.spp_lace_custom_material and "Socket_5" in lace_modifier:
-                    lace_modifier["Socket_5"] = scene.spp_lace_custom_material
+            # Color - Socket_11
+            if "Socket_11" in lace_modifier:
+                col.prop(lace_modifier, '["Socket_11"]', text="Color")
             else:
-                # Show default material info
-                col.label(text="Using default lace material")
+                col.prop(scene, "spp_lace_color", text="Color")
+            
+            # Flip Normal - Socket_6
+            if "Socket_6" in lace_modifier:
+                col.prop(lace_modifier, '["Socket_6"]', text="Flip Normal")
+            else:
+                col.prop(scene, "spp_lace_flip_normal", text="Flip Normal")
+            
+            # Shade Smooth - Socket_9
+            if "Socket_9" in lace_modifier:
+                col.prop(lace_modifier, '["Socket_9"]', text="Shade Smooth")
+            else:
+                col.prop(scene, "spp_lace_shade_smooth", text="Shade Smooth")
+            
+            # Material section removed - using default lace material only
         else:
-            col.prop(scene, "spp_lace_color", text="Lace Color")
-            # Material Section
-            col.separator()
-            col.label(text="Material:")
-            row = col.row(align=True)
-            row.prop(scene, "spp_lace_use_custom_material", text="Custom")
-            if scene.spp_lace_use_custom_material:
-                col.prop(scene, "spp_lace_custom_material", text="")
+            # Fallback to scene properties when no modifier exists
+            col.prop(scene, "spp_lace_color", text="Color")
+            col.prop(scene, "spp_lace_flip_normal", text="Flip Normal")
+            col.prop(scene, "spp_lace_shade_smooth", text="Shade Smooth")
+            
+            # Material section removed - using default lace material only
         
         # Apply Button
         col.separator()
@@ -193,6 +200,8 @@ class OBJECT_PT_SneakerPanelLace(bpy.types.Panel):
         
         # Apply lace operator - uses scene properties internally
         apply_col.operator("spp.apply_lace", text="Apply Lace", icon="CURVE_DATA")
+        
+        # Custom profile is now handled directly above
 
 
 # Registration

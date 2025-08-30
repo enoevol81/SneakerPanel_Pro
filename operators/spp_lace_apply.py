@@ -134,19 +134,30 @@ class SPP_OT_apply_lace(Operator):
             self.report({'ERROR'}, "Failed to load lace assets")
             return {'CANCELLED'}
         
-        # Get active object
-        obj = context.active_object
-        if not obj or obj.type != 'CURVE':
-            self.report({'ERROR'}, "Please select a curve object")
+        # Get active object - this should be the target curve for lace generation
+        target_curve = context.active_object
+        if not target_curve or target_curve.type != 'CURVE':
+            self.report({'ERROR'}, "Please select a curve object to apply lace to")
             return {'CANCELLED'}
         
         # Get lace type from scene properties
         lace_type = scene.spp_lace_profile
         
-        # Map lace type to node group name
+        # Validate custom profile if needed and ensure it's different from target
+        if lace_type == 'CUSTOM':
+            if not scene.spp_lace_custom_profile:
+                self.report({'ERROR'}, "Custom profile object not specified")
+                return {'CANCELLED'}
+            
+            # Ensure the custom profile is not the same as the target curve
+            if scene.spp_lace_custom_profile == target_curve:
+                self.report({'ERROR'}, "Custom profile cannot be the same as the target curve. Please select a different curve as the custom profile.")
+                return {'CANCELLED'}
+        
+        # Map lace type to correct node group name from asset file
         node_group_map = {
             'ROUND': 'spp_lace_round',
-            'OVAL': 'spp_lace_oval',
+            'OVAL': 'spp_lace_oval', 
             'FLAT': 'spp_lace_flat',
             'CUSTOM': 'spp_lace_custom'
         }
@@ -156,74 +167,88 @@ class SPP_OT_apply_lace(Operator):
             self.report({'ERROR'}, f"Unknown lace type: {lace_type}")
             return {'CANCELLED'}
         
-        # Get the node group
+        # Get the node group from loaded assets
         node_group = bpy.data.node_groups.get(node_group_name)
         if not node_group:
-            self.report({'ERROR'}, f"Node group '{node_group_name}' not found")
+            self.report({'ERROR'}, f"Node group '{node_group_name}' not found. Make sure lace assets are loaded.")
             return {'CANCELLED'}
         
-        # Validate custom profile if needed
-        if lace_type == 'CUSTOM':
-            if not scene.spp_lace_custom_profile:
-                self.report({'ERROR'}, "Custom profile object not specified")
-                return {'CANCELLED'}
-        
-        # Remove existing lace modifiers
+        # Remove existing lace modifiers from target curve
         modifiers_to_remove = []
-        for modifier in obj.modifiers:
+        for modifier in target_curve.modifiers:
             if modifier.type == 'NODES' and modifier.node_group:
                 # Check if it's one of our lace modifiers
-                if any(lace_name in modifier.node_group.name.lower() for lace_name in ['spp_lace_round', 'spp_lace_oval', 'spp_lace_flat', 'spp_lace_custom']):
+                if any(lace_name in modifier.node_group.name for lace_name in ['spp_lace_round', 'spp_lace_oval', 'spp_lace_flat', 'spp_lace_custom']):
                     modifiers_to_remove.append(modifier)
         
         for modifier in modifiers_to_remove:
-            obj.modifiers.remove(modifier)
+            target_curve.modifiers.remove(modifier)
         
-        # Add new geometry nodes modifier
-        modifier = obj.modifiers.new(name="SPP Lace", type='NODES')
+        # Add new geometry nodes modifier to target curve
+        modifier = target_curve.modifiers.new(name="SPP Lace", type='NODES')
         modifier.node_group = node_group
         
-        # Set modifier inputs from scene properties
+        # Set modifier inputs using named inputs (each node group has its own input structure)
         try:
-            # Basic parameters
-            if "Resample" in modifier:
-                modifier["Resample"] = scene.spp_lace_resample
+            # Basic parameters that should exist in all node groups
             if "Scale" in modifier:
-                modifier["Scale"] = scene.spp_lace_scale
+                modifier["Scale"] = scene.spp_lace_scale if hasattr(scene, 'spp_lace_scale') else 0.05
+            
+            if "Resample" in modifier:
+                modifier["Resample"] = scene.spp_lace_resample if hasattr(scene, 'spp_lace_resample') else 64
+            
             if "Tilt" in modifier:
-                modifier["Tilt"] = scene.spp_lace_tilt
+                modifier["Tilt"] = scene.spp_lace_tilt if hasattr(scene, 'spp_lace_tilt') else 0.0
+            
             if "Normal Mode" in modifier:
-                modifier["Normal Mode"] = int(scene.spp_lace_normal_mode)
-            if "Free Normal Control" in modifier:
-                modifier["Free Normal Control"] = scene.spp_lace_free_normal
-            if "Flip V" in modifier:
-                modifier["Flip V"] = scene.spp_lace_flip_v
-            if "Flip Normal" in modifier:
-                modifier["Flip Normal"] = scene.spp_lace_flip_normal
-            if "Shade Smooth" in modifier:
-                modifier["Shade Smooth"] = scene.spp_lace_shade_smooth
-            if "Lace Color" in modifier:
-                modifier["Lace Color"] = scene.spp_lace_color
+                normal_mode = int(scene.spp_lace_normal_mode) if hasattr(scene, 'spp_lace_normal_mode') else 0
+                modifier["Normal Mode"] = normal_mode
             
-            # Custom profile for CUSTOM type
-            if lace_type == 'CUSTOM' and "Custom Profile" in modifier:
-                if scene.spp_lace_custom_profile:
-                    modifier["Custom Profile"] = scene.spp_lace_custom_profile
+            # Free Normal Controls (only when Normal Mode is Free)
+            if "Free Normal Controls" in modifier and hasattr(scene, 'spp_lace_free_normal') and scene.spp_lace_normal_mode == '2':
+                modifier["Free Normal Controls"] = scene.spp_lace_free_normal
             
-            # Material assignment
+            # Material - use default lace material
             if "Material" in modifier:
-                if scene.spp_lace_use_custom_material and scene.spp_lace_custom_material:
-                    modifier["Material"] = scene.spp_lace_custom_material
-                else:
-                    # Use default material
-                    default_material = bpy.data.materials.get("spp_lace_material")
-                    if default_material:
-                        modifier["Material"] = default_material
+                default_material = bpy.data.materials.get("spp_lace_material")
+                if default_material:
+                    modifier["Material"] = default_material
+            
+            # Color
+            if "Color" in modifier and hasattr(scene, 'spp_lace_color'):
+                modifier["Color"] = scene.spp_lace_color
+            
+            # Flip Normal
+            if "Flip Normal" in modifier and hasattr(scene, 'spp_lace_flip_normal'):
+                modifier["Flip Normal"] = scene.spp_lace_flip_normal
+            
+            # Shade Smooth
+            if "Shade Smooth" in modifier and hasattr(scene, 'spp_lace_shade_smooth'):
+                modifier["Shade Smooth"] = scene.spp_lace_shade_smooth
+            
+            # Custom Profile (only for spp_lace_custom)
+            if lace_type == 'CUSTOM' and scene.spp_lace_custom_profile:
+                # According to the asset file, the custom profile input lives on Socket_12
+                try:
+                    modifier["Socket_12"] = scene.spp_lace_custom_profile
+                except Exception as e:
+                    # Fallback: print a warning and log available inputs
+                    print(f"Warning: Could not set custom profile on Socket_12: {e}")
+                    print(f"Available modifier keys: {list(modifier.keys())}")
                     
         except Exception as e:
             print(f"Error setting modifier inputs: {e}")
         
-        self.report({'INFO'}, f"Applied {lace_type.lower()} lace profile")
+        # Report success with clarification about target vs profile
+        if lace_type == 'CUSTOM':
+            self.report({'INFO'}, f"Applied custom lace profile to '{target_curve.name}' using '{scene.spp_lace_custom_profile.name}' as profile")
+        else:
+            self.report({'INFO'}, f"Applied {lace_type.lower()} lace profile to '{target_curve.name}'")
+        
+        # Force viewport update
+        for area in context.screen.areas:
+            if area.type == 'VIEW_3D':
+                area.tag_redraw()
         return {'FINISHED'}
     
     def draw(self, context):

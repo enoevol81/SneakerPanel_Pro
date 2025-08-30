@@ -46,6 +46,16 @@ class MESH_OT_FillBorderGrid(Operator):
 
             # Apply grid fill with the specified parameters
             bpy.ops.mesh.fill_grid(span=self.span, offset=self.offset)
+            
+            # Fix normal direction to match surface orientation
+            # Select all newly created faces
+            bpy.ops.mesh.select_all(action='SELECT')
+            
+            # Recalculate normals to ensure consistent direction
+            bpy.ops.mesh.normals_make_consistent(inside=False)
+            
+            # Deselect all to clean up selection
+            bpy.ops.mesh.select_all(action='DESELECT')
 
             # Restore the original selection mode
             bpy.ops.mesh.select_mode(
