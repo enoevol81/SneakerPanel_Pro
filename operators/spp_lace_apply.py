@@ -13,7 +13,10 @@ class SPP_OT_apply_lace(Operator):
     """Apply lace geometry to selected curve"""
     bl_idname = "spp.apply_lace"
     bl_label = "Apply Lace"
-    bl_options = {'REGISTER', 'UNDO'}
+    # Removed the 'REGISTER' flag from bl_options to avoid the "Adjust Last Operation"
+    # panel popping up in the viewport.  Only 'UNDO' is kept so the user can
+    # undo the operation without any redundant popup.
+    bl_options = {'UNDO'}
     
     lace_type: EnumProperty(
         name="Lace Type",
@@ -205,8 +208,11 @@ class SPP_OT_apply_lace(Operator):
                 modifier["Normal Mode"] = normal_mode
             
             # Free Normal Controls (only when Normal Mode is Free)
-            if "Free Normal Controls" in modifier and hasattr(scene, 'spp_lace_free_normal') and scene.spp_lace_normal_mode == '2':
-                modifier["Free Normal Controls"] = scene.spp_lace_free_normal
+            # In the loaded asset, the free normal vector lives on Socket_10.  Keep
+            # the scene property as the single source of truth and propagate it to
+            # the modifier.
+            if "Socket_10" in modifier and hasattr(scene, 'spp_lace_free_normal') and scene.spp_lace_normal_mode == '2':
+                modifier["Socket_10"] = scene.spp_lace_free_normal
             
             # Material - use default lace material
             if "Material" in modifier:
@@ -239,12 +245,11 @@ class SPP_OT_apply_lace(Operator):
         except Exception as e:
             print(f"Error setting modifier inputs: {e}")
         
-        # Report success with clarification about target vs profile
-        if lace_type == 'CUSTOM':
-            self.report({'INFO'}, f"Applied custom lace profile to '{target_curve.name}' using '{scene.spp_lace_custom_profile.name}' as profile")
-        else:
-            self.report({'INFO'}, f"Applied {lace_type.lower()} lace profile to '{target_curve.name}'")
-        
+        # Success reporting has been removed to avoid the redundant pop-up in the
+        # viewport.  Instead, silently return success.  A console message can be
+        # printed for debugging if desired.
+        #print(f"Applied {lace_type.lower()} lace profile to {target_curve.name}")
+
         # Force viewport update
         for area in context.screen.areas:
             if area.type == 'VIEW_3D':

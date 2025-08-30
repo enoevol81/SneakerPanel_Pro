@@ -1,153 +1,305 @@
-
 import bpy
-
+from bpy.props import EnumProperty, FloatProperty, BoolProperty, IntProperty, FloatVectorProperty, PointerProperty
 from .utils.panel_utils import update_stabilizer, update_stabilizer_ui
 
 
-def _update_lace_modifier_live(self, context):
-    """Live update callback for lace modifier parameters"""
+# -----------------------------------------------------------------------------
+# Utility functions and targeted update callbacks for the lace generator.
+#
+# The original live update function updated **all** inputs on every change,
+# which caused user‑adjusted values (e.g. scale, resample, tilt) to be reset
+# whenever another property (such as the free normal) changed.  The new
+# approach defines per‑property update functions that only modify the
+# corresponding socket on the active lace modifier.  This prevents unrelated
+# inputs from being overwritten and restores proper live editing behaviour.
+
+# Helper to find the first SPP lace modifier on the active curve
+def _get_lace_modifier(context):
+    obj = context.active_object
+    if not obj or obj.type != 'CURVE':
+        return None
+    for mod in obj.modifiers:
+        if mod.type == 'NODES' and mod.node_group:
+            if 'LaceFromCurves' in mod.node_group.name or 'spp_lace' in mod.node_group.name:
+                return mod
+    return None
+
+# Profile update: set the profile type and (for custom) the profile object
+def _update_lace_profile(self, context):
+    mod = _get_lace_modifier(context)
+    if not mod:
+        return
+    scene = context.scene
+    # Map enum to integer expected by the node group
+    profile_map = {'ROUND': 0, 'OVAL': 0, 'FLAT': 1, 'CUSTOM': 2}
+    profile_value = profile_map.get(scene.spp_lace_profile, 0)
     try:
-        obj = context.active_object
-        if not obj or obj.type != 'CURVE':
-            return
-        
-        # Find the lace modifier
-        modifier = None
-        for mod in obj.modifiers:
-            if mod.type == 'NODES' and mod.node_group:
-                # Check for both old naming and new asset-based node group
-                if 'LaceFromCurves' in mod.node_group.name or 'spp_lace' in mod.node_group.name:
-                    modifier = mod
+        mod["Socket_1"] = profile_value
+    except Exception:
+        if "Lace Profile" in mod:
+            mod["Lace Profile"] = profile_value
+    # If custom, set the custom profile object
+    if scene.spp_lace_profile == 'CUSTOM' and scene.spp_lace_custom_profile:
+        for socket_name in ["Socket_12", "Custom Profile", "Object", "Profile Object", "Profile"]:
+            try:
+                if socket_name in mod:
+                    mod[socket_name] = scene.spp_lace_custom_profile
                     break
-        
-        if not modifier:
-            return
-        
-        scene = context.scene
-        
-        # Use index-based socket access for the asset-based node group
-        # Correct socket mapping from geometry node:
-        # Socket_2=Scale, Socket_3=Tilt, Socket_4=Normal Mode, Socket_5=Material,
-        # Socket_6=Flip Normal, Socket_8=Resample, Socket_9=Shade Smooth,
-        # Socket_10=[0,1,2]=Free Normal Controls, Socket_11=Color, Socket_12=Custom Profile
-        
-        # Profile type (convert enum to integer)
-        if hasattr(scene, 'spp_lace_profile'):
-            profile_map = {'ROUND': 0, 'OVAL': 0, 'FLAT': 1, 'CUSTOM': 2}
-            profile_value = profile_map.get(scene.spp_lace_profile, 0)
-            try:
-                modifier["Socket_1"] = profile_value
-            except:
-                # Try named input as fallback
-                if "Lace Profile" in modifier:
-                    modifier["Lace Profile"] = profile_value
-        
-        # Scale
-        if hasattr(scene, 'spp_lace_scale'):
-            try:
-                modifier["Socket_2"] = scene.spp_lace_scale
-            except:
-                if "Scale" in modifier:
-                    modifier["Scale"] = scene.spp_lace_scale
-        
-        # Tilt - Socket_3
-        if hasattr(scene, 'spp_lace_tilt'):
-            try:
-                modifier["Socket_3"] = scene.spp_lace_tilt
-            except:
-                if "Tilt" in modifier:
-                    modifier["Tilt"] = scene.spp_lace_tilt
-        
-        # Normal Mode - Socket_4 (convert string to integer)
-        if hasattr(scene, 'spp_lace_normal_mode'):
-            # Ensure we convert string to int: '0'->0, '1'->1, '2'->2
-            normal_value = int(scene.spp_lace_normal_mode) if isinstance(scene.spp_lace_normal_mode, str) else scene.spp_lace_normal_mode
-            try:
-                modifier["Socket_4"] = normal_value
-            except:
-                if "Normal Mode" in modifier:
-                    modifier["Normal Mode"] = normal_value
-        
-        # Resample - Socket_8
-        if hasattr(scene, 'spp_lace_resample'):
-            try:
-                modifier["Socket_8"] = scene.spp_lace_resample
-            except:
-                if "Resample" in modifier:
-                    modifier["Resample"] = scene.spp_lace_resample
-        
-        # Material - Socket_5 (use default lace material)
-        try:
-            default_material = bpy.data.materials.get("spp_lace_material")
-            if default_material:
-                modifier["Socket_5"] = default_material
-        except:
-            if "Material" in modifier:
-                default_material = bpy.data.materials.get("spp_lace_material")
-                if default_material:
-                    modifier["Material"] = default_material
-        
-        # Flip Normal - Socket_6
-        if hasattr(scene, 'spp_lace_flip_normal'):
-            try:
-                modifier["Socket_6"] = scene.spp_lace_flip_normal
-            except:
-                if "Flip Normal" in modifier:
-                    modifier["Flip Normal"] = scene.spp_lace_flip_normal
-        
-        # Shade Smooth - Socket_9
-        if hasattr(scene, 'spp_lace_shade_smooth'):
-            try:
-                modifier["Socket_9"] = scene.spp_lace_shade_smooth
-            except:
-                if "Shade Smooth" in modifier:
-                    modifier["Shade Smooth"] = scene.spp_lace_shade_smooth
-        
-        # Free Normal Controls - Socket_10 [0,1,2] (only when Normal Mode is Free)
-        if hasattr(scene, 'spp_lace_free_normal') and scene.spp_lace_normal_mode == '2':
-            try:
-                modifier["Socket_10"] = scene.spp_lace_free_normal
-            except:
-                if "Free Normal Controls" in modifier:
-                    modifier["Free Normal Controls"] = scene.spp_lace_free_normal
-        
-        # Color - Socket_11
-        if hasattr(scene, 'spp_lace_color'):
-            try:
-                modifier["Socket_11"] = scene.spp_lace_color
-            except:
-                if "Color" in modifier:
-                    modifier["Color"] = scene.spp_lace_color
-        
-        # Custom Profile - Socket_12 (only if CUSTOM is selected)
-        if hasattr(scene, 'spp_lace_custom_profile') and scene.spp_lace_profile == 'CUSTOM':
-            profile_set = False
-            # Try multiple possible input names for custom profile
-            for socket_name in ["Socket_12", "Custom Profile", "Object", "Profile Object", "Profile"]:
-                try:
-                    if socket_name in modifier:
-                        modifier[socket_name] = scene.spp_lace_custom_profile
-                        profile_set = True
-                        break
-                except:
-                    continue
-            
-            if not profile_set:
-                print(f"Warning: Could not set custom profile in live update")
-        
-        # Force viewport update without toggling modifier visibility
-        if hasattr(context, 'view_layer'):
+            except Exception:
+                continue
+    # Refresh viewport
+    if hasattr(context, 'view_layer'):
+        context.view_layer.update()
+    for area in context.screen.areas:
+        if area.type == 'VIEW_3D':
+            area.tag_redraw()
+
+# Scale update
+def _update_lace_scale(self, context):
+    mod = _get_lace_modifier(context)
+    if not mod:
+        return
+    scene = context.scene
+    try:
+        mod["Socket_2"] = scene.spp_lace_scale
+    except Exception:
+        if "Scale" in mod:
+            mod["Scale"] = scene.spp_lace_scale
+    # Refresh viewport
+    if hasattr(context, 'view_layer'):
+        context.view_layer.update()
+    for area in context.screen.areas:
+        if area.type == 'VIEW_3D':
+            area.tag_redraw()
+
+# Resample update
+def _update_lace_resample(self, context):
+    mod = _get_lace_modifier(context)
+    if not mod:
+        return
+    scene = context.scene
+    try:
+        mod["Socket_8"] = scene.spp_lace_resample
+    except Exception:
+        if "Resample" in mod:
+            mod["Resample"] = scene.spp_lace_resample
+    # Refresh viewport
+    if hasattr(context, 'view_layer'):
+        context.view_layer.update()
+    for area in context.screen.areas:
+        if area.type == 'VIEW_3D':
+            area.tag_redraw()
+
+# Tilt update
+def _update_lace_tilt(self, context):
+    mod = _get_lace_modifier(context)
+    if not mod:
+        return
+    scene = context.scene
+    try:
+        mod["Socket_3"] = scene.spp_lace_tilt
+    except Exception:
+        if "Tilt" in mod:
+            mod["Tilt"] = scene.spp_lace_tilt
+    # Refresh viewport
+    if hasattr(context, 'view_layer'):
+        context.view_layer.update()
+    for area in context.screen.areas:
+        if area.type == 'VIEW_3D':
+            area.tag_redraw()
+
+# --- REPLACE in properties.py ----------------------------------------------
+
+def _set_modifier_input_vec(mod, names, vec):
+    """Try multiple key names (and per-axis fallbacks) to set a vector."""
+    # 1) direct vector sockets
+    for key in names:
+        if key in mod:
+            mod[key] = vec
+            return True
+
+    # 2) per-axis fallback (e.g. "Free Normal X", "Free Normal Y", "Free Normal Z")
+    axis_keys_sets = [
+        ("Free Normal X", "Free Normal Y", "Free Normal Z"),
+        ("Free X", "Free Y", "Free Z"),
+        ("Socket_10.0", "Socket_10.1", "Socket_10.2"),
+    ]
+    for xk, yk, zk in axis_keys_sets:
+        if xk in mod and yk in mod and zk in mod:
+            mod[xk], mod[yk], mod[zk] = vec[0], vec[1], vec[2]
+            return True
+
+    return False
+
+
+def _force_modifier_recalc(context, obj, mod):
+    """Rock-solid refresh: toggle viewport, bump frame, tag updates."""
+    try:
+        if obj: obj.update_tag()
+        dg = context.evaluated_depsgraph_get()
+        dg.update()
+
+        if mod:
+            orig = mod.show_viewport
+            mod.show_viewport = False
             context.view_layer.update()
-        
-        # Tag areas for redraw
+            mod.show_viewport = orig
+
+            if mod.node_group:
+                mod.node_group.update_tag()
+
+        # bump the frame to trigger GN
+        scn = context.scene
+        scn.frame_set(scn.frame_current)
+
+        # redraw 3D views
         for area in context.screen.areas:
             if area.type == 'VIEW_3D':
                 area.tag_redraw()
-        
+
+        if hasattr(context, "view_layer"):
+            context.view_layer.update()
+
     except Exception as e:
-        # Catch all exceptions to prevent panel collapse
-        print(f"Warning in lace modifier update: {e}")
-        # Do NOT raise the exception - this prevents panel collapse
+        print(f"[SPP] Recalc refresh failed: {e}")
+
+
+def _update_lace_normal_mode(self, context):
+    mod = _get_lace_modifier(context)
+    if not mod:
+        return
+    scene = context.scene
+    # Ensure integer for the modifier input
+    normal_value = int(scene.spp_lace_normal_mode) if isinstance(scene.spp_lace_normal_mode, str) else scene.spp_lace_normal_mode
+
+    # Write to either Socket_4 or the named input
+    wrote = False
+    for key in ("Socket_4", "Normal Mode"):
+        if key in mod:
+            mod[key] = normal_value
+            wrote = True
+            break
+
+    if not wrote:
+        print("[SPP] Normal Mode input not found on modifier (Socket_4/Normal Mode).")
+
+    # If switching to Free, immediately push the current free vector as well
+    if normal_value == 2:
+        _update_lace_free_normal(self, context)
+    else:
+        _force_modifier_recalc(context, context.active_object, mod)
+
+
+def _update_lace_free_normal(self, context):
+    mod = _get_lace_modifier(context)
+    if not mod:
+        return
+
+    scene = context.scene
+    obj = context.active_object
+
+    # Always force modifier’s Normal Mode = Free (2) to ensure GN uses this branch.
+    for key in ("Socket_4", "Normal Mode"):
+        if key in mod:
+            try:
+                mod[key] = 2
+                break
+            except Exception:
+                pass
+
+    vec = scene.spp_lace_free_normal
+
+    # Robust name matching across asset variants
+    candidates = ("Socket_10", "Free Normal Controls", "Free Normal")
+    ok = _set_modifier_input_vec(mod, candidates, vec)
+
+    if not ok:
+        # Log available keys once for debugging
+        print("[SPP] Could not find a Free Normal input. Available keys:", list(mod.keys()))
+        return
+
+    _force_modifier_recalc(context, obj, mod)
+# --- END REPLACE ------------------------------------------------------------
+
+
+
+# Flip normal update
+def _update_lace_flip_normal(self, context):
+    mod = _get_lace_modifier(context)
+    if not mod:
+        return
+    scene = context.scene
+    try:
+        mod["Socket_6"] = scene.spp_lace_flip_normal
+    except Exception:
+        if "Flip Normal" in mod:
+            mod["Flip Normal"] = scene.spp_lace_flip_normal
+    # Refresh viewport
+    if hasattr(context, 'view_layer'):
+        context.view_layer.update()
+    for area in context.screen.areas:
+        if area.type == 'VIEW_3D':
+            area.tag_redraw()
+
+# Shade smooth update
+def _update_lace_shade_smooth(self, context):
+    mod = _get_lace_modifier(context)
+    if not mod:
+        return
+    scene = context.scene
+    try:
+        mod["Socket_9"] = scene.spp_lace_shade_smooth
+    except Exception:
+        if "Shade Smooth" in mod:
+            mod["Shade Smooth"] = scene.spp_lace_shade_smooth
+    # Refresh viewport
+    if hasattr(context, 'view_layer'):
+        context.view_layer.update()
+    for area in context.screen.areas:
+        if area.type == 'VIEW_3D':
+            area.tag_redraw()
+
+# Color update
+def _update_lace_color(self, context):
+    mod = _get_lace_modifier(context)
+    if not mod:
+        return
+    scene = context.scene
+    try:
+        mod["Socket_11"] = scene.spp_lace_color
+    except Exception:
+        if "Color" in mod:
+            mod["Color"] = scene.spp_lace_color
+    # Refresh viewport
+    if hasattr(context, 'view_layer'):
+        context.view_layer.update()
+    for area in context.screen.areas:
+        if area.type == 'VIEW_3D':
+            area.tag_redraw()
+
+# Custom profile update (used when the user changes the custom profile field
+# after applying the modifier)
+def _update_lace_custom_profile(self, context):
+    mod = _get_lace_modifier(context)
+    if not mod:
+        return
+    scene = context.scene
+    if scene.spp_lace_profile != 'CUSTOM' or not scene.spp_lace_custom_profile:
+        return
+    for socket_name in ["Socket_12", "Custom Profile", "Object", "Profile Object", "Profile"]:
+        try:
+            if socket_name in mod:
+                mod[socket_name] = scene.spp_lace_custom_profile
+                break
+        except Exception as e:
+            print(f"Failed to set custom profile via {socket_name}: {e}")
+            continue
+    # Refresh viewport
+    if hasattr(context, 'view_layer'):
+        context.view_layer.update()
+    for area in context.screen.areas:
+        if area.type == 'VIEW_3D':
+            area.tag_redraw()
 
 
 def _update_reference_image_opacity(self, context):
@@ -190,7 +342,8 @@ def register_properties():
             ('CUSTOM', "Custom", "Custom profile from another object"),
         ],
         default='ROUND',
-        update=_update_lace_modifier_live,
+        # Update only the profile and custom profile socket when this changes
+        update=_update_lace_profile,
     )
 
     bpy.types.Scene.spp_lace_scale = bpy.props.FloatProperty(
@@ -200,7 +353,8 @@ def register_properties():
         min=0.001,
         max=10.0,
         precision=3,
-        update=_update_lace_modifier_live,
+        # Update only the scale socket when this changes
+        update=_update_lace_scale,
     )
 
     bpy.types.Scene.spp_lace_resample = bpy.props.IntProperty(
@@ -209,7 +363,8 @@ def register_properties():
         default=64,
         min=1,
         max=1000,
-        update=_update_lace_modifier_live,
+        # Update only the resample socket when this changes
+        update=_update_lace_resample,
     )
 
     bpy.types.Scene.spp_lace_tilt = bpy.props.FloatProperty(
@@ -217,7 +372,8 @@ def register_properties():
         description="Rotation around the curve tangent",
         default=0.0,
         subtype="ANGLE",
-        update=_update_lace_modifier_live,
+        # Update only the tilt socket when this changes
+        update=_update_lace_tilt,
     )
 
     bpy.types.Scene.spp_lace_normal_mode = bpy.props.EnumProperty(
@@ -229,13 +385,16 @@ def register_properties():
             ('2', "Free", "Free normal direction"),
         ],
         default='0',
-        update=_update_lace_modifier_live,
+        # Update only the normal mode socket when this changes, and refresh free normal if needed
+        update=_update_lace_normal_mode,
     )
 
     bpy.types.Scene.spp_lace_custom_profile = bpy.props.PointerProperty(
         name="Custom Profile",
         description="Object to use as custom profile (only used when Lace Profile is set to Custom)",
         type=bpy.types.Object,
+        # Update the custom profile socket when this changes and the profile is set to CUSTOM
+        update=_update_lace_custom_profile,
     )
 
     # Custom material property removed - using default lace material only
@@ -244,31 +403,36 @@ def register_properties():
         name="Shade Smooth",
         description="Apply smooth shading to the generated mesh",
         default=True,
-        update=_update_lace_modifier_live,
+        # Update only the shade smooth socket when this changes
+        update=_update_lace_shade_smooth,
     )
     
     # Additional lace properties for new asset-based system
     bpy.types.Scene.spp_lace_free_normal = bpy.props.FloatVectorProperty(
         name="Free Normal",
-        description="Free normal control vector",
+        description="Free normal control vector - use the shader ball to interactively adjust direction",
         default=(0.0, 0.0, 1.0),
         subtype='DIRECTION',
         size=3,
-        update=_update_lace_modifier_live,
+        min=-1.0,
+        max=1.0,
+        # Update only the free normal socket when this changes and normal mode is set to Free
+        update=_update_lace_free_normal,
     )
     
     bpy.types.Scene.spp_lace_flip_v = bpy.props.BoolProperty(
         name="Flip V",
         description="Flip UV V coordinate",
         default=False,
-        update=_update_lace_modifier_live,
+        update=None,
     )
     
     bpy.types.Scene.spp_lace_flip_normal = bpy.props.BoolProperty(
         name="Flip Normal",
         description="Flip face normals",
         default=False,
-        update=_update_lace_modifier_live,
+        # Update only the flip normal socket when this changes
+        update=_update_lace_flip_normal,
     )
     
     bpy.types.Scene.spp_lace_color = bpy.props.FloatVectorProperty(
@@ -279,7 +443,8 @@ def register_properties():
         size=4,
         min=0.0,
         max=1.0,
-        update=_update_lace_modifier_live,
+        # Update only the color socket when this changes
+        update=_update_lace_color,
     )
     
     # Use custom material property removed - using default lace material only

@@ -151,15 +151,8 @@ class OBJECT_PT_SneakerPanelLace(bpy.types.Panel):
         if scene.spp_lace_normal_mode == '2':
             col.separator()
             col.label(text="Free Normal Direction:")
-            if lace_modifier and "Socket_10" in lace_modifier:
-                # Direct socket control for Free Normal vector
-                row = col.row(align=True)
-                row.prop(lace_modifier, '["Socket_10"]', index=0, text="X")
-                row.prop(lace_modifier, '["Socket_10"]', index=1, text="Y")
-                row.prop(lace_modifier, '["Socket_10"]', index=2, text="Z")
-            else:
-                col.prop(scene, "spp_lace_free_normal", text="")
-        # This else block is no longer needed as we always use scene properties for normal mode
+            # The shader ball widget for interactive direction control
+            col.prop(scene, "spp_lace_free_normal", text="")
         
         # Flip Options and Material
         col.separator()
