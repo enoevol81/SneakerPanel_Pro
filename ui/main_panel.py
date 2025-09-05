@@ -93,7 +93,11 @@ class OBJECT_PT_SneakerPanelProMain(bpy.types.Panel):
         # === Panel Configuration ===
         main_box = layout.box()
         header_row = main_box.row()
-        header_row.label(text="Panel Configuration", icon="COLLECTION_COLOR_05")
+        icon_id = icons.get_icon("edit")
+        if icon_id:
+            header_row.label(text="Panel Configuration", icon_value=icon_id)
+        else:
+            header_row.label(text="Panel Configuration")
 
         row = main_box.row()
         row.prop(scn, "spp_panel_count", text="Panel #")

@@ -30,7 +30,9 @@ def load_icons():
         "tools.png",
         "mesh.png",
         "ref_image.png",
-        "profile.png"
+        "profile.png",
+        "edit.png"
+        
 
 
     ]
