@@ -25,10 +25,7 @@ def load_icons():
         "auto_uv.png",
         "laces.png",
         "logo.png",
-        "spp_tile_32.png",
-        "spp_tile_64.png",
         "tools.png",
-        "mesh.png",
         "ref_image.png",
         "profile.png",
         "edit.png"

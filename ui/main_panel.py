@@ -171,6 +171,12 @@ class OBJECT_PT_SneakerPanelProMain(bpy.types.Panel):
         panel_header = panel_box.row(align=True)
         panel_header.prop(scn, "spp_show_mesh_object", toggle=True, text="Mesh Object", icon="TRIA_DOWN" if getattr(scn, "spp_show_mesh_object", False) else "TRIA_RIGHT")
         
+        # Show retopology indicator in header when in edit mode
+        if context.mode == 'EDIT_MESH' and getattr(scn, "spp_show_mesh_object", False):
+            overlay = context.space_data.overlay
+            if overlay.show_retopology:
+                panel_header.label(text="", icon="OVERLAY")
+        
         if getattr(scn, "spp_show_mesh_object", False):
             # Shading controls
             obj = context.active_object
@@ -278,23 +284,15 @@ class OBJECT_PT_SneakerPanelProMain(bpy.types.Panel):
                 panel_box.label(
                     text="Select a mesh object to enable solidify controls.", icon="INFO"
                 )
-                
-        # Retopology section (only visible in edit mode)
-        if context.mode == 'EDIT_MESH':
-            retopo_box = tools_box.box()
-            retopo_header = retopo_box.row(align=True)
-            retopo_header.prop(scn, "spp_show_retopology", toggle=True, text="Retopology ViewPort Context", icon="TRIA_DOWN" if getattr(scn, "spp_show_retopology", False) else "TRIA_RIGHT")
             
-            if getattr(scn, "spp_show_retopology", False):
-                retopo_content = retopo_box.column(align=True)
-                
-                # Enable/disable retopology overlay
+            # Retopology controls (only in edit mode, directly in Mesh Object section)
+            if context.mode == 'EDIT_MESH':
+                panel_box.separator(factor=0.5)
                 overlay = context.space_data.overlay
-                retopo_content.prop(overlay, "show_retopology", text="Show Retopology")
+                panel_box.prop(overlay, "show_retopology", text="Show Retopology")
                 
                 if overlay.show_retopology:
-                    # Retopology opacity slider
-                    retopo_content.prop(overlay, "retopology_offset", text="Offset", slider=True)
+                    panel_box.prop(overlay, "retopology_offset", text="Offset", slider=True)
 
 
 # Registration
