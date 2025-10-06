@@ -16,7 +16,7 @@ def load_icons():
     pcoll = bpy.utils.previews.new()
 
     # Use relative path for icons directory
-    icons_dir = os.path.join(os.path.dirname(__file__), "..", "operators", "icons")
+    icons_dir = os.path.join(os.path.dirname(__file__), "..", "ui", "icons")
 
     # Load additional icons
     ui_icons = [
