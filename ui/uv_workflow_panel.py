@@ -90,8 +90,18 @@ class OBJECT_PT_UVWorkflow(Panel):
             tip_col = tip_box.column(align=True); tip_col.scale_y = 0.9
             tip_col.label(text="UV Workflow Tips:", icon='HELP')
             tip_col.label(text="• Use Stabilizer for pencil control")
-            tip_col.label(text="• Mirror curve in edit mode")
-            tip_col.operator("wm.url_open", text="View UV Workflow Tutorial", icon='URL').url = "https://example.com/uv-workflow-tutorial"
+            tip_col.label(text="• Name overlay; # in panel configuration")            
+            tip_col.label(text="• Draw or traces shapes from projected reference image directly on the Shell's UV")
+            tip_col.label(text="• Use Stabilizer for pencil control")
+            tip_col.label(text="• Commit line art by running sample to polyline on curve - Smallest count work best")         
+            tip_col.label(text="• Adjust edge flow with Edge Relax or Smooth Mesh")
+            tip_col.label(text="• Use UV Boundary Checker to verify alignment.")
+            tip_col.label(text="• Use Quick Conform to help position panel to shell")
+            tip_col.label(text="• Maintain quad topology for best shrinkwrap results")
+            tip_col.label(text="• Toggle Apply Shrinkwrap to finalize projection")
+            tip_col.label(text="• Enable retopology mode in panel helpers for visual debugging")
+            tip_col.label(text="• Finalize panel by using 'Add Solidify' in Panel Helpers")
+            tip_col.operator("wm.url_open", text="View UV Workflow Tutorial", icon='URL').url = "https://youtu.be/I0Z-mQTZGpw"
 
         # -----------------------------
         # Step 1 (collapsible)
@@ -167,9 +177,9 @@ class OBJECT_PT_UVWorkflow(Panel):
                     tip_box = tools.box(); tip_box.alert = True
                     tip_col = tip_box.column(align=True); tip_col.scale_y = 0.9
                     tip_col.label(text="Mirror Curve Tips:", icon="HELP")
-                    tip_col.label(text="• Mirror curve in edit mode")
-                    tip_col.label(text="• Mirror curve in object mode")
-                    tip_col.operator("wm.url_open", text="View Mirror Curve Tutorial", icon="URL").url = "https://example.com/mirror_curve-tutorial"
+                    tip_col.label(text="• Place 3D Cursor at desired reflection axis")
+                    tip_col.label(text="• Run Mirror Curve command")
+                    tip_col.operator("wm.url_open", text="View Mirror Curve Tutorial", icon="URL").url = "https://youtu.be/4vtYrTp7tzc"
 
                 # Step 2b – Mirror (Edit Mode)
                 mir = tools.column(align=True)

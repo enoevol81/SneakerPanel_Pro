@@ -119,21 +119,7 @@ class OBJECT_PT_SneakerPanelProMain(bpy.types.Panel):
         icon_id = icons.get_icon("tools")
         if icon_id:
             tools_header.label(text="Panel Helper Tools", icon_value=icon_id)
-            icon = 'LIGHT_SUN' if context.window_manager.spp_show_helper_tooltip else 'INFO'
-            tools_header.prop(context.window_manager, "spp_show_helper_tooltip", text="", toggle=True, icon=icon)
-
-        # When toggled on, show compact tips
-        if context.window_manager.spp_show_helper_tooltip:
-            tip_box = tools_box.box()
-            tip_box.alert = True
-            col = tip_box.column(align=True)
-            col.label(text="• Smooth Mesh — relaxes interior quads after fill")
-            col.label(text="• Merge by Distance — collapses tiny edges/verts")
-            col.label(text="• Checker Dissolve — halves interior density quickly")
-            col.label(text="• Edge Flow/Relax — evens spacing without shrinking border")
-            col.operator(
-                "wm.url_open", text="View Helper Tooltips Tutorial", icon="URL"
-            ).url = "https://example.com/helper-tooltips-tutorial"
+           
             
         # Edge & Loop Refinement (collapsible)
         refinement_box = tools_box.box()

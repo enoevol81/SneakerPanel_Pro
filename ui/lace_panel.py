@@ -49,7 +49,7 @@ class OBJECT_PT_SneakerPanelLace(bpy.types.Panel):
             tip_col.label(text="• Use custom profile for unique lace shapes")
             tip_col.operator(
                 "wm.url_open", text="View Lace Generator Tutorial", icon="URL"
-            ).url = "https://example.com/lace-generator-tutorial"
+            ).url = "https://youtu.be/aQWf-eODUV8"
 
         # Check if object has a lace modifier
         has_lace_modifier = False

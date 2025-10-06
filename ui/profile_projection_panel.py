@@ -64,7 +64,7 @@ class PP_PT_Main(Panel):
             tip_col.label(text="• Remember to save images")
             tip_col.operator(
                 "wm.url_open", text="View Reference Image Projection Tutorial", icon="URL"
-            ).url = "https://example.com/ref-image-projection-tutorial"
+            ).url = "https://youtu.be/JTzSzB_lelk"
         
         # Parameters section
         params_box = main_box.box()

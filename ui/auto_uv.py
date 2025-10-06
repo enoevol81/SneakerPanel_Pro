@@ -43,17 +43,16 @@ class OBJECT_PT_autu_uv(bpy.types.Panel):
             tip_box.alert = True  # Makes the box stand out with a different color
             tip_col = tip_box.column(align=True)
             tip_col.scale_y = 0.9  # Slightly smaller text
+            tip_col.label(text="Mirror Curve Tips:", icon="HELP")
             tip_col.label(text="• Mark seams at Boundary and Heel Counter Edges")
             tip_col.label(text="• Run 'Unwrap Shell' to create UV layout")
             tip_col.label(text="• Place 3D cursor at toe tip → Click 'Define Toe'")
-            tip_col.label(
-                text="• Place cursor at direction point → Click 'Define Up Axis [Z+ Axis]'"
-            )
+            tip_col.label(text="• Place cursor at direction point → Click 'Define Up Axis [Z+ Axis]'")
             tip_col.label(text="• Run 'Orient UV Island' for precise orientation")
             tip_col.label(text="• Direction point: tongue area or toward ankle")
             tip_col.operator(
                 "wm.url_open", text="View UV Setup Tutorial", icon="URL"
-            ).url = "https://example.com/uv-setup-tutorial"
+            ).url = "https://youtu.be/qAlJvCL7YXs"
 
         # Steps with better visual flow
         steps_col = uv_box.column(align=True)
