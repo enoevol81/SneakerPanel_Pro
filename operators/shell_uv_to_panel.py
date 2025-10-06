@@ -5,7 +5,6 @@ from mathutils import Vector, geometry
 
 from ..utils.collections import add_object_to_panel_collection
 from ..utils.panel_utils import apply_surface_snap  # For transform-based snap
-from .panel_generator import generate_panel  # Import the utility function
 
 
 def get_3d_point_from_uv(shell_obj, uv_layer_name, uv_coord_target_2d, context):
@@ -296,31 +295,38 @@ class OBJECT_OT_ShellUVToPanel(bpy.types.Operator):
             if panel_name_prop and panel_name_prop.strip()
             else f"Panel_{panel_count}"
         )
-        grid_span = getattr(context.scene, "spp_grid_fill_span", 2)
-        created_panel_obj = generate_panel(
-            panel_obj=boundary_mesh_obj_ref,
-            shell_obj=shell_obj,
-            filled_obj_name=filled_obj_name,
-            grid_span=grid_span,
-            uv_layer_name=source_uv_map_name,
-        )
-
-        if not created_panel_obj:
-            self.report({"ERROR"}, "Panel generation (generate_panel function) failed.")
-            obj_curve_check = bpy.data.objects.get(intermediate_curve_obj_name)
-            if obj_curve_check:
-                bpy.data.objects.remove(obj_curve_check, do_unlink=True)
-            if curve_data_3d_ref and curve_data_3d_ref.users == 0:
-                bpy.data.curves.remove(curve_data_3d_ref)
-            obj_boundary_mesh_check = bpy.data.objects.get(boundary_mesh_obj_name)
-            if obj_boundary_mesh_check:
-                data_b_mesh = obj_boundary_mesh_check.data
-                bpy.data.objects.remove(obj_boundary_mesh_check, do_unlink=True)
-                if data_b_mesh and data_b_mesh.users == 0:
-                    bpy.data.meshes.remove(data_b_mesh)
-            elif mesh_data_boundary_ref and mesh_data_boundary_ref.users == 0:
-                bpy.data.meshes.remove(mesh_data_boundary_ref)
-            return {"CANCELLED"}
+        # Use simple grid fill instead of the old panel_generator
+        bpy.ops.object.select_all(action="DESELECT")
+        boundary_mesh_obj_ref.select_set(True)
+        context.view_layer.objects.active = boundary_mesh_obj_ref
+        
+        # Switch to edit mode and fill the boundary
+        bpy.ops.object.mode_set(mode='EDIT')
+        bpy.ops.mesh.select_all(action='SELECT')
+        
+        # Try grid fill first, fallback to triangle fill if needed
+        try:
+            bpy.ops.mesh.fill_grid()
+            self.report({"INFO"}, "Grid fill successful")
+        except:
+            try:
+                bpy.ops.mesh.fill()
+                bpy.ops.mesh.tris_convert_to_quads()
+                self.report({"INFO"}, "Triangle fill with quad conversion successful")
+            except Exception as e:
+                self.report({"ERROR"}, f"Panel fill failed: {e}")
+                bpy.ops.object.mode_set(mode='OBJECT')
+                return {"CANCELLED"}
+        
+        bpy.ops.object.mode_set(mode='OBJECT')
+        
+        # Rename the filled object
+        created_panel_obj = boundary_mesh_obj_ref
+        created_panel_obj.name = filled_obj_name
+        
+        # Apply surface snap to conform to shell
+        if shell_obj:
+            apply_surface_snap(created_panel_obj, shell_obj, iterations=3)
 
         # (Transform-based snap, optional subdivision/conform, and shade smooth on created_panel_obj as before)
         # ... (This whole section remains the same)

@@ -15,7 +15,6 @@ from . import (
     apply_shrinkwrap,
     boundary_edges,
     convert_bezier_to_surface,
-    convert_to_mesh,
     create_quad_panel_from_outline,
     decimate_curve,
     define_toe,
@@ -24,13 +23,11 @@ from . import (
     fill_border_grid,
     fill_quad_border,
     gp_to_curve,
-    lace_from_curves,
+    # lace_from_curves,  # Disabled - replaced by new asset-based system
     mirror_curve_points,
     mirror_panel,
     orient_uv_island,
     overlay_panel_onto_shell,
-    panel_generate,
-    panel_generator,
     quick_conform,
     reduce_verts,
     ref_image_gen,
@@ -41,6 +38,9 @@ from . import (
     smooth_mesh,
     smooth_vertices,
     solidify_panel,
+    spp_lace_apply,  # New asset-based lace system
+    spp_lace_loader,  # New asset loader
+    # spp_lace_panel,   # Disabled - UI moved to ui/lace_panel.py
     surface_resolution,
     unwrap_shell,
     uv_boundary_checker,
@@ -53,12 +53,9 @@ def register():
     gp_to_curve.register()
     decimate_curve.register()
     convert_bezier_to_surface.register()
-    convert_to_mesh.register()
     surface_resolution.register()
     smooth_vertices.register()
     reduce_verts.register()
-    panel_generate.register()
-    panel_generator.register()
     shell_uv_to_panel.register()
     solidify_panel.register()
     uv_to_mesh.register()
@@ -74,7 +71,8 @@ def register():
     smooth_mesh.register()
     overlay_panel_onto_shell.register()
     uv_boundary_checker.register()
-    lace_from_curves.register()
+    # lace_from_curves.register()  # Disabled - replaced by new asset-based system
+    spp_lace_apply.register()  # New asset-based lace system
     edge_flow.register()
     mirror_panel.register()
     edge_relax.register()
@@ -93,12 +91,9 @@ def unregister():
     uv_to_mesh.unregister()
     solidify_panel.unregister()
     shell_uv_to_panel.unregister()
-    panel_generator.unregister()
-    panel_generate.unregister()
     reduce_verts.unregister()
     smooth_vertices.unregister()
     surface_resolution.unregister()
-    convert_to_mesh.unregister()
     convert_bezier_to_surface.unregister()
     decimate_curve.unregister()
     gp_to_curve.unregister()
@@ -112,7 +107,9 @@ def unregister():
     smooth_mesh.unregister()
     overlay_panel_onto_shell.unregister()
     uv_boundary_checker.unregister()
-    lace_from_curves.unregister()
+    # lace_from_curves.unregister()  # Disabled - replaced by new asset-based system
+    # spp_lace_panel.unregister()  # Disabled - UI moved to ui/lace_panel.py
+    spp_lace_apply.unregister()  # New asset-based lace system
     edge_flow.unregister()
     mirror_panel.unregister()
     edge_relax.unregister()

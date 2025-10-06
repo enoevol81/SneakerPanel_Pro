@@ -80,10 +80,10 @@ class OBJECT_PT_UVWorkflow(Panel):
         uv_header = uv_box.row(align=True)
         uv_header.label(text="Draw Direct To UV",icon_value=icons.get_icon("2d"))
 
-        # Optional workflow tooltip (pattern used elsewhere in your UI)
-        tooltip_icon = 'LIGHT_SUN' if getattr(context.scene, "spp_show_uv_workflow_tooltip", False) else 'INFO'
+        # Tooltip icon
+        icon = "LIGHT_SUN" if getattr(context.scene, "spp_show_uv_workflow_tooltip", False) else "INFO"
         if hasattr(context.scene, "spp_show_uv_workflow_tooltip"):
-            uv_header.prop(context.scene, "spp_show_uv_workflow_tooltip", text="", icon=tooltip_icon, emboss=False)
+            uv_header.prop(context.scene, "spp_show_uv_workflow_tooltip", text="", toggle=True, icon=icon)
 
         if getattr(context.scene, "spp_show_uv_workflow_tooltip", False):
             tip_box = uv_box.box(); tip_box.alert = True
@@ -112,18 +112,20 @@ class OBJECT_PT_UVWorkflow(Panel):
                 opacity_row = step1.row(align=True)
                 opacity_row.prop(S, "spp_reference_image_opacity", text="Opacity", slider=True)
 
-            # Stabilizer (optional)
+            # Stabilizer (collapsible)
             stab = step1.box()
             r = stab.row(align=True)
-            if hasattr(S, "spp_use_stabilizer"):
-                r.prop(S, "spp_use_stabilizer", text="")
-            r.label(text="Stabilizer Settings")
-            if getattr(S, "spp_use_stabilizer", False):
-                c = stab.column(align=True)
-                if hasattr(S, "spp_stabilizer_radius"):
-                    c.prop(S, "spp_stabilizer_radius", text="Radius")
-                if hasattr(S, "spp_stabilizer_strength_ui"):
-                    c.prop(S, "spp_stabilizer_strength_ui", text="Strength")
+            r.prop(S, "spp_show_uv_stabilizer_settings", toggle=True, text="Stabilizer Settings", icon="TRIA_DOWN" if getattr(S, "spp_show_uv_stabilizer_settings", False) else "TRIA_RIGHT")
+            
+            if getattr(S, "spp_show_uv_stabilizer_settings", False):
+                stab_content = stab.column(align=True)
+                if hasattr(S, "spp_use_stabilizer"):
+                    stab_content.prop(S, "spp_use_stabilizer", text="Use Stabilizer")
+                if getattr(S, "spp_use_stabilizer", False):
+                    if hasattr(S, "spp_stabilizer_radius"):
+                        stab_content.prop(S, "spp_stabilizer_radius", text="Radius")
+                    if hasattr(S, "spp_stabilizer_strength_ui"):
+                        stab_content.prop(S, "spp_stabilizer_strength_ui", text="Strength")        
 
         # -----------------------------
         # Step 2 (collapsible, always-on)
@@ -134,39 +136,44 @@ class OBJECT_PT_UVWorkflow(Panel):
                   text="Step 2: Create & Edit Curve", icon='OUTLINER_OB_CURVE')
 
         if W.spp_show_uv_step_2:
-            col = step2.column(align=True); col.scale_y = 1.1
+            col = step2.column(align=True); col.scale_y = 1.2
             col.operator("object.gp_to_curve", text="Convert to Curve", icon='IPO_BEZIER')
 
-            tools = step2.box(); tools.label(text="Curve Editing Tools", icon="TOOL_SETTINGS")
-            dec = tools.column(align=True); dec.label(text="Decimate Curve:", icon="MOD_DECIM")
-            r = dec.row(align=True); r.prop(S, "spp_decimate_ratio", text="Ratio"); r.operator("object.decimate_curve", text="Apply", icon='CHECKMARK')
-            # Curve options + mirror tooltip
-            opts = tools.column(align=True)
-            rr = opts.row(align=True)
+            # Curve Editing Tools (collapsible)
+            tools = step2.box()
+            tools_header = tools.row(align=True)
+            tools_header.prop(S, "spp_show_uv_curve_editing_tools", toggle=True, text="Curve Editing Tools", icon="TRIA_DOWN" if getattr(S, "spp_show_uv_curve_editing_tools", False) else "TRIA_RIGHT")
+            
+            if getattr(S, "spp_show_uv_curve_editing_tools", False):
+                dec = tools.column(align=True); dec.label(text="Decimate Curve:", icon="MOD_DECIM")
+                r = dec.row(align=True); r.prop(S, "spp_decimate_ratio", text="Ratio"); r.operator("object.decimate_curve", text="Apply", icon='CHECKMARK')
+                # Curve options + mirror tooltip
+                opts = tools.column(align=True)
+                rr = opts.row(align=True)
 
-            left_split = rr.split(factor=0.7, align=True)
-            left_row = left_split.row(align=True)
-            if hasattr(S, "spp_curve_cyclic"):
-                left_row.prop(S, "spp_curve_cyclic", text="")
-            left_row.label(text="Cyclic Curve")
+                left_split = rr.split(factor=0.7, align=True)
+                left_row = left_split.row(align=True)
+                if hasattr(S, "spp_curve_cyclic"):
+                    left_row.prop(S, "spp_curve_cyclic", text="")
+                left_row.label(text="Cyclic Curve")
 
-            right_split = left_split.row(align=True)
-            right_split.alignment = 'RIGHT'
-            icon = 'LIGHT_SUN' if getattr(context.scene, "spp_show_mirror_tooltip", False) else 'INFO'
-            if hasattr(context.scene, "spp_show_mirror_tooltip"):
-                right_split.prop(context.scene, "spp_show_mirror_tooltip", text="", toggle=True, icon=icon)
+                right_split = left_split.row(align=True)
+                right_split.alignment = 'RIGHT'
+                icon = 'LIGHT_SUN' if getattr(context.scene, "spp_show_mirror_tooltip", False) else 'INFO'
+                if hasattr(context.scene, "spp_show_mirror_tooltip"):
+                    right_split.prop(context.scene, "spp_show_mirror_tooltip", text="", toggle=True, icon=icon)
 
-            if getattr(context.scene, "spp_show_mirror_tooltip", False):
-                tip_box = tools.box(); tip_box.alert = True
-                tip_col = tip_box.column(align=True); tip_col.scale_y = 0.9
-                tip_col.label(text="Mirror Curve Tips:", icon="HELP")
-                tip_col.label(text="• Mirror curve in edit mode")
-                tip_col.label(text="• Mirror curve in object mode")
-                tip_col.operator("wm.url_open", text="View Mirror Curve Tutorial", icon="URL").url = "https://example.com/mirror_curve-tutorial"
+                if getattr(context.scene, "spp_show_mirror_tooltip", False):
+                    tip_box = tools.box(); tip_box.alert = True
+                    tip_col = tip_box.column(align=True); tip_col.scale_y = 0.9
+                    tip_col.label(text="Mirror Curve Tips:", icon="HELP")
+                    tip_col.label(text="• Mirror curve in edit mode")
+                    tip_col.label(text="• Mirror curve in object mode")
+                    tip_col.operator("wm.url_open", text="View Mirror Curve Tutorial", icon="URL").url = "https://example.com/mirror_curve-tutorial"
 
-            # Step 2b – Mirror (Edit Mode)
-            mir = tools.column(align=True)
-            mir.operator("curve.mirror_selected_points_at_cursor", text="Mirror Curve", icon="MOD_MIRROR")
+                # Step 2b – Mirror (Edit Mode)
+                mir = tools.column(align=True)
+                mir.operator("curve.mirror_selected_points_at_cursor", text="Mirror Curve", icon="MOD_MIRROR")
 
         # -----------------------------
         # Step 3 (collapsible)
@@ -235,8 +242,6 @@ class OBJECT_PT_UVWorkflow(Panel):
         if W.spp_show_uv_step_5:
             fill_row = step5.row(align=True); fill_row.scale_y = 1.2
             fill_row.operator("mesh.simple_grid_fill", text="Fill Panel Border", icon='MOD_TRIANGULATE')
-            smooth_row = step5.row(align=True)
-            smooth_row.operator("mesh.smooth_mesh", text="Smooth Mesh (Optional)", icon='MOD_SMOOTH')
 
         # -----------------------------
         # Step 6 (collapsible, always-on)

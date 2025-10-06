@@ -46,6 +46,13 @@ def register():
 
         # Register audit tooltips
         _audit_tooltips.register()
+        
+        # Pre-load lace assets for instant first use (optional)
+        try:
+            from .operators.spp_lace_loader import load_lace_assets
+            load_lace_assets()
+        except Exception as e:
+            print(f"Note: Lace assets will be loaded on first use: {e}")
 
         # Register any classes defined directly in this file
         for cls in classes:
