@@ -5,6 +5,7 @@ __pycache__/
 *.pyd
 *.egg-info/
 .pytest_cache/
+.pyc
 
 # OS cruft
 .DS_Store
@@ -32,3 +33,7 @@ dist/
 *.bak
 *.tmp
 *.orig
+.tmp
+.log
+.zip
+
