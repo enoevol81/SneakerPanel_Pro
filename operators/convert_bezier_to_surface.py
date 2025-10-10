@@ -1,7 +1,5 @@
-
 import bpy
 from bpy.props import BoolProperty, IntProperty
-from mathutils import Vector
 
 from ..utils.collections import add_object_to_panel_collection
 
@@ -24,7 +22,7 @@ def get_selected_curves():
         try:
             if obj.type == "CURVE":
                 rv_list.append(obj)
-        except:
+        except Exception:
             pass
     return rv_list
 
@@ -33,7 +31,7 @@ def selected_1_or_more_curves():
     try:
         if len(get_selected_curves()) > 0:
             return bpy.context.active_object.type == "CURVE"
-    except:
+    except Exception:
         pass
     return False
 
@@ -61,9 +59,7 @@ def surface_from_bezier(context_ref, surfacedata, points, center):
 
     # Create guiding NURBS splines and add them to surfacedata
     # (Detailed spline creation logic from your original file)
-    temp_splines_for_make_segment = (
-        []
-    )  # Store newly created splines to operate on later
+    temp_splines_for_make_segment = []  # Store newly created splines to operate on later
 
     surfacespline1 = surfacedata.splines.new(type="NURBS")
     temp_splines_for_make_segment.append(surfacespline1)
@@ -292,9 +288,7 @@ def surface_from_bezier(context_ref, surfacedata, points, center):
     bpy.ops.curve.make_segment()  # This skins the surface across the selected points of the new splines
 
     # Set properties for the NURBS splines that constitute the surface patch
-    for (
-        s_nurbs
-    ) in (
+    for s_nurbs in (
         temp_splines_for_make_segment
     ):  # Iterate over splines created in this function call
         s_nurbs.resolution_u = 4  # Default U resolution for each patch segment

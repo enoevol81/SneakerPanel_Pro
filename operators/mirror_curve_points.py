@@ -1,11 +1,9 @@
-
 import bpy
 from bpy.props import EnumProperty
 from bpy.types import Operator
 
 
 class CURVE_OT_MirrorSelectedPointsAtCursor(Operator):
-
     bl_idname = "curve.mirror_selected_points_at_cursor"
     bl_label = "Mirror Selected Curve Points"
     bl_description = "Duplicate and mirror selected curve points around the 3D cursor"
@@ -77,7 +75,7 @@ class CURVE_OT_MirrorSelectedPointsAtCursor(Operator):
             if original_mode != "EDIT":
                 try:
                     bpy.ops.object.mode_set(mode=original_mode)
-                except:
+                except Exception:
                     pass  # Don't fail if mode restoration fails
 
         return {"FINISHED"}

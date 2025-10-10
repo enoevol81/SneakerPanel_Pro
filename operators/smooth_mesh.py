@@ -1,4 +1,3 @@
-
 import bmesh
 import bpy
 from bpy.props import BoolProperty, FloatProperty, IntProperty
@@ -6,7 +5,6 @@ from bpy.types import Operator
 
 
 class MESH_OT_SmoothMesh(Operator):
-
     bl_idname = "mesh.smooth_mesh"
     bl_label = "Smooth Mesh"
     bl_description = "Smooth mesh vertices with boundary preservation"
@@ -143,7 +141,7 @@ class MESH_OT_SmoothMesh(Operator):
                 if original_mode != "EDIT":
                     try:
                         bpy.ops.object.mode_set(mode=original_mode)
-                    except:
+                    except Exception:
                         pass  # Don't fail if mode restoration fails
                 return {"FINISHED"}
             else:
@@ -151,7 +149,7 @@ class MESH_OT_SmoothMesh(Operator):
                 if original_mode != "EDIT":
                     try:
                         bpy.ops.object.mode_set(mode=original_mode)
-                    except:
+                    except Exception:
                         pass
                 self.report({"ERROR"}, "Smoothing failed")
                 return {"CANCELLED"}
@@ -160,7 +158,7 @@ class MESH_OT_SmoothMesh(Operator):
             if original_mode != "EDIT":
                 try:
                     bpy.ops.object.mode_set(mode=original_mode)
-                except:
+                except Exception:
                     pass
             self.report({"ERROR"}, f"Smoothing error: {str(e)}")
             return {"CANCELLED"}

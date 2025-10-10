@@ -1,7 +1,3 @@
-
-import bpy
-
-
 def update_active_surface_resolution(scene_self, context):
     try:
         new_resolution_u = getattr(scene_self, "spp_resolution_u", 12)

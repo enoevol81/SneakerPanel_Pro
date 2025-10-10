@@ -1,3 +1,4 @@
+# ruff: noqa: E402
 
 bl_info = {
     "name": "SneakerPanel Pro Operators",
@@ -39,7 +40,6 @@ from . import (
     smooth_vertices,
     solidify_panel,
     spp_lace_apply,  # New asset-based lace system
-    spp_lace_loader,  # New asset loader
     # spp_lace_panel,   # Disabled - UI moved to ui/lace_panel.py
     surface_resolution,
     unwrap_shell,

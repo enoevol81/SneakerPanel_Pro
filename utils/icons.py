@@ -28,16 +28,13 @@ def load_icons():
         "tools.png",
         "ref_image.png",
         "profile.png",
-        "edit.png"
-        
-
-
+        "edit.png",
     ]
 
     for icon_name in ui_icons:
         icon_path = os.path.join(icons_dir, icon_name)
         if os.path.exists(icon_path):
-            pcoll.load(icon_name.split('.')[0], icon_path, "IMAGE")
+            pcoll.load(icon_name.split(".")[0], icon_path, "IMAGE")
         else:
             print(f"Warning: Icon not found at {icon_path}")
 
@@ -46,7 +43,6 @@ def load_icons():
 
 
 def get_icon(icon_name):
-
     pcoll = preview_collections.get("main")
     if pcoll and icon_name in pcoll:
         return pcoll[icon_name].icon_id
@@ -54,7 +50,6 @@ def get_icon(icon_name):
 
 
 def unload_icons():
-
     for pcoll in preview_collections.values():
         bpy.utils.previews.remove(pcoll)
     preview_collections.clear()

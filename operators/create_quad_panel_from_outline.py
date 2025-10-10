@@ -1,4 +1,3 @@
-
 import bpy
 from bpy.props import BoolProperty, FloatProperty
 from bpy.types import Operator

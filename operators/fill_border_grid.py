@@ -1,14 +1,14 @@
-
 import bpy
 from bpy.props import IntProperty
 from bpy.types import Operator
 
 
 class MESH_OT_FillBorderGrid(Operator):
-
     bl_idname = "mesh.fill_border_grid"
     bl_label = "Fill Border with Grid"
-    bl_description = "Fill selected boundary edges with a grid pattern using specified span count"
+    bl_description = (
+        "Fill selected boundary edges with a grid pattern using specified span count"
+    )
     bl_options = {"REGISTER", "UNDO"}
 
     span: IntProperty(
@@ -46,16 +46,16 @@ class MESH_OT_FillBorderGrid(Operator):
 
             # Apply grid fill with the specified parameters
             bpy.ops.mesh.fill_grid(span=self.span, offset=self.offset)
-            
+
             # Fix normal direction to match surface orientation
             # Select all newly created faces
-            bpy.ops.mesh.select_all(action='SELECT')
-            
+            bpy.ops.mesh.select_all(action="SELECT")
+
             # Recalculate normals to ensure consistent direction
             bpy.ops.mesh.normals_make_consistent(inside=False)
-            
+
             # Deselect all to clean up selection
-            bpy.ops.mesh.select_all(action='DESELECT')
+            bpy.ops.mesh.select_all(action="DESELECT")
 
             # Restore the original selection mode
             bpy.ops.mesh.select_mode(

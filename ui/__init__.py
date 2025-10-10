@@ -1,5 +1,3 @@
-import bpy
-
 from . import (
     auto_uv,
     lace_panel,  # Re-enabled with new asset-based lace system

@@ -1,4 +1,3 @@
-
 import bmesh
 import bpy
 from mathutils import Vector
@@ -293,7 +292,7 @@ class MESH_OT_CheckUVBoundary(bpy.types.Operator):
             try:
                 if "bm" in locals():
                     bm.free()
-            except:
+            except Exception:
                 pass
             return {"CANCELLED"}
 
@@ -393,7 +392,6 @@ class MESH_OT_CheckUVBoundary(bpy.types.Operator):
 
 
 class MESH_OT_ReselectUVViolations(bpy.types.Operator):
-
     bl_idname = "mesh.reselect_uv_violations"
     bl_label = "Re-select UV Violations"
     bl_description = "Re-select vertices marked as UV boundary violations"

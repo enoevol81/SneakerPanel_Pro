@@ -7,7 +7,6 @@ def lerp(v0, v1, t):
 
 
 class MESH_OT_set_edge_linear(bpy.types.Operator):
-
     bl_idname = "mesh.set_edge_linear"
     bl_label = "Set Edge Linear"
     bl_description = "Straighten selected edges by placing vertices along a straight line between endpoints"
@@ -61,7 +60,6 @@ class MESH_OT_set_edge_linear(bpy.types.Operator):
         visited = set()
 
         def walk_path(start):
-
             path = [start]
             visited.add(start)
             prev = None

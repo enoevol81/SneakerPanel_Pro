@@ -1,8 +1,5 @@
-
-import bmesh
 import bpy
 from bpy.types import Operator
-from mathutils import Vector
 
 
 class OBJECT_OT_DefineToe(Operator):

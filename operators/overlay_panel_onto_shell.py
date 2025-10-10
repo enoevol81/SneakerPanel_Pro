@@ -1,4 +1,3 @@
-
 import bmesh
 import bpy
 from mathutils import Vector, geometry
@@ -7,7 +6,6 @@ from ..utils.collections import add_object_to_panel_collection
 
 
 class MESH_OT_OverlayPanelOntoShell(bpy.types.Operator):
-   
     bl_idname = "mesh.overlay_panel_onto_shell"
     bl_label = "Project 2D Panel to 3D Shell"
     bl_description = "Uses the shell's UVs to recreate the selected 2-D panel directly on the shell surface"
@@ -25,7 +23,6 @@ class MESH_OT_OverlayPanelOntoShell(bpy.types.Operator):
         )
 
     def find_uv_reference_mesh(self, context, shell_obj_name):
-
         for obj in context.scene.objects:
             if obj.type == "MESH" and "spp_original_3d_mesh_name" in obj:
                 if obj["spp_original_3d_mesh_name"] == shell_obj_name:
@@ -33,34 +30,6 @@ class MESH_OT_OverlayPanelOntoShell(bpy.types.Operator):
         return None
 
     def check_uv_boundary_violations(self, panel_obj, uv_mesh_obj, scale_factor):
-
-        violation_count = 0
-
-        # Create bmesh from panel
-        bm = bmesh.new()
-        bm.from_mesh(panel_obj.data)
-
-        try:
-            # Check each vertex
-            for vert in bm.verts:
-                # Convert vertex to UV space
-                p_world = panel_obj.matrix_world @ vert.co
-                p_local_uv = uv_mesh_obj.matrix_world.inverted() @ p_world
-                uv_coord = Vector(
-                    (p_local_uv.x / scale_factor, p_local_uv.y / scale_factor)
-                )
-
-                # Check if outside UV bounds (0-1 range)
-                if uv_coord.x < 0 or uv_coord.x > 1 or uv_coord.y < 0 or uv_coord.y > 1:
-                    violation_count += 1
-
-        finally:
-            bm.free()
-
-        return violation_count
-
-    def check_uv_boundary_violations(self, panel_obj, uv_mesh_obj, scale_factor):
-
         violation_count = 0
 
         # Create bmesh from panel
@@ -259,7 +228,7 @@ class MESH_OT_OverlayPanelOntoShell(bpy.types.Operator):
             try:
                 if original_mode != "OBJECT":
                     bpy.ops.object.mode_set(mode=original_mode.split("_")[-1])
-            except:
+            except Exception:
                 pass  # If mode restoration fails, stay in current mode
 
         return {"FINISHED"}

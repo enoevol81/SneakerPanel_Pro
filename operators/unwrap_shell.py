@@ -1,11 +1,9 @@
-
 import bmesh
 import bpy
 from bpy.types import Operator
 
 
 class OBJECT_OT_UnwrapShell(Operator):
-
     bl_idname = "object.unwrap_shell"
     bl_label = "Unwrap Shell"
     bl_description = "Unwrap the selected shell mesh for UV mapping"

@@ -1,4 +1,3 @@
-
 import bpy
 from bpy.props import EnumProperty
 from bpy.types import Operator
@@ -72,7 +71,10 @@ class OBJECT_PT_SneakerPanelProMain(bpy.types.Panel):
         toggles = workflow_box.row()
         toggles.scale_y = 1.3
         t = toggles.operator(
-            "wm.context_toggle", text=" Auto UV", icon_value=icons.get_icon("auto_uv"), depress=wm.spp_show_auto_uv
+            "wm.context_toggle",
+            text=" Auto UV",
+            icon_value=icons.get_icon("auto_uv"),
+            depress=wm.spp_show_auto_uv,
         )
         t.data_path = "window_manager.spp_show_auto_uv"
         t = toggles.operator(
@@ -119,13 +121,20 @@ class OBJECT_PT_SneakerPanelProMain(bpy.types.Panel):
         icon_id = icons.get_icon("tools")
         if icon_id:
             tools_header.label(text="Panel Helper Tools", icon_value=icon_id)
-           
-            
+
         # Edge & Loop Refinement (collapsible)
         refinement_box = tools_box.box()
         refinement_header = refinement_box.row(align=True)
-        refinement_header.prop(scn, "spp_show_edge_refinement", toggle=True, text="Edge & Loop Refinement", icon="TRIA_DOWN" if getattr(scn, "spp_show_edge_refinement", False) else "TRIA_RIGHT")
-        
+        refinement_header.prop(
+            scn,
+            "spp_show_edge_refinement",
+            toggle=True,
+            text="Edge & Loop Refinement",
+            icon="TRIA_DOWN"
+            if getattr(scn, "spp_show_edge_refinement", False)
+            else "TRIA_RIGHT",
+        )
+
         if getattr(scn, "spp_show_edge_refinement", False):
             # Selection tools
             refinement_box.label(text="Selection:", icon="SELECT_SET")
@@ -143,26 +152,38 @@ class OBJECT_PT_SneakerPanelProMain(bpy.types.Panel):
             sel_grid.operator(
                 "mesh.select_boundary_edges", text="Select Boundary", icon="EDGESEL"
             )
-            
+
             # Flow tools
             refinement_box.label(text="Edge Flow:", icon="FORCE_FORCE")
             flow_grid = refinement_box.grid_flow(columns=3, align=True)
             flow_grid.scale_y = 1.3
-            flow_grid.operator("mesh.set_edge_linear", text="Straighten", icon="IPO_LINEAR")
+            flow_grid.operator(
+                "mesh.set_edge_linear", text="Straighten", icon="IPO_LINEAR"
+            )
             flow_grid.operator("mesh.edge_relax", text="Relax", icon="MOD_SMOOTH")
-            flow_grid.operator("mesh.set_edge_flow", text="Set Flow", icon="FORCE_FORCE")
+            flow_grid.operator(
+                "mesh.set_edge_flow", text="Set Flow", icon="FORCE_FORCE"
+            )
 
         # Mesh Object Tools (collapsible)
         panel_box = tools_box.box()
         panel_header = panel_box.row(align=True)
-        panel_header.prop(scn, "spp_show_mesh_object", toggle=True, text="Mesh Object", icon="TRIA_DOWN" if getattr(scn, "spp_show_mesh_object", False) else "TRIA_RIGHT")
-        
+        panel_header.prop(
+            scn,
+            "spp_show_mesh_object",
+            toggle=True,
+            text="Mesh Object",
+            icon="TRIA_DOWN"
+            if getattr(scn, "spp_show_mesh_object", False)
+            else "TRIA_RIGHT",
+        )
+
         # Show retopology indicator in header when in edit mode
-        if context.mode == 'EDIT_MESH' and getattr(scn, "spp_show_mesh_object", False):
+        if context.mode == "EDIT_MESH" and getattr(scn, "spp_show_mesh_object", False):
             overlay = context.space_data.overlay
             if overlay.show_retopology:
                 panel_header.label(text="", icon="OVERLAY")
-        
+
         if getattr(scn, "spp_show_mesh_object", False):
             # Shading controls
             obj = context.active_object
@@ -189,7 +210,7 @@ class OBJECT_PT_SneakerPanelProMain(bpy.types.Panel):
 
             # Object tools
             panel_grid = panel_box.grid_flow(columns=3, align=True)
-            panel_grid.scale_y = 1.2    
+            panel_grid.scale_y = 1.2
             panel_grid.operator("mesh.add_subsurf", text="SubD", icon="MOD_SUBSURF")
             panel_grid.operator("mesh.mirror_panel", text="Mirror", icon="MOD_MIRROR")
             panel_grid.operator(
@@ -197,8 +218,12 @@ class OBJECT_PT_SneakerPanelProMain(bpy.types.Panel):
             )
 
             fitment_row = panel_box.row(align=True)
-            fitment_row.operator("mesh.quick_conform", text="Quick Conform", icon="SNAP_ON")
-            fitment_row.operator("mesh.smooth_mesh", text="Smooth Mesh", icon="MOD_SMOOTH")
+            fitment_row.operator(
+                "mesh.quick_conform", text="Quick Conform", icon="SNAP_ON"
+            )
+            fitment_row.operator(
+                "mesh.smooth_mesh", text="Smooth Mesh", icon="MOD_SMOOTH"
+            )
 
             # Thicken Panel (Solidify) section
             panel_box.label(text="Thicken Panel:", icon="MOD_SOLIDIFY")
@@ -268,17 +293,20 @@ class OBJECT_PT_SneakerPanelProMain(bpy.types.Panel):
                     )
             else:
                 panel_box.label(
-                    text="Select a mesh object to enable solidify controls.", icon="INFO"
+                    text="Select a mesh object to enable solidify controls.",
+                    icon="INFO",
                 )
-            
+
             # Retopology controls (only in edit mode, directly in Mesh Object section)
-            if context.mode == 'EDIT_MESH':
+            if context.mode == "EDIT_MESH":
                 panel_box.separator(factor=0.5)
                 overlay = context.space_data.overlay
                 panel_box.prop(overlay, "show_retopology", text="Show Retopology")
-                
+
                 if overlay.show_retopology:
-                    panel_box.prop(overlay, "retopology_offset", text="Offset", slider=True)
+                    panel_box.prop(
+                        overlay, "retopology_offset", text="Offset", slider=True
+                    )
 
 
 # Registration

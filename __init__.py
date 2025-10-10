@@ -1,24 +1,24 @@
+# ruff: noqa: E402
 
 bl_info = {
-    "name": "Sneaker Panel Pro",
-    "author": "Your Name",
-    "version": (1, 0),
-    "blender": (4, 4, 0),
-    "location": "View3D > Sidebar > Sneaker Panel",
-    "description": "Modular plugin for drawing and projecting sneaker panels",
+"name": "Sneaker Panel Pro",
+    "author": "Enoevol Creative Solutions",
+    "version": (1, 0, 0),
+    "blender": (4, 5, 0),
+    "location": "Sidebar > Sneaker Panel Pro",
+    "description": "Professional Footwear Design Toolkit for Blender",
     "category": "Object",
-    "doc_url": "",  
-    "tracker_url": "", 
-    "warning": "", 
+    "warning": "Requires 'Grease Pencil To Curves', and 'Loop Tools' add-ons (enable in Preferences > Add-ons)"
 }
 
 import bpy
 
-from . import prefs  
-from . import state  
+from . import prefs
+from . import state
 from . import operators, properties, ui
 from .utils import icons
 from .utils import audit_tooltips as _audit_tooltips
+
 # List of all classes for registration
 classes = []
 
@@ -46,10 +46,11 @@ def register():
 
         # Register audit tooltips
         _audit_tooltips.register()
-        
+
         # Pre-load lace assets for instant first use (optional)
         try:
             from .operators.spp_lace_loader import load_lace_assets
+
             load_lace_assets()
         except Exception as e:
             print(f"Note: Lace assets will be loaded on first use: {e}")
@@ -58,7 +59,7 @@ def register():
         for cls in classes:
             bpy.utils.register_class(cls)
 
-        print(f"SneakerPanel Pro: Successfully registered addon")
+        print("SneakerPanel Pro: Successfully registered addon")
     except Exception as e:
         print(f"SneakerPanel Pro: Error during registration: {e}")
         raise
@@ -92,7 +93,7 @@ def unregister():
         # Unregister preferences last
         prefs.unregister()
 
-        print(f"SneakerPanel Pro: Successfully unregistered addon")
+        print("SneakerPanel Pro: Successfully unregistered addon")
     except Exception as e:
         print(f"SneakerPanel Pro: Error during unregistration: {e}")
         raise

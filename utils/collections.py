@@ -1,11 +1,7 @@
-
-import random
-
 import bpy
 
 
 def get_sneaker_panels_collection():
-
     # Check if collection already exists
     if "Sneaker Panels" in bpy.data.collections:
         main_collection = bpy.data.collections["Sneaker Panels"]
@@ -21,7 +17,6 @@ def get_sneaker_panels_collection():
 
 
 def _get_panel_color_tag(panel_number):
-
     # Available colors: default (NONE) + COLOR_01 through COLOR_08 = 9 total
     color_options = [
         "NONE",  # Default/white
@@ -41,7 +36,6 @@ def _get_panel_color_tag(panel_number):
 
 
 def get_panel_collection(panel_number, panel_name=None):
-
     # Get main collection
     main_collection = get_sneaker_panels_collection()
 
@@ -69,7 +63,6 @@ def get_panel_collection(panel_number, panel_name=None):
 
 
 def add_object_to_panel_collection(obj, panel_number, panel_name=None):
-
     # Get panel collection
     panel_collection = get_panel_collection(panel_number, panel_name)
 

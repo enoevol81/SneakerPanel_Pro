@@ -1,12 +1,12 @@
-
 import bmesh
 import bpy
 from bpy.props import BoolProperty, IntProperty
 from bpy.types import Operator
+from mathutils import Vector
+from mathutils.bvhtree import BVHTree
 
 
 class MESH_OT_SimpleGridFill(Operator):
-
     bl_idname = "mesh.simple_grid_fill"
     bl_label = "Simple Grid Fill"
     bl_description = "Fill selected geometry with grid pattern"
@@ -57,11 +57,11 @@ class MESH_OT_SimpleGridFill(Operator):
 
         if len(endpoints) == 2:
             try:
-                new_edge = bm.edges.new(endpoints)
+                bm.edges.new(endpoints)
                 bm.edges.ensure_lookup_table()
                 self.report({"INFO"}, "Connected 2 endpoints")
                 return True
-            except:
+            except Exception:
                 self.report({"WARNING"}, "Could not connect endpoints")
                 return False
         elif len(endpoints) > 2:
@@ -72,7 +72,7 @@ class MESH_OT_SimpleGridFill(Operator):
                 bm.edges.ensure_lookup_table()
                 self.report({"INFO"}, f"Connected {len(endpoints)} endpoints in a loop")
                 return True
-            except:
+            except Exception:
                 self.report({"WARNING"}, "Could not connect all endpoints")
                 return False
 
@@ -195,6 +195,90 @@ class MESH_OT_SimpleGridFill(Operator):
                         {"WARNING"}, f"Boundary-preserving smoothing failed: {str(e)}"
                     )
 
+            # After fill (and optional smoothing), ensure face normals match shell orientation
+            try:
+                scene = context.scene
+                shell_obj = getattr(scene, "spp_shell_object", None)
+                bm = bmesh.from_edit_mesh(obj.data)
+                bm.faces.ensure_lookup_table()
+
+                if shell_obj and shell_obj.type == "MESH" and len(bm.faces) > 0:
+                    # Compute average panel normal in shell local space
+                    # Sample a subset of faces (up to 50) for robustness
+                    faces = bm.faces
+                    step = max(1, len(faces) // 50)
+                    avg_panel_normal_world = Vector((0.0, 0.0, 0.0))
+                    sample_points_world = []
+                    mw = obj.matrix_world
+                    for i in range(0, len(faces), step):
+                        f = faces[i]
+                        n_world = (mw.to_3x3() @ f.normal).normalized()
+                        avg_panel_normal_world += n_world
+                        # Use face center as corresponding sample point
+                        sample_points_world.append(mw @ f.calc_center_median())
+                    if sample_points_world:
+                        avg_panel_normal_world.normalize()
+
+                        # Build BVH for shell in its local space
+                        dg = context.evaluated_depsgraph_get()
+                        shell_eval = shell_obj.evaluated_get(dg)
+                        shell_mesh = shell_eval.to_mesh()
+                        try:
+                            bvh = BVHTree.FromMesh(shell_mesh, epsilon=0.0)
+                        except Exception:
+                            bvh = None
+
+                        if bvh is not None:
+                            inv_shell = shell_obj.matrix_world.inverted()
+                            # Compare average alignment across samples
+                            dots = []
+                            for p_world in sample_points_world:
+                                p_shell = inv_shell @ p_world
+                                hit = bvh.find_nearest(p_shell)
+                                if hit is None:
+                                    continue
+                                _, _, face_index, normal_shell = hit
+                                # normal_shell is in shell local space
+                                # Bring panel avg normal into shell local space for a fair dot
+                                panel_n_shell = (inv_shell.to_3x3() @ avg_panel_normal_world).normalized()
+                                dots.append(panel_n_shell.dot(normal_shell.normalized()))
+
+                            if dots:
+                                avg_dot = sum(dots) / len(dots)
+                                # If opposing orientation (avg_dot < 0), flip panel normals
+                                if avg_dot < 0.0:
+                                    # Preserve select mode and flip faces
+                                    prev_select_mode = context.tool_settings.mesh_select_mode[:]
+                                    try:
+                                        bpy.ops.mesh.select_all(action="SELECT")
+                                        bpy.ops.mesh.select_mode(type="FACE")
+                                        bpy.ops.mesh.flip_normals()
+                                        self.report({"INFO"}, "Flipped panel normals to match shell orientation")
+                                        bmesh.update_edit_mesh(obj.data)
+                                    except Exception as e:
+                                        self.report({"WARNING"}, f"Failed to flip normals: {str(e)}")
+                                    finally:
+                                        try:
+                                            bpy.ops.mesh.select_mode(
+                                                type="VERT"
+                                                if prev_select_mode[0]
+                                                else "EDGE"
+                                                if prev_select_mode[1]
+                                                else "FACE"
+                                            )
+                                        except Exception:
+                                            pass
+
+                        # Free evaluated mesh
+                        try:
+                            shell_eval.to_mesh_clear()
+                        except Exception:
+                            pass
+
+            except Exception as e:
+                # Non-fatal; proceed even if alignment check fails
+                self.report({"WARNING"}, f"Normal alignment check failed: {str(e)}")
+
             bpy.ops.mesh.select_mode(
                 type="VERT" if select_mode[0] else "EDGE" if select_mode[1] else "FACE"
             )
@@ -202,7 +286,7 @@ class MESH_OT_SimpleGridFill(Operator):
             if original_mode != "EDIT":
                 try:
                     bpy.ops.object.mode_set(mode=original_mode)
-                except:
+                except Exception:
                     pass
 
             return {"FINISHED"} if success else {"CANCELLED"}
@@ -211,7 +295,7 @@ class MESH_OT_SimpleGridFill(Operator):
             if original_mode != "EDIT":
                 try:
                     bpy.ops.object.mode_set(mode=original_mode)
-                except:
+                except Exception:
                     pass
             self.report({"ERROR"}, f"Simple grid fill failed: {str(e)}")
             return {"CANCELLED"}

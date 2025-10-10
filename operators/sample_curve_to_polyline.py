@@ -1,4 +1,3 @@
-
 import bpy
 
 from ..utils.collections import add_object_to_panel_collection
@@ -6,7 +5,6 @@ from ..utils.collections import add_object_to_panel_collection
 
 # --- Helper Function: Resample Polyline (from your script) ---
 def resample_polyline(points, num_samples):
-
     if not points or num_samples < 2:
         return []
 
@@ -47,7 +45,6 @@ def resample_polyline(points, num_samples):
 
 # --- Helper Function: Extract ordered points from a mesh outline ---
 def get_ordered_points_from_mesh(mesh_data):
-
     if not mesh_data or not mesh_data.edges:
         return []
 
@@ -97,7 +94,6 @@ def get_ordered_points_from_mesh(mesh_data):
 
 # --- Main Operator ---
 class CURVE_OT_SampleToPolyline(bpy.types.Operator):
-
     bl_idname = "curve.sample_to_polyline"
     bl_label = "Sample Curve to Polyline"
     bl_description = "Convert selected Bezier curve to an evenly sampled polyline mesh"
@@ -135,7 +131,6 @@ class CURVE_OT_SampleToPolyline(bpy.types.Operator):
                 return {"CANCELLED"}
 
         try:
-
             # Get desired sample count from the scene property
             samples_per_spline = int(context.scene.spp_sampler_fidelity)
 
@@ -225,7 +220,7 @@ class CURVE_OT_SampleToPolyline(bpy.types.Operator):
             if original_mode != "OBJECT":
                 try:
                     bpy.ops.object.mode_set(mode=original_mode)
-                except:
+                except Exception:
                     pass  # Don't fail if mode restoration fails
 
             return {"FINISHED"}
@@ -235,7 +230,7 @@ class CURVE_OT_SampleToPolyline(bpy.types.Operator):
             if original_mode != "OBJECT":
                 try:
                     bpy.ops.object.mode_set(mode=original_mode)
-                except:
+                except Exception:
                     pass
             self.report({"ERROR"}, f"Error during curve sampling: {str(e)}")
             return {"CANCELLED"}

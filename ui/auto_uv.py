@@ -3,7 +3,6 @@ from ..utils import icons
 
 
 class OBJECT_PT_autu_uv(bpy.types.Panel):
-
     bl_label = " Auto UV"
     bl_idname = "OBJECT_PT_sneaker_panel_pro_autu_uv"
     bl_space_type = "VIEW_3D"
@@ -23,9 +22,7 @@ class OBJECT_PT_autu_uv(bpy.types.Panel):
 
     def draw(self, context):
         layout = self.layout
-        scene = context.scene
         icon_id = icons.get_icon("auto_uv")
-        obj = context.active_object
 
         uv_box = layout.box()
         uv_header = uv_box.row(align=True)
@@ -35,7 +32,9 @@ class OBJECT_PT_autu_uv(bpy.types.Panel):
 
         # Add light bulb icon for tooltip
         icon = "LIGHT_SUN" if context.scene.spp_show_uv_gen_tooltip else "INFO"
-        uv_header.prop(context.scene, "spp_show_uv_gen_tooltip", text="", toggle=True, icon=icon)
+        uv_header.prop(
+            context.scene, "spp_show_uv_gen_tooltip", text="", toggle=True, icon=icon
+        )
 
         # Show tooltip if enabled
         if context.scene.spp_show_uv_gen_tooltip:
@@ -47,7 +46,9 @@ class OBJECT_PT_autu_uv(bpy.types.Panel):
             tip_col.label(text="• Mark seams at Boundary and Heel Counter Edges")
             tip_col.label(text="• Run 'Unwrap Shell' to create UV layout")
             tip_col.label(text="• Place 3D cursor at toe tip → Click 'Define Toe'")
-            tip_col.label(text="• Place cursor at direction point → Click 'Define Up Axis [Z+ Axis]'")
+            tip_col.label(
+                text="• Place cursor at direction point → Click 'Define Up Axis [Z+ Axis]'"
+            )
             tip_col.label(text="• Run 'Orient UV Island' for precise orientation")
             tip_col.label(text="• Direction point: tongue area or toward ankle")
             tip_col.operator(

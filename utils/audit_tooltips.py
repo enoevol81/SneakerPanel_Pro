@@ -3,7 +3,6 @@
 # -------------------------------------------------------------------------
 
 import bpy
-import inspect
 
 
 def run(verbose: bool = True) -> dict:
@@ -58,12 +57,14 @@ def run(verbose: bool = True) -> dict:
 class SPP_OT_RunTooltipAudit(bpy.types.Operator):
     bl_idname = "spp.run_tooltip_audit"
     bl_label = "Run Tooltip Audit"
-    bl_description = "Scan registered operators for missing hover tooltips and property descriptions"
+    bl_description = (
+        "Scan registered operators for missing hover tooltips and property descriptions"
+    )
 
     def execute(self, context):
         run(verbose=True)
-        self.report({'INFO'}, "Tooltip audit complete. See Console for report.")
-        return {'FINISHED'}
+        self.report({"INFO"}, "Tooltip audit complete. See Console for report.")
+        return {"FINISHED"}
 
 
 classes = (SPP_OT_RunTooltipAudit,)

@@ -2,17 +2,19 @@
 # Run in Scripting (Alt+P). N-panel: View3D > "ProfileProj"
 
 import bpy
-from bpy.types import Operator, Panel, PropertyGroup
-from bpy.props import StringProperty, EnumProperty, PointerProperty, IntProperty, FloatProperty
+from bpy.types import Operator, PropertyGroup
+from bpy.props import StringProperty, EnumProperty, PointerProperty
 from mathutils import Vector
 from bpy_extras import view3d_utils
+
 
 # -------------------------
 # Helpers
 # -------------------------
 def get_shell(context):
     o = context.active_object
-    return o if (o and o.type == 'MESH') else None
+    return o if (o and o.type == "MESH") else None
+
 
 def load_or_get_image(path):
     if not path:
@@ -26,6 +28,7 @@ def load_or_get_image(path):
             pass
     return bpy.data.images.load(abspath)
 
+
 def ensure_uv_layer(obj, name):
     me = obj.data
     uv = me.uv_layers.get(name)
@@ -33,6 +36,7 @@ def ensure_uv_layer(obj, name):
         uv = me.uv_layers.new(name=name)
     me.uv_layers.active = uv
     return uv
+
 
 def get_or_active_main_uv(obj, name_hint):
     """Get the main UV layer - always use the top UV slot (first in list)"""
@@ -42,53 +46,70 @@ def get_or_active_main_uv(obj, name_hint):
     # Always return the first UV layer (top slot) regardless of name hint
     return me.uv_layers[0].name
 
+
 def ensure_reference_material_on_main_uv(obj, baked_image, main_uv_name):
     """Material 'Reference Image' maps baked_image by MAIN UV into Base Color only."""
     mat = obj.active_material
     if not mat or mat.name != "Reference Image":
-        mat = bpy.data.materials.get("Reference Image") or bpy.data.materials.new("Reference Image")
+        mat = bpy.data.materials.get("Reference Image") or bpy.data.materials.new(
+            "Reference Image"
+        )
         obj.active_material = mat
     mat.use_nodes = True
-    nt = mat.node_tree; nodes = nt.nodes; links = nt.links
+    nt = mat.node_tree
+    nodes = nt.nodes
+    links = nt.links
 
-    out = next((n for n in nodes if n.type == 'OUTPUT_MATERIAL'), None) or nodes.new("ShaderNodeOutputMaterial")
-    bsdf = next((n for n in nodes if n.type == 'BSDF_PRINCIPLED'), None) or nodes.new("ShaderNodeBsdfPrincipled")
-    out.location = (600, 0); bsdf.location = (0, 0)
+    out = next((n for n in nodes if n.type == "OUTPUT_MATERIAL"), None) or nodes.new(
+        "ShaderNodeOutputMaterial"
+    )
+    bsdf = next((n for n in nodes if n.type == "BSDF_PRINCIPLED"), None) or nodes.new(
+        "ShaderNodeBsdfPrincipled"
+    )
+    out.location = (600, 0)
+    bsdf.location = (0, 0)
 
-    if not out.inputs['Surface'].is_linked:
-        links.new(bsdf.outputs['BSDF'], out.inputs['Surface'])
+    if not out.inputs["Surface"].is_linked:
+        links.new(bsdf.outputs["BSDF"], out.inputs["Surface"])
 
-    uvn = nodes.get("SPP_MainUV") or nodes.new("ShaderNodeUVMap"); uvn.name = "SPP_MainUV"
+    uvn = nodes.get("SPP_MainUV") or nodes.new("ShaderNodeUVMap")
+    uvn.name = "SPP_MainUV"
     # Set UV map to the actual main UV layer name (top slot)
     uvn.uv_map = main_uv_name
-    itex = nodes.get("SPP_BakedImage") or nodes.new("ShaderNodeTexImage"); itex.name = "SPP_BakedImage"; itex.image = baked_image
+    itex = nodes.get("SPP_BakedImage") or nodes.new("ShaderNodeTexImage")
+    itex.name = "SPP_BakedImage"
+    itex.image = baked_image
 
     # Wire baked image into Base Color using Main UV (not Projection)
-    uvn.location = (-400, 0); itex.location = (-200, 0)
-    if itex.inputs['Vector'].is_linked:
-        for l in list(itex.inputs['Vector'].links):
-            nt.links.remove(l)
-    links.new(uvn.outputs['UV'], itex.inputs['Vector'])
-    if bsdf.inputs['Base Color'].is_linked:
-        for l in list(bsdf.inputs['Base Color'].links):
-            nt.links.remove(l)
-    links.new(itex.outputs['Color'], bsdf.inputs['Base Color'])
+    uvn.location = (-400, 0)
+    itex.location = (-200, 0)
+    if itex.inputs["Vector"].is_linked:
+        for link in list(itex.inputs["Vector"].links):
+            nt.links.remove(link)
+    links.new(uvn.outputs["UV"], itex.inputs["Vector"])
+    if bsdf.inputs["Base Color"].is_linked:
+        for link in list(bsdf.inputs["Base Color"].links):
+            nt.links.remove(link)
+    links.new(itex.outputs["Color"], bsdf.inputs["Base Color"])
 
     # Make the image node the active paint slot (useful if switching to Material mode later)
-    for n in nodes: n.select = False
+    for n in nodes:
+        n.select = False
     itex.select = True
     nt.nodes.active = itex
     return mat
 
+
 def find_view3d_area_region():
     for area in bpy.context.window.screen.areas:
-        if area.type == 'VIEW_3D':
+        if area.type == "VIEW_3D":
             for region in area.regions:
-                if region.type == 'WINDOW':
+                if region.type == "WINDOW":
                     for space in area.spaces:
-                        if space.type == 'VIEW_3D':
+                        if space.type == "VIEW_3D":
                             return area, region, space
     return None, None, None
+
 
 def obj_screen_bounds(obj, area, region, space):
     coords = [obj.matrix_world @ Vector(corner) for corner in obj.bound_box]
@@ -96,10 +117,12 @@ def obj_screen_bounds(obj, area, region, space):
     for co in coords:
         p = view3d_utils.location_3d_to_region_2d(region, space.region_3d, co)
         if p is not None:
-            xs.append(p.x); ys.append(p.y)
+            xs.append(p.x)
+            ys.append(p.y)
     if not xs or not ys:
         return None
     return (min(xs), min(ys)), (max(xs), max(ys))
+
 
 def build_stroke_line(x0, y, x1, steps, size_px, pressure=1.0):
     pts = []
@@ -107,23 +130,28 @@ def build_stroke_line(x0, y, x1, steps, size_px, pressure=1.0):
         steps = 2
     dx = (x1 - x0) / (steps - 1)
     for i in range(steps):
-        x = x0 + i*dx
-        pts.append({
-            "name": "stroke",
-            "mouse": (x, y),
-            "mouse_event": (x, y),
-            "is_start": (i == 0),
-            "pen_flip": False,
-            "pressure": pressure,
-            "size": size_px,
-            "time": 0.0
-        })
+        x = x0 + i * dx
+        pts.append(
+            {
+                "name": "stroke",
+                "mouse": (x, y),
+                "mouse_event": (x, y),
+                "is_start": (i == 0),
+                "pen_flip": False,
+                "pressure": pressure,
+                "size": size_px,
+                "time": 0.0,
+            }
+        )
     return pts
 
-def set_clone_context(obj, src_img, proj_uv_name, main_uv_name, dest_img, brush_size=60, strength=1.0):
+
+def set_clone_context(
+    obj, src_img, proj_uv_name, main_uv_name, dest_img, brush_size=60, strength=1.0
+):
     # Activate Texture Paint mode
     try:
-        bpy.ops.object.mode_set(mode='TEXTURE_PAINT')
+        bpy.ops.object.mode_set(mode="TEXTURE_PAINT")
     except Exception:
         pass
 
@@ -133,19 +161,19 @@ def set_clone_context(obj, src_img, proj_uv_name, main_uv_name, dest_img, brush_
         me.uv_layers.active = me.uv_layers.get(main_uv_name)
     # Set clone UV to projection UV
     for uv in me.uv_layers:
-        uv.active_clone = (uv.name == proj_uv_name)
+        uv.active_clone = uv.name == proj_uv_name
 
     # Tool settings → Single Image mode targeting "Projected Design"
     ts = bpy.context.scene.tool_settings
     ip = ts.image_paint
-    ip.mode = 'IMAGE'          # <-- Single Image mode
-    ip.canvas = dest_img       # <-- Texture Slot image = Projected Design
+    ip.mode = "IMAGE"  # <-- Single Image mode
+    ip.canvas = dest_img  # <-- Texture Slot image = Projected Design
     ip.seam_bleed = 2
 
     # Switch to Clone tool (minimal override to avoid context errors)
     area, region, space = find_view3d_area_region()
     if area and region:
-        override = {'area': area}
+        override = {"area": area}
         try:
             bpy.ops.wm.tool_set_by_id(override, name="builtin.clone")
         except Exception:
@@ -153,46 +181,48 @@ def set_clone_context(obj, src_img, proj_uv_name, main_uv_name, dest_img, brush_
 
     # Configure clone settings using correct API paths
     # Set clone image on image paint settings (not brush)
-    if hasattr(ip, 'clone_image'):
+    if hasattr(ip, "clone_image"):
         ip.clone_image = src_img  # Clone Image = 2D profile image
-    
+
     # Enable Clone From Paint Slot
-    if hasattr(ip, 'use_clone_layer'):
+    if hasattr(ip, "use_clone_layer"):
         ip.use_clone_layer = True  # Clone From Paint Slot = True
-    
+
     # Find or create clone brush and set it active
     clone_brush = None
     for brush in bpy.data.brushes:
-        if brush.image_tool == 'CLONE':
+        if brush.image_tool == "CLONE":
             clone_brush = brush
             break
-    
+
     if not clone_brush:
         try:
-            clone_brush = bpy.data.brushes.new("SPP_Clone", mode='TEXTURE_PAINT')
-            clone_brush.image_tool = 'CLONE'
+            clone_brush = bpy.data.brushes.new("SPP_Clone", mode="TEXTURE_PAINT")
+            clone_brush.image_tool = "CLONE"
         except Exception:
             pass
-    
+
     if clone_brush:
         # Configure basic brush settings
         clone_brush.strength = strength
         clone_brush.size = brush_size
-    
+
     return clone_brush
+
 
 # -------------------------
 # Properties & UI
 # -------------------------
 class ProfileProjProps(PropertyGroup):
-    image_path: StringProperty(name="2D Profile Image", subtype='FILE_PATH')
+    image_path: StringProperty(name="2D Profile Image", subtype="FILE_PATH")
     projection_uv: StringProperty(name="Projection UV", default="Projection")
     main_uv: StringProperty(name="Main UV", default="UV Mesh")
     dest_size: EnumProperty(
         name="Dest Size",
-        items=[('1024','1K',''), ('2048','2K',''), ('4096','4K','')],
-        default='2048'
+        items=[("1024", "1K", ""), ("2048", "2K", ""), ("4096", "4K", "")],
+        default="2048",
     )
+
 
 # -------------------------
 # Operators
@@ -200,108 +230,120 @@ class ProfileProjProps(PropertyGroup):
 class PP_OT_CreateProjectionUV(Operator):
     bl_idname = "pp.create_projection_uv"
     bl_label = "1. Create 'Projection' UV + From View"
-    bl_options = {'REGISTER', 'UNDO'}
+    bl_options = {"REGISTER", "UNDO"}
 
     def execute(self, context):
         props = context.scene.profile_proj
         obj = get_shell(context)
         if not obj:
-            self.report({'ERROR'}, "Select a mesh object")
-            return {'CANCELLED'}
+            self.report({"ERROR"}, "Select a mesh object")
+            return {"CANCELLED"}
         if not props.image_path:
-            self.report({'ERROR'}, "Pick your 2D profile image")
-            return {'CANCELLED'}
+            self.report({"ERROR"}, "Pick your 2D profile image")
+            return {"CANCELLED"}
 
         # Show the image in UV editor so the user can align
         img = load_or_get_image(props.image_path)
         for area in bpy.context.window.screen.areas:
-            if area.type == 'IMAGE_EDITOR':
+            if area.type == "IMAGE_EDITOR":
                 for space in area.spaces:
-                    if space.type == 'IMAGE_EDITOR':
+                    if space.type == "IMAGE_EDITOR":
                         space.image = img
 
         # Create/activate Projection UV and Project From View (use current view)
         ensure_uv_layer(obj, props.projection_uv)
-        bpy.ops.object.mode_set(mode='EDIT')
-        bpy.ops.mesh.select_all(action='SELECT')
+        bpy.ops.object.mode_set(mode="EDIT")
+        bpy.ops.mesh.select_all(action="SELECT")
         bpy.ops.uv.project_from_view(correct_aspect=True, scale_to_bounds=False)
-        bpy.ops.object.mode_set(mode='OBJECT')
+        bpy.ops.object.mode_set(mode="OBJECT")
 
-        self.report({'INFO'}, "Projection UV created from the current view. Align it in the UV Editor.")
-        return {'FINISHED'}
+        self.report(
+            {"INFO"},
+            "Projection UV created from the current view. Align it in the UV Editor.",
+        )
+        return {"FINISHED"}
+
 
 class PP_OT_CreateDestMaterial(Operator):
     bl_idname = "pp.create_dest_and_material"
     bl_label = "2. Create Img Texture + Material"
-    bl_options = {'REGISTER', 'UNDO'}
+    bl_options = {"REGISTER", "UNDO"}
 
     def execute(self, context):
         props = context.scene.profile_proj
         obj = get_shell(context)
         if not obj:
-            self.report({'ERROR'}, "Select a mesh object")
-            return {'CANCELLED'}
+            self.report({"ERROR"}, "Select a mesh object")
+            return {"CANCELLED"}
 
         main_uv = get_or_active_main_uv(obj, props.main_uv)
         if not main_uv:
-            self.report({'ERROR'}, "Mesh has no UVs. Unwrap first.")
-            return {'CANCELLED'}
+            self.report({"ERROR"}, "Mesh has no UVs. Unwrap first.")
+            return {"CANCELLED"}
 
         size = int(props.dest_size)
         dest_img = bpy.data.images.get("Projected Design")
         if dest_img is None or dest_img.size[0] != size:
             if dest_img and dest_img.users == 0:
                 bpy.data.images.remove(dest_img)
-            dest_img = bpy.data.images.new("Projected Design", width=size, height=size, alpha=True)
-            dest_img.generated_color = (0,0,0,0)
+            dest_img = bpy.data.images.new(
+                "Projected Design", width=size, height=size, alpha=True
+            )
+            dest_img.generated_color = (0, 0, 0, 0)
 
         ensure_reference_material_on_main_uv(obj, dest_img, main_uv)
-        self.report({'INFO'}, f"Created/assigned '{dest_img.name}' and material 'Reference Image' on Main UV")
-        return {'FINISHED'}
+        self.report(
+            {"INFO"},
+            f"Created/assigned '{dest_img.name}' and material 'Reference Image' on Main UV",
+        )
+        return {"FINISHED"}
+
 
 class PP_OT_AutoCloneTransfer(Operator):
     bl_idname = "pp.auto_clone_transfer"
     bl_label = "3. Transfer Image UV"
-    bl_options = {'REGISTER', 'UNDO'}
+    bl_options = {"REGISTER", "UNDO"}
 
     def execute(self, context):
         props = context.scene.profile_proj
         obj = get_shell(context)
         if not obj:
-            self.report({'ERROR'}, "Select a mesh object")
-            return {'CANCELLED'}
+            self.report({"ERROR"}, "Select a mesh object")
+            return {"CANCELLED"}
         src_img = load_or_get_image(props.image_path)
         if not src_img:
-            self.report({'ERROR'}, "Pick your 2D profile image")
-            return {'CANCELLED'}
+            self.report({"ERROR"}, "Pick your 2D profile image")
+            return {"CANCELLED"}
 
         proj_uv = ensure_uv_layer(obj, props.projection_uv).name
         main_uv = get_or_active_main_uv(obj, props.main_uv)
         if not main_uv:
-            self.report({'ERROR'}, "Mesh has no UVs. Unwrap first.")
-            return {'CANCELLED'}
+            self.report({"ERROR"}, "Mesh has no UVs. Unwrap first.")
+            return {"CANCELLED"}
 
         # Ensure destination image + material and set Texture Paint Single Image targeting it
         size = int(props.dest_size)
-        dest_img = bpy.data.images.get("Projected Design") or bpy.data.images.new("Projected Design", width=size, height=size, alpha=True)
-        dest_img.generated_color = (0,0,0,0)
+        dest_img = bpy.data.images.get("Projected Design") or bpy.data.images.new(
+            "Projected Design", width=size, height=size, alpha=True
+        )
+        dest_img.generated_color = (0, 0, 0, 0)
         ensure_reference_material_on_main_uv(obj, dest_img, main_uv)
 
         # Prepare clone context (Single Image mode + canvas=Projected Design + clone_image=src)
         clone_brush = set_clone_context(obj, src_img, proj_uv, main_uv, dest_img)
-        
+
         # Additional brush configuration for clone painting
         if clone_brush:
             ts = bpy.context.scene.tool_settings
             # Ensure clone settings are properly configured
-            if hasattr(ts.image_paint, 'use_clone_layer'):
+            if hasattr(ts.image_paint, "use_clone_layer"):
                 ts.image_paint.use_clone_layer = True
 
         # Switch to Texture Paint workspace/context
         try:
             # Switch to Texture Painting workspace if available
             for workspace in bpy.data.workspaces:
-                if 'Texture' in workspace.name or 'Paint' in workspace.name:
+                if "Texture" in workspace.name or "Paint" in workspace.name:
                     bpy.context.window.workspace = workspace
                     break
         except Exception:
@@ -309,16 +351,16 @@ class PP_OT_AutoCloneTransfer(Operator):
 
         # Configure Image Editor to show Projected Design in VIEW mode
         for area in bpy.context.window.screen.areas:
-            if area.type == 'IMAGE_EDITOR':
+            if area.type == "IMAGE_EDITOR":
                 for space in area.spaces:
-                    if space.type == 'IMAGE_EDITOR':
+                    if space.type == "IMAGE_EDITOR":
                         # Set the image and ensure it's properly loaded
                         space.image = dest_img  # Set to Projected Design
-                        space.mode = 'VIEW'     # Set mode to VIEW
+                        space.mode = "VIEW"  # Set mode to VIEW
                         # Force update the area
                         area.tag_redraw()
                         break
-        
+
         # Also set the image in tool settings for texture paint context
         try:
             bpy.context.scene.tool_settings.image_paint.canvas = dest_img
@@ -328,30 +370,36 @@ class PP_OT_AutoCloneTransfer(Operator):
         # Find a 3D view to paint into
         area, region, space = find_view3d_area_region()
         if not area:
-            self.report({'ERROR'}, "No 3D View area found")
-            return {'CANCELLED'}
-        override = {'area': area, 'region': region}
+            self.report({"ERROR"}, "No 3D View area found")
+            return {"CANCELLED"}
+        override = {"area": area, "region": region}
 
         # Compute on-screen bounds of the object to sweep strokes over
         bounds = obj_screen_bounds(obj, area, region, space)
         if bounds is None:
-            self.report({'ERROR'}, "Cannot compute screen bounds for object")
-            return {'CANCELLED'}
+            self.report({"ERROR"}, "Cannot compute screen bounds for object")
+            return {"CANCELLED"}
         (x0, y0), (x1, y1) = bounds
 
         # Use conservative defaults (no UI knobs): 28 rows, 80 samples, 64px brush, full strength
         rows, samples, size_px, pressure = 28, 80, 64, 1.0
         dy = (y1 - y0) / (rows + 1)
-        for i in range(1, rows+1):
-            y = y0 + i*dy
-            stroke = build_stroke_line(x0, y, x1, steps=samples, size_px=size_px, pressure=pressure)
+        for i in range(1, rows + 1):
+            y = y0 + i * dy
+            stroke = build_stroke_line(
+                x0, y, x1, steps=samples, size_px=size_px, pressure=pressure
+            )
             try:
-                bpy.ops.paint.image_paint(override, stroke=stroke, mode='NORMAL')
+                bpy.ops.paint.image_paint(override, stroke=stroke, mode="NORMAL")
             except Exception:
                 pass
 
-        self.report({'INFO'}, "Auto Clone Transfer complete for current view. Repeat from the opposite side if needed.")
-        return {'FINISHED'}
+        self.report(
+            {"INFO"},
+            "Auto Clone Transfer complete for current view. Repeat from the opposite side if needed.",
+        )
+        return {"FINISHED"}
+
 
 # -------------------------
 # Register
@@ -363,15 +411,18 @@ classes = (
     PP_OT_AutoCloneTransfer,
 )
 
+
 def register():
     for c in classes:
         bpy.utils.register_class(c)
     bpy.types.Scene.profile_proj = PointerProperty(type=ProfileProjProps)
 
+
 def unregister():
     del bpy.types.Scene.profile_proj
     for c in reversed(classes):
         bpy.utils.unregister_class(c)
+
 
 if __name__ == "__main__":
     register()

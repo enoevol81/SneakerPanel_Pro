@@ -1,5 +1,3 @@
-import math
-
 import bmesh
 import bpy
 import mathutils
@@ -75,7 +73,7 @@ class OBJECT_OT_set_edge_flow(bpy.types.Operator):
                         p4 = p3 - (p2 - p3)
                         new_pos = hermite_3d(p1, p2, p3, p4, 0.5, -self.tension, 0)
                         updated_positions[center.index] = new_pos
-                    except:
+                    except Exception:
                         continue
 
             for vidx, new_co in updated_positions.items():

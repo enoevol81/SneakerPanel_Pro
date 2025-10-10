@@ -1,14 +1,9 @@
-
 import bpy
 from bpy.props import FloatProperty
 from bpy.types import Operator
 
-from ..utils.collections import get_panel_collection
-
 
 class OBJECT_OT_SolidifyPanel(Operator):
-
-
     bl_idname = "object.solidify_panel"
     bl_label = "Solidify Panel"
     bl_description = "Add solidify modifier to the selected panel"
@@ -105,7 +100,6 @@ class OBJECT_OT_SolidifyPanel(Operator):
 
 
 class OBJECT_OT_ApplySolidify(Operator):
-
     bl_idname = "object.apply_solidify"
     bl_label = "Apply Solidify"
     bl_description = "Apply the solidify modifier to make thickness permanent"

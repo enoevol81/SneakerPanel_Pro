@@ -1,12 +1,9 @@
-
 import bpy
 
-from ..utils.collections import add_object_to_panel_collection, get_panel_collection
-from ..utils.panel_utils import update_stabilizer
+from ..utils.collections import add_object_to_panel_collection
 
 
 class OBJECT_OT_AddGPDraw(bpy.types.Operator):
-
     bl_idname = "object.add_gp_draw"
     bl_label = "Add GPDraw Grease Pencil"
     bl_description = "Create a new Grease Pencil object for drawing panel outlines"

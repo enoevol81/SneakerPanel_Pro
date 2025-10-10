@@ -1,4 +1,3 @@
-
 import math
 
 import bmesh
@@ -8,7 +7,6 @@ from mathutils import Vector
 
 
 class OBJECT_OT_OrientUVIsland(Operator):
-
     bl_idname = "object.orient_uv_island"
     bl_label = "Orient UV Island"
     bl_description = "Orient the UV island to make the toe point upward"

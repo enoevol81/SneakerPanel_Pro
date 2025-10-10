@@ -1,14 +1,12 @@
-
 import bmesh
 import bpy
 from mathutils import Vector
 
 
 # -------------------------------------------------------------------------
-#Stabilizer
+# Stabilizer
 # ------------------------------------------------------------------------
 def update_stabilizer(self, context):
-
     # Make sure we have access to the Grease Pencil paint settings
     if not hasattr(bpy.context, "tool_settings") or not hasattr(
         bpy.context.tool_settings, "gpencil_paint"
@@ -60,10 +58,9 @@ def update_stabilizer_ui(self, context):
 
 
 # -------------------------------------------------------------------------
-#Surface Snap
+# Surface Snap
 # ------------------------------------------------------------------------
 def apply_surface_snap():
-
     bpy.ops.transform.translate(
         value=(0, 0, 0),
         orient_type="GLOBAL",
@@ -87,12 +84,10 @@ def apply_surface_snap():
     )
 
 
-
 # -------------------------------------------------------------------------
-#Vert Reduction
+# Vert Reduction
 # ------------------------------------------------------------------------
 def reduce_mesh_verts(context, percentage):
-
     obj = context.active_object
     if obj and obj.type == "MESH":
         if obj.mode != "EDIT":
@@ -105,10 +100,9 @@ def reduce_mesh_verts(context, percentage):
 
 
 # -------------------------------------------------------------------------
-#Curvature
+# Curvature
 # ------------------------------------------------------------------------
 def compute_curvature(bm, vert):
-
     normal = vert.normal
     curvature = 0.0
     count = 0
@@ -126,10 +120,9 @@ def compute_curvature(bm, vert):
 
 
 # -------------------------------------------------------------------------
-#Quad Flow
+# Quad Flow
 # ------------------------------------------------------------------------
 def create_flow_based_quads(bm, target_quad_length=0.1):
-
     # First, create a clean boundary
     boundary_edges = [e for e in bm.edges if len(e.link_faces) < 2]
     bmesh.ops.dissolve_degenerate(bm, edges=bm.edges, dist=0.001)
@@ -150,7 +143,7 @@ def create_flow_based_quads(bm, target_quad_length=0.1):
         for edge in current.link_edges:
             if edge in used_edges or edge not in boundary_edges:
                 continue
-            next_vert = edge.other_vert(current)
+            edge.other_vert(current)
             next_edge = edge
             break
         if next_edge is None or next_edge.other_vert(current) == start:

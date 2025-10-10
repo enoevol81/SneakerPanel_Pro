@@ -1,11 +1,9 @@
-
 import bpy
 
 from ..utils.panel_utils import apply_surface_snap
 
 
 class OBJECT_OT_SmoothVertices(bpy.types.Operator):
-
     bl_idname = "object.smooth_vertices"
     bl_label = "Smooth Vertices"
     bl_description = "Smooth mesh vertices while maintaining surface projection"
@@ -77,7 +75,7 @@ class OBJECT_OT_SmoothVertices(bpy.types.Operator):
             if "original_mode" in locals() and original_mode != obj.mode:
                 try:
                     bpy.ops.object.mode_set(mode=original_mode)
-                except:
+                except Exception:
                     pass
             return {"CANCELLED"}
 

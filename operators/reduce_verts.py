@@ -1,4 +1,3 @@
-
 import bmesh
 import bpy
 
@@ -28,11 +27,11 @@ def _collapse_shortest_edge_to_make_even(obj, context):
         # Find shortest edge to minimally affect shape
         shortest = None
         shortest_len = 1e30
-        for e in bm.edges:
-            l = (e.verts[0].co - e.verts[1].co).length
-            if l < shortest_len:
-                shortest_len = l
-                shortest = e
+        for edge in bm.edges:
+            edge_length = (edge.verts[0].co - edge.verts[1].co).length
+            if edge_length < shortest_len:
+                shortest_len = edge_length
+                shortest = edge
         if not shortest:
             return False
 
@@ -78,11 +77,11 @@ def _collapse_n_shortest_edges(obj, count):
         # Find shortest edge
         shortest = None
         shortest_len = 1e30
-        for e in bm.edges:
-            l = (e.verts[0].co - e.verts[1].co).length
-            if l < shortest_len:
-                shortest = e
-                shortest_len = l
+        for edge in bm.edges:
+            edge_length = (edge.verts[0].co - edge.verts[1].co).length
+            if edge_length < shortest_len:
+                shortest = edge
+                shortest_len = edge_length
         if not shortest:
             break
         try:
@@ -116,7 +115,6 @@ class MESH_OT_MakeEvenVerts(bpy.types.Operator):
 
 
 class OBJECT_OT_ReduceVerts(bpy.types.Operator):
-
     bl_idname = "object.reduce_verts"
     bl_label = "Reduce Verts"
     bl_description = "Reduce mesh vertices while maintaining shape"
@@ -235,7 +233,7 @@ class OBJECT_OT_ReduceVerts(bpy.types.Operator):
             # Try to restore original mode
             try:
                 bpy.ops.object.mode_set(mode=original_mode)
-            except:
+            except Exception:
                 pass
             return {"CANCELLED"}
 

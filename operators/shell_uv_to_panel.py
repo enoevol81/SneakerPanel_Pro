@@ -1,4 +1,3 @@
-
 import bmesh
 import bpy
 from mathutils import Vector, geometry
@@ -42,10 +41,10 @@ def get_3d_point_from_uv(shell_obj, uv_layer_name, uv_coord_target_2d, context):
         face_triangles_data = []
         if num_loops == 3:
             tri_uvs_3d = [
-                Vector((l[uv_layer_bm].uv.x, l[uv_layer_bm].uv.y, 0.0))
-                for l in loops_on_face
+                Vector((loop[uv_layer_bm].uv.x, loop[uv_layer_bm].uv.y, 0.0))
+                for loop in loops_on_face
             ]
-            tri_verts_3d = [l.vert.co.copy() for l in loops_on_face]
+            tri_verts_3d = [loop.vert.co.copy() for loop in loops_on_face]
             face_triangles_data.append({"uvs": tri_uvs_3d, "verts": tri_verts_3d})
         elif num_loops == 4:
             uvs1_3d = [
@@ -299,31 +298,31 @@ class OBJECT_OT_ShellUVToPanel(bpy.types.Operator):
         bpy.ops.object.select_all(action="DESELECT")
         boundary_mesh_obj_ref.select_set(True)
         context.view_layer.objects.active = boundary_mesh_obj_ref
-        
+
         # Switch to edit mode and fill the boundary
-        bpy.ops.object.mode_set(mode='EDIT')
-        bpy.ops.mesh.select_all(action='SELECT')
-        
+        bpy.ops.object.mode_set(mode="EDIT")
+        bpy.ops.mesh.select_all(action="SELECT")
+
         # Try grid fill first, fallback to triangle fill if needed
         try:
             bpy.ops.mesh.fill_grid()
             self.report({"INFO"}, "Grid fill successful")
-        except:
+        except Exception:
             try:
                 bpy.ops.mesh.fill()
                 bpy.ops.mesh.tris_convert_to_quads()
                 self.report({"INFO"}, "Triangle fill with quad conversion successful")
             except Exception as e:
                 self.report({"ERROR"}, f"Panel fill failed: {e}")
-                bpy.ops.object.mode_set(mode='OBJECT')
+                bpy.ops.object.mode_set(mode="OBJECT")
                 return {"CANCELLED"}
-        
-        bpy.ops.object.mode_set(mode='OBJECT')
-        
+
+        bpy.ops.object.mode_set(mode="OBJECT")
+
         # Rename the filled object
         created_panel_obj = boundary_mesh_obj_ref
         created_panel_obj.name = filled_obj_name
-        
+
         # Apply surface snap to conform to shell
         if shell_obj:
             apply_surface_snap(created_panel_obj, shell_obj, iterations=3)
@@ -484,11 +483,11 @@ class OBJECT_OT_ShellUVToPanel(bpy.types.Operator):
         try:
             if original_mode != "OBJECT":
                 bpy.ops.object.mode_set(mode=original_mode.split("_")[-1])
-        except:
+        except Exception:
             pass  # If mode restoration fails, stay in current mode
 
         return {"FINISHED"}
-    
+
 
 def register():
     bpy.utils.register_class(OBJECT_OT_ShellUVToPanel)

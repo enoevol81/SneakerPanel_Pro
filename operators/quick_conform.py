@@ -3,7 +3,6 @@ from bpy.types import Operator
 
 
 class OBJECT_OT_quick_conform(Operator):
-    
     bl_idname = "mesh.quick_conform"
     bl_label = "Quick Conform"
     bl_description = "Quickly snap the selected mesh to conform to the shell surface"
@@ -65,7 +64,7 @@ class OBJECT_OT_quick_conform(Operator):
             try:
                 if original_mode != "OBJECT":
                     bpy.ops.object.mode_set(mode=original_mode)
-            except:
+            except Exception:
                 pass
             return {"CANCELLED"}
 

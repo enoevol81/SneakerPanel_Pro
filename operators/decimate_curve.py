@@ -1,4 +1,3 @@
-
 import bpy
 
 
@@ -42,7 +41,7 @@ class OBJECT_OT_DecimateCurve(bpy.types.Operator):
             if original_mode != "EDIT":
                 try:
                     bpy.ops.object.mode_set(mode=original_mode)
-                except:
+                except Exception:
                     pass  # Don't fail if mode restoration fails
 
             return {"FINISHED"}
@@ -51,7 +50,7 @@ class OBJECT_OT_DecimateCurve(bpy.types.Operator):
             if original_mode != "EDIT":
                 try:
                     bpy.ops.object.mode_set(mode=original_mode)
-                except:
+                except Exception:
                     pass
             self.report({"ERROR"}, f"Curve decimate failed: {str(e)}")
             return {"CANCELLED"}

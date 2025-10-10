@@ -1,4 +1,3 @@
-
 import math
 
 import bmesh
@@ -11,7 +10,6 @@ from ..utils.collections import add_object_to_panel_collection
 
 
 def convert_object_to_mesh(obj, apply_modifiers=True, preserve_status=True):
-
     original_active = None
     original_selected = []
 
@@ -53,7 +51,6 @@ def convert_object_to_mesh(obj, apply_modifiers=True, preserve_status=True):
 
 
 class OBJECT_OT_UVToMesh(Operator):
-
     bl_idname = "object.uv_to_mesh"
     bl_label = "UV to Mesh and Prep for Drawing"
     bl_description = "Creates UV Mesh, adds Grease Pencil, isolates, frames, and sets view for drawing."
@@ -106,9 +103,6 @@ class OBJECT_OT_UVToMesh(Operator):
             return {"CANCELLED"}
 
         # Store original mode for restoration
-        original_mode = (
-            context.active_object.mode if context.active_object else "OBJECT"
-        )
 
         # Switch to Object Mode if not already there
         if context.mode != "OBJECT":
@@ -118,7 +112,6 @@ class OBJECT_OT_UVToMesh(Operator):
                 self.report({"ERROR"}, f"Could not switch to Object Mode: {str(e)}")
                 return {"CANCELLED"}
 
-        active_obj_backup = context.view_layer.objects.active
         selected_objs_backup = context.selected_objects[:]
         if selected_objs_backup:
             bpy.ops.object.select_all(action="DESELECT")
@@ -226,65 +219,74 @@ class OBJECT_OT_UVToMesh(Operator):
                 uv_material = bpy.data.materials.get(uv_material_name)
                 if uv_material:
                     bpy.data.materials.remove(uv_material)
-                
+
                 # Duplicate the original reference material
                 uv_material = ref_material.copy()
                 uv_material.name = uv_material_name
-                
+
                 # Modify the material for UV mesh - remove projection mapping and use direct UV
                 if uv_material.use_nodes:
                     nodes = uv_material.node_tree.nodes
                     links = uv_material.node_tree.links
-                    
+
                     # Find the main UV node and image texture node
                     uv_node = nodes.get("SPP_MainUV")
                     image_node = nodes.get("SPP_BakedImage")
                     bsdf = nodes.get("Principled BSDF")
-                    
+
                     if uv_node and image_node:
                         # Remove any existing mapping/transform nodes between UV and image
-                        for link in list(image_node.inputs['Vector'].links):
+                        for link in list(image_node.inputs["Vector"].links):
                             links.remove(link)
-                        
+
                         # Connect UV directly to image texture for 1:1 mapping
-                        links.new(uv_node.outputs['UV'], image_node.inputs['Vector'])
-                        
+                        links.new(uv_node.outputs["UV"], image_node.inputs["Vector"])
+
                         # Update UV node to use the UV mesh's UV layer
                         uv_node.uv_map = "UVMap"
-                    
+
                     # Set up transparency for opacity control
                     if bsdf:
                         # Enable transparency
-                        uv_material.blend_method = 'BLEND'
+                        uv_material.blend_method = "BLEND"
                         uv_material.use_backface_culling = False
-                        
+
                         # Set initial opacity from scene property
-                        initial_opacity = getattr(context.scene, "spp_reference_image_opacity", 0.5)
+                        initial_opacity = getattr(
+                            context.scene, "spp_reference_image_opacity", 0.5
+                        )
                         bsdf.inputs["Alpha"].default_value = initial_opacity
-                        
+
                         # Connect image alpha to BSDF alpha if not already connected
                         if image_node and not bsdf.inputs["Alpha"].is_linked:
                             if "Alpha" in image_node.outputs:
                                 # Create a math node to multiply image alpha with opacity
                                 math_node = nodes.new("ShaderNodeMath")
-                                math_node.operation = 'MULTIPLY'
-                                math_node.location = (image_node.location.x + 200, image_node.location.y - 200)
+                                math_node.operation = "MULTIPLY"
+                                math_node.location = (
+                                    image_node.location.x + 200,
+                                    image_node.location.y - 200,
+                                )
                                 math_node.inputs[1].default_value = initial_opacity
-                                
-                                links.new(image_node.outputs["Alpha"], math_node.inputs[0])
-                                links.new(math_node.outputs["Value"], bsdf.inputs["Alpha"])
-                
+
+                                links.new(
+                                    image_node.outputs["Alpha"], math_node.inputs[0]
+                                )
+                                links.new(
+                                    math_node.outputs["Value"], bsdf.inputs["Alpha"]
+                                )
+
                 # Clear existing materials and apply the UV-specific material
                 ob_uv.data.materials.clear()
                 ob_uv.data.materials.append(uv_material)
-                
+
                 # Create UV coordinates for the UV mesh so material can display properly
                 # The UV mesh vertices are positioned at UV coordinates, so we create a 1:1 UV mapping
                 if not ob_uv.data.uv_layers:
                     uv_layer = ob_uv.data.uv_layers.new(name="UVMap")
                 else:
                     uv_layer = ob_uv.data.uv_layers[0]
-                
+
                 # Set UV coordinates to match vertex positions, accounting for applied scale factor
                 for face in ob_uv.data.polygons:
                     for loop_idx in face.loop_indices:
@@ -295,17 +297,23 @@ class OBJECT_OT_UVToMesh(Operator):
                         uv_x = vert.co.x / calculated_scale_factor
                         uv_y = vert.co.y / calculated_scale_factor
                         uv_layer.data[loop_idx].uv = (uv_x, uv_y)
-                
+
                 # Change display mode to solid so material is visible, but keep wireframe
                 ob_uv.display_type = "SOLID"
                 if hasattr(ob_uv, "show_wire"):
                     ob_uv.show_wire = True  # Keep wireframe overlay visible
                 if hasattr(ob_uv, "show_all_edges"):
                     ob_uv.show_all_edges = True
-                
-                self.report({"INFO"}, f"Applied UV-specific Reference Image material '{uv_material.name}' with proper mapping.")
+
+                self.report(
+                    {"INFO"},
+                    f"Applied UV-specific Reference Image material '{uv_material.name}' with proper mapping.",
+                )
             else:
-                self.report({"WARNING"}, "Reference Image material not found. Create reference image projection first.")
+                self.report(
+                    {"WARNING"},
+                    "Reference Image material not found. Create reference image projection first.",
+                )
         else:
             # Keep original wireframe display when not using reference image
             ob_uv.display_type = "WIRE"
@@ -428,9 +436,6 @@ class OBJECT_OT_UVToMesh(Operator):
         if area_3d and region_3d_window:
             space_data = area_3d.spaces.active
             if space_data.type == "VIEW_3D":
-                original_perspective = (
-                    space_data.region_3d.view_perspective
-                )  # Store for potential restore
                 space_data.region_3d.view_perspective = "ORTHO"
 
                 override_context = context.copy()
