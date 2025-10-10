@@ -240,23 +240,35 @@ class MESH_OT_SimpleGridFill(Operator):
                                 _, _, face_index, normal_shell = hit
                                 # normal_shell is in shell local space
                                 # Bring panel avg normal into shell local space for a fair dot
-                                panel_n_shell = (inv_shell.to_3x3() @ avg_panel_normal_world).normalized()
-                                dots.append(panel_n_shell.dot(normal_shell.normalized()))
+                                panel_n_shell = (
+                                    inv_shell.to_3x3() @ avg_panel_normal_world
+                                ).normalized()
+                                dots.append(
+                                    panel_n_shell.dot(normal_shell.normalized())
+                                )
 
                             if dots:
                                 avg_dot = sum(dots) / len(dots)
                                 # If opposing orientation (avg_dot < 0), flip panel normals
                                 if avg_dot < 0.0:
                                     # Preserve select mode and flip faces
-                                    prev_select_mode = context.tool_settings.mesh_select_mode[:]
+                                    prev_select_mode = (
+                                        context.tool_settings.mesh_select_mode[:]
+                                    )
                                     try:
                                         bpy.ops.mesh.select_all(action="SELECT")
                                         bpy.ops.mesh.select_mode(type="FACE")
                                         bpy.ops.mesh.flip_normals()
-                                        self.report({"INFO"}, "Flipped panel normals to match shell orientation")
+                                        self.report(
+                                            {"INFO"},
+                                            "Flipped panel normals to match shell orientation",
+                                        )
                                         bmesh.update_edit_mesh(obj.data)
                                     except Exception as e:
-                                        self.report({"WARNING"}, f"Failed to flip normals: {str(e)}")
+                                        self.report(
+                                            {"WARNING"},
+                                            f"Failed to flip normals: {str(e)}",
+                                        )
                                     finally:
                                         try:
                                             bpy.ops.mesh.select_mode(

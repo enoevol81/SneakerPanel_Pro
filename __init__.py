@@ -1,14 +1,14 @@
 # ruff: noqa: E402
 
 bl_info = {
-"name": "Sneaker Panel Pro",
+    "name": "Sneaker Panel Pro",
     "author": "Enoevol Creative Solutions",
     "version": (1, 0, 0),
     "blender": (4, 5, 0),
     "location": "Sidebar > Sneaker Panel Pro",
     "description": "Professional Footwear Design Toolkit for Blender",
     "category": "Object",
-    "warning": "Requires 'Grease Pencil To Curves', and 'Loop Tools' add-ons (enable in Preferences > Add-ons)"
+    "warning": "Requires 'Grease Pencil To Curves', and 'Loop Tools' add-ons (enable in Preferences > Add-ons)",
 }
 
 import bpy

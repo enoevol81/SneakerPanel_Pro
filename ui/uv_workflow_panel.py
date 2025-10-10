@@ -172,7 +172,7 @@ class OBJECT_PT_UVWorkflow(Panel):
             stab = step1.box()
             stab_header = stab.row(align=True)
             stab_header.label(text="Stabilizer Settings", icon="MODIFIER")
-            
+
             stab_content = stab.column(align=True)
             if hasattr(S, "spp_use_stabilizer"):
                 stab_content.prop(S, "spp_use_stabilizer", text="Use Stabilizer")
@@ -180,9 +180,7 @@ class OBJECT_PT_UVWorkflow(Panel):
                 if hasattr(S, "spp_stabilizer_radius"):
                     stab_content.prop(S, "spp_stabilizer_radius", text="Radius")
                 if hasattr(S, "spp_stabilizer_strength_ui"):
-                    stab_content.prop(
-                        S, "spp_stabilizer_strength_ui", text="Strength"
-                    )
+                    stab_content.prop(S, "spp_stabilizer_strength_ui", text="Strength")
 
         # -----------------------------
         # Step 2 (collapsible, always-on)
