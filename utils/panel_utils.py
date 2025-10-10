@@ -4,6 +4,19 @@ from mathutils import Vector
 
 
 # -------------------------------------------------------------------------
+# Unregister All UI
+# ------------------------------------------------------------------------
+def unregister_all_ui():
+    """Disable all Sneaker Panel Pro panels when license check fails."""
+    for cls in list(bpy.types.Panel.__subclasses__()):
+        if "Sneaker Panel Pro" in getattr(cls, "bl_label", ""):
+            try:
+                bpy.utils.unregister_class(cls)
+            except Exception:
+                pass
+
+
+# -------------------------------------------------------------------------
 # Stabilizer
 # ------------------------------------------------------------------------
 def update_stabilizer(self, context):

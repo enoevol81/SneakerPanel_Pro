@@ -37,6 +37,15 @@ Built from real footwear design workflows, Sneaker Panel Pro lets you design, pr
 4. Enable **Sneaker Panel Pro** in the Add-ons list.  
 5. Tools appear under **Sidebar → Sneaker Panel Pro**.
 
+## 🔐 License Activation
+
+Sneaker Panel Pro requires a per-user activation key.
+
+- **Blender Market buyers** will receive a custom offline license key via email.
+- **Gumroad buyers** can use their Gumroad license key (verified online).
+- Activation: Preferences → Add-ons → Sneaker Panel Pro → paste License Key + Buyer Email → Verify License.
+
+
 ---
 
 ## 📋 Requirements

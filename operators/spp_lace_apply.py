@@ -10,6 +10,7 @@ from bpy.props import (
     FloatProperty,
     IntProperty,
     BoolProperty,
+    StringProperty,
     PointerProperty,
     FloatVectorProperty,
 )
@@ -91,8 +92,8 @@ class SPP_OT_apply_lace(Operator):
         default=True,
     )
 
-    custom_material: PointerProperty(
-        name="Material", description="Custom material to use", type=bpy.types.Material
+    custom_material: StringProperty(
+        name="Material", description="Name of custom material to use", default=""
     )
 
     custom_profile: bpy.props.StringProperty(
@@ -307,7 +308,7 @@ class SPP_OT_apply_lace(Operator):
         col.separator()
         col.prop(self, "use_default_material")
         if not self.use_default_material:
-            col.prop(self, "custom_material")
+            col.prop_search(self, "custom_material", bpy.data, "materials")
 
 
 def register():
