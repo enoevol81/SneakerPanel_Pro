@@ -63,7 +63,7 @@ class OBJECT_OT_SolidifyPanel(Operator):
             # Pull initial values from UI scene properties when available
             scn = context.scene
             thickness_val = getattr(scn, "spp_solidify_thickness", self.thickness)
-            offset_val = getattr(scn, "spp_solidify_offset", 0.0)
+            offset_val = getattr(scn, "spp_solidify_offset", 1.0)
             even_val = getattr(scn, "spp_solidify_even_thickness", True)
             rim_val = getattr(scn, "spp_solidify_rim", True)
             rim_only_val = getattr(scn, "spp_solidify_rim_only", False)
