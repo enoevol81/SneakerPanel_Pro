@@ -51,11 +51,15 @@ def register():
                 ui.register()
                 print("✅ Sneaker Panel Pro: License/Trial active – Full UI enabled")
             else:
-                print("⚠ Sneaker Panel Pro: License not verified and trial expired – UI panels disabled")
+                print(
+                    "⚠ Sneaker Panel Pro: License not verified and trial expired – UI panels disabled"
+                )
 
                 # Show warning popup for unlicensed users
                 def warn_popup(self, context):
-                    self.layout.label(text="Sneaker Panel Pro license not verified or trial expired.")
+                    self.layout.label(
+                        text="Sneaker Panel Pro license not verified or trial expired."
+                    )
                     self.layout.label(
                         text="Please enter your license key in Preferences → Add-ons → Sneaker Panel Pro."
                     )
@@ -75,6 +79,7 @@ def register():
         # Pre-load lace assets (optional)
         try:
             from .operators.spp_lace_loader import load_lace_assets
+
             load_lace_assets()
         except Exception as e:
             print(f"Note: Lace assets will be loaded on first use: {e}")

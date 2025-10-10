@@ -81,7 +81,6 @@ class SPPrefs(AddonPreferences):
         else:
             col.label(text=f"⚠ {self.license_status}", icon="ERROR")
 
-
         # Experimental features section
         box = layout.box()
         col = box.column(align=True)
@@ -97,15 +96,18 @@ class SPP_OT_ResetLicense(bpy.types.Operator):
 
     def execute(self, context):
         from .utils import license_manager
+
         try:
             license_manager.clear_local_license()
             prefs = context.preferences.addons[__package__].preferences
             prefs.license_status = "Unverified"
-            self.report({'INFO'}, "License reset successfully. Restart Blender to re-activate.")
-            return {'FINISHED'}
+            self.report(
+                {"INFO"}, "License reset successfully. Restart Blender to re-activate."
+            )
+            return {"FINISHED"}
         except Exception as e:
-            self.report({'ERROR'}, f"Reset failed: {e}")
-            return {'CANCELLED'}
+            self.report({"ERROR"}, f"Reset failed: {e}")
+            return {"CANCELLED"}
 
 
 def get_prefs(context=None):
@@ -118,6 +120,7 @@ def register():
     bpy.utils.register_class(SPPrefs)
     bpy.utils.register_class(SPPVerifyLicenseOperator)
     bpy.utils.register_class(SPP_OT_ResetLicense)
+
 
 def unregister():
     bpy.utils.unregister_class(SPPrefs)

@@ -166,6 +166,7 @@ def enable_ui_after_license():
     """Re-enable UI panels after successful license verification."""
     try:
         from .. import ui
+
         ui.register()
         print("✅ Sneaker Panel Pro: UI panels enabled after license verification.")
         return True
