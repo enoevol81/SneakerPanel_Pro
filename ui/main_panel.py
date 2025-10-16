@@ -308,6 +308,78 @@ class OBJECT_PT_SneakerPanelProMain(bpy.types.Panel):
                         overlay, "retopology_offset", text="Offset", slider=True
                     )
 
+        # === Boolean Builder ===
+        boolean_box = layout.box()
+        boolean_header = boolean_box.row()
+        icon_id = icons.get_icon("tools")
+        if icon_id:
+            boolean_header.label(text="Boolean Builder", icon_value=icon_id)
+        else:
+            boolean_header.label(text="Boolean Builder", icon="MOD_BOOLEAN")
+
+        # Get current boolean state
+        boolean_state = getattr(scn, "spp_boolean_state", "NONE")
+        main_obj_name = getattr(scn, "spp_boolean_main_object", "")
+        target_obj_name = getattr(scn, "spp_boolean_target_object", "")
+
+        if boolean_state == "NONE":
+            # Start boolean builder
+            boolean_box.operator(
+                "object.boolean_builder",
+                text="Start Boolean Builder",
+                icon="PLAY"
+            ).action = "START"
+            
+        elif boolean_state == "SELECT_MAIN":
+            # Select main panel step
+            boolean_box.label(text="Step 1: Select Main Panel", icon="INFO")
+            row = boolean_box.row(align=True)
+            row.operator(
+                "object.boolean_builder", 
+                text="Confirm Selection",
+                icon="CHECKMARK"
+            ).action = "SELECT_MAIN"
+            row.operator(
+                "object.boolean_builder",
+                text="Cancel",
+                icon="CANCEL"
+            ).action = "CANCEL"
+            
+        elif boolean_state == "SELECT_TARGET":
+            # Select target object step
+            boolean_box.label(text=f"Main: {main_obj_name}", icon="OBJECT_DATA")
+            boolean_box.label(text="Step 2: Select Object to Subtract", icon="INFO")
+            row = boolean_box.row(align=True)
+            row.operator(
+                "object.boolean_builder",
+                text="Confirm Selection", 
+                icon="CHECKMARK"
+            ).action = "SELECT_TARGET"
+            row.operator(
+                "object.boolean_builder",
+                text="Cancel",
+                icon="CANCEL"
+            ).action = "CANCEL"
+            
+        elif boolean_state == "READY_TO_BOOLEAN":
+            # Ready to create boolean
+            boolean_box.label(text=f"Main: {main_obj_name}", icon="OBJECT_DATA")
+            boolean_box.label(text=f"Target: {target_obj_name}", icon="REMOVE")
+            boolean_box.separator()
+            row = boolean_box.row(align=True)
+            row.scale_y = 1.5
+            create_btn = row.operator(
+                "object.boolean_builder",
+                text="Create Boolean",
+                icon="MOD_BOOLEAN"
+            )
+            create_btn.action = "CREATE_BOOLEAN"
+            row.operator(
+                "object.boolean_builder",
+                text="Cancel",
+                icon="CANCEL"
+            ).action = "CANCEL"
+
 
 # Registration
 classes = [WM_OT_SPP_ToggleWorkflow, OBJECT_PT_SneakerPanelProMain]

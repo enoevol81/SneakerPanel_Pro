@@ -549,6 +549,33 @@ def register_properties():
     )
 
     # -------------------------------------------------------------------------
+    # Boolean Builder properties
+    # -------------------------------------------------------------------------
+    bpy.types.Scene.spp_boolean_state = bpy.props.EnumProperty(
+        name="Boolean Builder State",
+        description="Current state of the boolean builder",
+        items=[
+            ("NONE", "None", "Boolean builder not active"),
+            ("SELECT_MAIN", "Select Main", "Select main panel object"),
+            ("SELECT_TARGET", "Select Target", "Select object to subtract"),
+            ("READY_TO_BOOLEAN", "Ready", "Ready to create boolean operation"),
+        ],
+        default="NONE",
+    )
+
+    bpy.types.Scene.spp_boolean_main_object = bpy.props.StringProperty(
+        name="Boolean Main Object",
+        description="Name of the main object for boolean operation",
+        default="",
+    )
+
+    bpy.types.Scene.spp_boolean_target_object = bpy.props.StringProperty(
+        name="Boolean Target Object", 
+        description="Name of the target object for boolean operation",
+        default="",
+    )
+
+    # -------------------------------------------------------------------------
     # Grease Pencil stabilizer properties
     # -------------------------------------------------------------------------
     bpy.types.Scene.spp_use_stabilizer = bpy.props.BoolProperty(
@@ -864,6 +891,10 @@ def unregister_properties():
         "spp_panel_count",
         "spp_panel_name",
         "spp_shell_object",
+        # Boolean Builder
+        "spp_boolean_state",
+        "spp_boolean_main_object", 
+        "spp_boolean_target_object",
         # --- UI tooltip toggles
         "spp_show_mirror_tooltip",
         "spp_show_uv_gen_tooltip",

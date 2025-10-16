@@ -14,6 +14,7 @@ from . import (
     add_gp_draw,
     add_subsurf,
     apply_shrinkwrap,
+    boolean_builder,
     boundary_edges,
     convert_bezier_to_surface,
     create_quad_panel_from_outline,
@@ -82,6 +83,7 @@ def register():
     add_subsurf.register()
     set_edge_linear.register()
     ref_image_gen.register()
+    boolean_builder.register()
 
 
 def unregister():
@@ -119,3 +121,4 @@ def unregister():
     add_subsurf.unregister()
     set_edge_linear.unregister()
     ref_image_gen.unregister()
+    boolean_builder.unregister()
