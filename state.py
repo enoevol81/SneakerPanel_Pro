@@ -5,94 +5,190 @@ from bpy.props import EnumProperty, BoolProperty
 
 def update_surface_step_1(self, context):
     """Ensure only one surface step is open at a time"""
-    if self.spp_show_surface_step_1:
-        self.spp_show_surface_step_2 = False
-        self.spp_show_surface_step_3 = False
-        self.spp_show_surface_step_4 = False
+    # Use EXACT same logic as UV workflow that works
+    if not context or not hasattr(context, 'window_manager'):
+        return
+    if context.window_manager is None:
+        return
+    if not hasattr(context, 'scene') or context.scene is None:
+        return
+    
+    if getattr(self, 'spp_show_surface_step_1', False):
+        # Use setattr to avoid potential recursion issues
+        setattr(self, 'spp_show_surface_step_2', False)
+        setattr(self, 'spp_show_surface_step_3', False)
+        setattr(self, 'spp_show_surface_step_4', False)
 
 
 def update_surface_step_2(self, context):
     """Ensure only one surface step is open at a time"""
-    if self.spp_show_surface_step_2:
-        self.spp_show_surface_step_1 = False
-        self.spp_show_surface_step_3 = False
-        self.spp_show_surface_step_4 = False
+    # Use EXACT same logic as UV workflow that works
+    if not context or not hasattr(context, 'window_manager'):
+        return
+    if context.window_manager is None:
+        return
+    if not hasattr(context, 'scene') or context.scene is None:
+        return
+    
+    if getattr(self, 'spp_show_surface_step_2', False):
+        # Use setattr to avoid potential recursion issues
+        setattr(self, 'spp_show_surface_step_1', False)
+        setattr(self, 'spp_show_surface_step_3', False)
+        setattr(self, 'spp_show_surface_step_4', False)
 
 
 def update_surface_step_3(self, context):
     """Ensure only one surface step is open at a time"""
-    if self.spp_show_surface_step_3:
-        self.spp_show_surface_step_1 = False
-        self.spp_show_surface_step_2 = False
-        self.spp_show_surface_step_4 = False
+    # Use EXACT same logic as UV workflow that works
+    if not context or not hasattr(context, 'window_manager'):
+        return
+    if context.window_manager is None:
+        return
+    if not hasattr(context, 'scene') or context.scene is None:
+        return
+    
+    if getattr(self, 'spp_show_surface_step_3', False):
+        # Use setattr to avoid potential recursion issues
+        setattr(self, 'spp_show_surface_step_1', False)
+        setattr(self, 'spp_show_surface_step_2', False)
+        setattr(self, 'spp_show_surface_step_4', False)
 
 
 def update_surface_step_4(self, context):
     """Ensure only one surface step is open at a time"""
-    if self.spp_show_surface_step_4:
-        self.spp_show_surface_step_1 = False
-        self.spp_show_surface_step_2 = False
-        self.spp_show_surface_step_3 = False
+    # Use EXACT same logic as UV workflow that works
+    if not context or not hasattr(context, 'window_manager'):
+        return
+    if context.window_manager is None:
+        return
+    if not hasattr(context, 'scene') or context.scene is None:
+        return
+    
+    if getattr(self, 'spp_show_surface_step_4', False):
+        # Use setattr to avoid potential recursion issues
+        setattr(self, 'spp_show_surface_step_1', False)
+        setattr(self, 'spp_show_surface_step_2', False)
+        setattr(self, 'spp_show_surface_step_3', False)
 
 
 def update_uv_step_1(self, context):
     """Ensure only one UV step is open at a time"""
-    if self.spp_show_uv_step_1:
-        self.spp_show_uv_step_2 = False
-        self.spp_show_uv_step_3 = False
-        self.spp_show_uv_step_4 = False
-        self.spp_show_uv_step_5 = False
-        self.spp_show_uv_step_6 = False
+    # Skip if this is a hover event or invalid context
+    if not context or not hasattr(context, 'window_manager'):
+        return
+    if context.window_manager is None:
+        return
+    # Skip if context doesn't have proper scene access
+    if not hasattr(context, 'scene') or context.scene is None:
+        return
+    
+    if getattr(self, 'spp_show_uv_step_1', False):
+        # Use setattr to avoid potential recursion issues
+        setattr(self, 'spp_show_uv_step_2', False)
+        setattr(self, 'spp_show_uv_step_3', False)
+        setattr(self, 'spp_show_uv_step_4', False)
+        setattr(self, 'spp_show_uv_step_5', False)
+        setattr(self, 'spp_show_uv_step_6', False)
 
 
 def update_uv_step_2(self, context):
     """Ensure only one UV step is open at a time"""
-    if self.spp_show_uv_step_2:
-        self.spp_show_uv_step_1 = False
-        self.spp_show_uv_step_3 = False
-        self.spp_show_uv_step_4 = False
-        self.spp_show_uv_step_5 = False
-        self.spp_show_uv_step_6 = False
+    # Skip if this is a hover event or invalid context
+    if not context or not hasattr(context, 'window_manager'):
+        return
+    if context.window_manager is None:
+        return
+    # Skip if context doesn't have proper scene access
+    if not hasattr(context, 'scene') or context.scene is None:
+        return
+    
+    if getattr(self, 'spp_show_uv_step_2', False):
+        # Use setattr to avoid potential recursion issues
+        setattr(self, 'spp_show_uv_step_1', False)
+        setattr(self, 'spp_show_uv_step_3', False)
+        setattr(self, 'spp_show_uv_step_4', False)
+        setattr(self, 'spp_show_uv_step_5', False)
+        setattr(self, 'spp_show_uv_step_6', False)
 
 
 def update_uv_step_3(self, context):
     """Ensure only one UV step is open at a time"""
-    if self.spp_show_uv_step_3:
-        self.spp_show_uv_step_1 = False
-        self.spp_show_uv_step_2 = False
-        self.spp_show_uv_step_4 = False
-        self.spp_show_uv_step_5 = False
-        self.spp_show_uv_step_6 = False
+    # Skip if this is a hover event or invalid context
+    if not context or not hasattr(context, 'window_manager'):
+        return
+    if context.window_manager is None:
+        return
+    # Skip if context doesn't have proper scene access
+    if not hasattr(context, 'scene') or context.scene is None:
+        return
+    
+    if getattr(self, 'spp_show_uv_step_3', False):
+        # Use setattr to avoid potential recursion issues
+        setattr(self, 'spp_show_uv_step_1', False)
+        setattr(self, 'spp_show_uv_step_2', False)
+        setattr(self, 'spp_show_uv_step_4', False)
+        setattr(self, 'spp_show_uv_step_5', False)
+        setattr(self, 'spp_show_uv_step_6', False)
 
 
 def update_uv_step_4(self, context):
     """Ensure only one UV step is open at a time"""
-    if self.spp_show_uv_step_4:
-        self.spp_show_uv_step_1 = False
-        self.spp_show_uv_step_2 = False
-        self.spp_show_uv_step_3 = False
-        self.spp_show_uv_step_5 = False
-        self.spp_show_uv_step_6 = False
+    # Skip if this is a hover event or invalid context
+    if not context or not hasattr(context, 'window_manager'):
+        return
+    if context.window_manager is None:
+        return
+    # Skip if context doesn't have proper scene access
+    if not hasattr(context, 'scene') or context.scene is None:
+        return
+    
+    if getattr(self, 'spp_show_uv_step_4', False):
+        # Use setattr to avoid potential recursion issues
+        setattr(self, 'spp_show_uv_step_1', False)
+        setattr(self, 'spp_show_uv_step_2', False)
+        setattr(self, 'spp_show_uv_step_3', False)
+        setattr(self, 'spp_show_uv_step_5', False)
+        setattr(self, 'spp_show_uv_step_6', False)
 
 
 def update_uv_step_5(self, context):
     """Ensure only one UV step is open at a time"""
-    if self.spp_show_uv_step_5:
-        self.spp_show_uv_step_1 = False
-        self.spp_show_uv_step_2 = False
-        self.spp_show_uv_step_3 = False
-        self.spp_show_uv_step_4 = False
-        self.spp_show_uv_step_6 = False
+    # Skip if this is a hover event or invalid context
+    if not context or not hasattr(context, 'window_manager'):
+        return
+    if context.window_manager is None:
+        return
+    # Skip if context doesn't have proper scene access
+    if not hasattr(context, 'scene') or context.scene is None:
+        return
+    
+    if getattr(self, 'spp_show_uv_step_5', False):
+        # Use setattr to avoid potential recursion issues
+        setattr(self, 'spp_show_uv_step_1', False)
+        setattr(self, 'spp_show_uv_step_2', False)
+        setattr(self, 'spp_show_uv_step_3', False)
+        setattr(self, 'spp_show_uv_step_4', False)
+        setattr(self, 'spp_show_uv_step_6', False)
 
 
 def update_uv_step_6(self, context):
     """Ensure only one UV step is open at a time"""
-    if self.spp_show_uv_step_6:
-        self.spp_show_uv_step_1 = False
-        self.spp_show_uv_step_2 = False
-        self.spp_show_uv_step_3 = False
-        self.spp_show_uv_step_4 = False
-        self.spp_show_uv_step_5 = False
+    # Skip if this is a hover event or invalid context
+    if not context or not hasattr(context, 'window_manager'):
+        return
+    if context.window_manager is None:
+        return
+    # Skip if context doesn't have proper scene access
+    if not hasattr(context, 'scene') or context.scene is None:
+        return
+    
+    if getattr(self, 'spp_show_uv_step_6', False):
+        # Use setattr to avoid potential recursion issues
+        setattr(self, 'spp_show_uv_step_1', False)
+        setattr(self, 'spp_show_uv_step_2', False)
+        setattr(self, 'spp_show_uv_step_3', False)
+        setattr(self, 'spp_show_uv_step_4', False)
+        setattr(self, 'spp_show_uv_step_5', False)
 
 
 def register():
@@ -138,81 +234,73 @@ def register():
     # -------------------------------------------------------------------------
     # NEW: Collapsible step toggles — Surface (3D)
     # -------------------------------------------------------------------------
-    if not hasattr(WM, "spp_show_surface_step_1"):
-        WM.spp_show_surface_step_1 = BoolProperty(
-            name="Show Surface Step 1",
-            default=True,
-            description="Toggle visibility of Surface Step 1",
-            update=update_surface_step_1,
-        )
-    if not hasattr(WM, "spp_show_surface_step_2"):
-        WM.spp_show_surface_step_2 = BoolProperty(
-            name="Show Surface Step 2",
-            default=False,
-            description="Toggle visibility of Surface Step 2",
-            update=update_surface_step_2,
-        )
-    if not hasattr(WM, "spp_show_surface_step_3"):
-        WM.spp_show_surface_step_3 = BoolProperty(
-            name="Show Surface Step 3",
-            default=False,
-            description="Toggle visibility of Surface Step 3",
-            update=update_surface_step_3,
-        )
-    if not hasattr(WM, "spp_show_surface_step_4"):
-        WM.spp_show_surface_step_4 = BoolProperty(
-            name="Show Surface Step 4",
-            default=False,
-            description="Toggle visibility of Surface Step 4",
-            update=update_surface_step_4,
-        )
+    # Use same logic as working UV workflow
+    WM.spp_show_surface_step_1 = BoolProperty(
+        name="Show Surface Step 1",
+        default=getattr(WM, 'spp_show_surface_step_1', True),
+        description="Toggle visibility of Surface Step 1",
+        update=update_surface_step_1,
+    )
+    WM.spp_show_surface_step_2 = BoolProperty(
+        name="Show Surface Step 2",
+        default=getattr(WM, 'spp_show_surface_step_2', False),
+        description="Toggle visibility of Surface Step 2",
+        update=update_surface_step_2,
+    )
+    WM.spp_show_surface_step_3 = BoolProperty(
+        name="Show Surface Step 3",
+        default=getattr(WM, 'spp_show_surface_step_3', False),
+        description="Toggle visibility of Surface Step 3",
+        update=update_surface_step_3,
+    )
+    WM.spp_show_surface_step_4 = BoolProperty(
+        name="Show Surface Step 4",
+        default=getattr(WM, 'spp_show_surface_step_4', False),
+        description="Toggle visibility of Surface Step 4",
+        update=update_surface_step_4,
+    )
 
     # -------------------------------------------------------------------------
     # NEW: Collapsible step toggles — UV (2D)
     # -------------------------------------------------------------------------
 
-    if not hasattr(WM, "spp_show_uv_step_1"):
-        WM.spp_show_uv_step_1 = BoolProperty(
-            name="Show UV Step 1",
-            default=True,
-            description="Toggle visibility of UV Step 1",
-            update=update_uv_step_1,
-        )
-    if not hasattr(WM, "spp_show_uv_step_2"):
-        WM.spp_show_uv_step_2 = BoolProperty(
-            name="Show UV Step 2",
-            default=False,
-            description="Toggle visibility of UV Step 2",
-            update=update_uv_step_2,
-        )
-    if not hasattr(WM, "spp_show_uv_step_3"):
-        WM.spp_show_uv_step_3 = BoolProperty(
-            name="Show UV Step 3",
-            default=False,
-            description="Toggle visibility of UV Step 3",
-            update=update_uv_step_3,
-        )
-    if not hasattr(WM, "spp_show_uv_step_4"):
-        WM.spp_show_uv_step_4 = BoolProperty(
-            name="Show UV Step 4",
-            default=False,
-            description="Toggle visibility of UV Step 4",
-            update=update_uv_step_4,
-        )
-    if not hasattr(WM, "spp_show_uv_step_5"):
-        WM.spp_show_uv_step_5 = BoolProperty(
-            name="Show UV Step 5",
-            default=False,
-            description="Toggle visibility of UV Step 5",
-            update=update_uv_step_5,
-        )
-    if not hasattr(WM, "spp_show_uv_step_6"):
-        WM.spp_show_uv_step_6 = BoolProperty(
-            name="Show UV Step 6",
-            default=False,
-            description="Toggle visibility of UV Step 6",
-            update=update_uv_step_6,
-        )
+    # Force re-registration for UV steps too (matching Surface workflow)
+    WM.spp_show_uv_step_1 = BoolProperty(
+        name="Show UV Step 1",
+        default=getattr(WM, 'spp_show_uv_step_1', True),
+        description="Toggle visibility of UV Step 1",
+        update=update_uv_step_1,
+    )
+    WM.spp_show_uv_step_2 = BoolProperty(
+        name="Show UV Step 2",
+        default=getattr(WM, 'spp_show_uv_step_2', False),
+        description="Toggle visibility of UV Step 2",
+        update=update_uv_step_2,
+    )
+    WM.spp_show_uv_step_3 = BoolProperty(
+        name="Show UV Step 3",
+        default=getattr(WM, 'spp_show_uv_step_3', False),
+        description="Toggle visibility of UV Step 3",
+        update=update_uv_step_3,
+    )
+    WM.spp_show_uv_step_4 = BoolProperty(
+        name="Show UV Step 4",
+        default=getattr(WM, 'spp_show_uv_step_4', False),
+        description="Toggle visibility of UV Step 4",
+        update=update_uv_step_4,
+    )
+    WM.spp_show_uv_step_5 = BoolProperty(
+        name="Show UV Step 5",
+        default=getattr(WM, 'spp_show_uv_step_5', False),
+        description="Toggle visibility of UV Step 5",
+        update=update_uv_step_5,
+    )
+    WM.spp_show_uv_step_6 = BoolProperty(
+        name="Show UV Step 6",
+        default=getattr(WM, 'spp_show_uv_step_6', False),
+        description="Toggle visibility of UV Step 6",
+        update=update_uv_step_6,
+    )
 
     # -------------------------------------------------------------------------
     # Experimental panel internal radio (keep yours)

@@ -58,14 +58,14 @@ class OBJECT_PT_SurfaceWorkflow(bpy.types.Panel):
             tip_col = tip_box.column(align=True)
             tip_col.scale_y = 0.9
             tip_col.label(text="Surface Workflow Tips:", icon="HELP")
-            tip_col.label(text="• Name overlay; # in panel configuration")
+            tip_col.label(text="• Update Panel # and Name in Panel Configuration")
             tip_col.label(
                 text="• Draw or traces shapes from projected reference image directly on the 3D shell"
             )
             tip_col.label(text="• Use Stabilizer for pencil control")
             tip_col.label(text="• Adjust edge flow with Edge Relax or Smooth Mesh")
             tip_col.label(
-                text="• Commit line art by running sample to polyline on curve - Smallest count work best"
+                text="• Commit line art by running sample to polyline on curve - Smallest count works best"
             )
             tip_col.label(text="• Use Quick Conform to help position panel to shell")
             tip_col.label(text="• Maintain quad topology for best shrinkwrap results")
@@ -74,7 +74,7 @@ class OBJECT_PT_SurfaceWorkflow(bpy.types.Panel):
                 text="• Enable retopology mode in panel helpers for visual debugging"
             )
             tip_col.label(
-                text="• Finalize panel by using 'Add Solidify' in Panel Helpers"
+                text="• Thickenpanel by using 'Add Solidify' in Panel Helpers"
             )
             tip_col.operator(
                 "wm.url_open", text="View Surface Workflow Tutorial", icon="URL"
@@ -83,13 +83,13 @@ class OBJECT_PT_SurfaceWorkflow(bpy.types.Panel):
         # ---------- Step 1: Create Grease Pencil ----------
         step1 = surface_box.box()
         hdr1 = step1.row(align=True)
-        hdr1.prop(
-            W,
-            "spp_show_surface_step_1",
-            toggle=True,
+        op1 = hdr1.operator(
+            "wm.toggle_surface_step",
             text="Step 1: Create Grease Pencil – Design Your Panel",
             icon="GREASEPENCIL",
+            depress=W.spp_show_surface_step_1,
         )
+        op1.step = 1
 
         if W.spp_show_surface_step_1:
             col = step1.column(align=True)
@@ -117,13 +117,13 @@ class OBJECT_PT_SurfaceWorkflow(bpy.types.Panel):
         # ---------- Step 2: Create & Edit Curve ----------
         step2 = surface_box.box()
         hdr2 = step2.row(align=True)
-        hdr2.prop(
-            W,
-            "spp_show_surface_step_2",
-            toggle=True,
+        op2 = hdr2.operator(
+            "wm.toggle_surface_step",
             text="Step 2: Create & Edit Curve",
             icon="OUTLINER_OB_CURVE",
+            depress=W.spp_show_surface_step_2,
         )
+        op2.step = 2
 
         if W.spp_show_surface_step_2:
             col = step2.column(align=True)
@@ -176,8 +176,8 @@ class OBJECT_PT_SurfaceWorkflow(bpy.types.Panel):
                 tip_col = tip_box.column(align=True)
                 tip_col.scale_y = 0.9
                 tip_col.label(text="Mirror Curve Tips:", icon="HELP")
-                tip_col.label(text="• Place 3D Cursor at desired reflection axis")
-                tip_col.label(text="• Run Mirror Curve command")
+                tip_col.label(text="• Place 3D Cursor at desired mirror axis")
+                tip_col.label(text="• Run 'Mirror Curve' command")
                 tip_col.operator(
                     "wm.url_open", text="View Mirror Curve Tutorial", icon="URL"
                 ).url = "https://youtu.be/4vtYrTp7tzc"
@@ -193,13 +193,13 @@ class OBJECT_PT_SurfaceWorkflow(bpy.types.Panel):
         # ---------- Step 3: Sample Curve to Polyline ----------
         step3 = surface_box.box()
         hdr3 = step3.row(align=True)
-        hdr3.prop(
-            W,
-            "spp_show_surface_step_3",
-            toggle=True,
+        op3 = hdr3.operator(
+            "wm.toggle_surface_step",
             text="Step 3: Sample Curve to Polyline",
             icon="CURVE_DATA",
+            depress=W.spp_show_surface_step_3,
         )
+        op3.step = 3
 
         if W.spp_show_surface_step_3:
             if hasattr(S, "spp_sampler_fidelity"):
@@ -217,13 +217,13 @@ class OBJECT_PT_SurfaceWorkflow(bpy.types.Panel):
         # ---------- Step 4: Fill Border with Grid ----------
         step4 = surface_box.box()
         hdr4 = step4.row(align=True)
-        hdr4.prop(
-            W,
-            "spp_show_surface_step_4",
-            toggle=True,
+        op4 = hdr4.operator(
+            "wm.toggle_surface_step",
             text="Step 4: Fill Border with Grid",
             icon="GRID",
+            depress=W.spp_show_surface_step_4,
         )
+        op4.step = 4
 
         if W.spp_show_surface_step_4:
             fill_row = step4.row(align=True)

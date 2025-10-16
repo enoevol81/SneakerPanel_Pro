@@ -199,7 +199,21 @@ class MESH_OT_SimpleGridFill(Operator):
             try:
                 scene = context.scene
                 shell_obj = getattr(scene, "spp_shell_object", None)
+                
+                if shell_obj is None:
+                    self.report({"WARNING"}, "No shell object found in scene properties")
+                elif shell_obj.type != "MESH":
+                    self.report({"WARNING"}, f"Shell object '{shell_obj.name}' is not a mesh")
+                else:
+                    self.report({"INFO"}, f"Using shell object: {shell_obj.name}")
+                
+                # Ensure we're in edit mode and have valid mesh data
+                if obj.mode != 'EDIT':
+                    bpy.ops.object.mode_set(mode='EDIT')
+                    
                 bm = bmesh.from_edit_mesh(obj.data)
+                bm.faces.ensure_lookup_table()
+                bm.normal_update()
                 bm.faces.ensure_lookup_table()
 
                 if shell_obj and shell_obj.type == "MESH" and len(bm.faces) > 0:
@@ -223,10 +237,51 @@ class MESH_OT_SimpleGridFill(Operator):
                         dg = context.evaluated_depsgraph_get()
                         shell_eval = shell_obj.evaluated_get(dg)
                         shell_mesh = shell_eval.to_mesh()
-                        try:
-                            bvh = BVHTree.FromMesh(shell_mesh, epsilon=0.0)
-                        except Exception:
+                        
+                        if shell_mesh is None or len(shell_mesh.polygons) == 0:
+                            self.report({"WARNING"}, "Shell object has no mesh data")
                             bvh = None
+                        else:
+                            self.report({"INFO"}, f"Shell mesh has {len(shell_mesh.polygons)} faces")
+                            try:
+                                # Create BVH tree - try multiple methods for compatibility
+                                bvh = None
+                                
+                                # Method 1: Try FromBMesh (Blender 4.4+)
+                                try:
+                                    shell_bm = bmesh.new()
+                                    shell_bm.from_mesh(shell_mesh)
+                                    shell_bm.faces.ensure_lookup_table()
+                                    shell_bm.normal_update()
+                                    bvh = BVHTree.FromBMesh(shell_bm)
+                                    shell_bm.free()
+                                except (AttributeError, Exception):
+                                    pass
+                                
+                                # Method 2: Try FromMesh if FromBMesh failed (older versions)
+                                if bvh is None:
+                                    try:
+                                        bvh = BVHTree.FromMesh(shell_mesh)
+                                    except (AttributeError, Exception):
+                                        pass
+                                
+                                # Method 3: Try FromPolygons as fallback (very old versions)
+                                if bvh is None:
+                                    try:
+                                        vertices = [v.co for v in shell_mesh.vertices]
+                                        polygons = [p.vertices for p in shell_mesh.polygons]
+                                        bvh = BVHTree.FromPolygons(vertices, polygons)
+                                    except (AttributeError, Exception):
+                                        pass
+                                
+                                if bvh is not None:
+                                    self.report({"INFO"}, "BVH tree created successfully")
+                                else:
+                                    self.report({"WARNING"}, "Failed to create BVH tree with any method")
+                                    
+                            except Exception as e:
+                                self.report({"WARNING"}, f"Failed to build BVH tree: {str(e)}")
+                                bvh = None
 
                         if bvh is not None:
                             inv_shell = shell_obj.matrix_world.inverted()
@@ -237,36 +292,74 @@ class MESH_OT_SimpleGridFill(Operator):
                                 hit = bvh.find_nearest(p_shell)
                                 if hit is None:
                                     continue
-                                _, _, face_index, normal_shell = hit
-                                # normal_shell is in shell local space
+                                
+                                # Handle different BVH hit result formats across Blender versions
+                                try:
+                                    # Try new format: (location, normal, face_index, distance)
+                                    location, normal_shell, face_index, distance = hit
+                                except ValueError:
+                                    try:
+                                        # Try old format: (location, normal, face_index)
+                                        location, normal_shell, face_index = hit
+                                    except ValueError:
+                                        # Skip if we can't unpack the hit result
+                                        continue
+                                
+                                # normal_shell is in shell local space and should be a Vector
                                 # Bring panel avg normal into shell local space for a fair dot
                                 panel_n_shell = (
                                     inv_shell.to_3x3() @ avg_panel_normal_world
                                 ).normalized()
+                                
+                                # Ensure normal_shell is a Vector (compatibility across versions)
+                                try:
+                                    if hasattr(normal_shell, 'normalized'):
+                                        normal_shell_vec = normal_shell.normalized()
+                                    elif hasattr(normal_shell, '__len__') and len(normal_shell) == 3:
+                                        normal_shell_vec = Vector(normal_shell).normalized()
+                                    else:
+                                        # Skip if we can't convert to a proper normal vector
+                                        continue
+                                except Exception:
+                                    continue
+                                
                                 dots.append(
-                                    panel_n_shell.dot(normal_shell.normalized())
+                                    panel_n_shell.dot(normal_shell_vec)
                                 )
 
                             if dots:
                                 avg_dot = sum(dots) / len(dots)
+                                self.report({"INFO"}, f"Analyzed {len(dots)} sample points, avg_dot: {avg_dot:.3f}")
+                                
                                 # If opposing orientation (avg_dot < 0), flip panel normals
                                 if avg_dot < 0.0:
+                                    self.report({"INFO"}, "Panel normals are opposing shell - flipping...")
                                     # Preserve select mode and flip faces
                                     prev_select_mode = (
                                         context.tool_settings.mesh_select_mode[:]
                                     )
                                     try:
+                                        # Ensure we have faces selected
                                         bpy.ops.mesh.select_all(action="SELECT")
                                         bpy.ops.mesh.select_mode(type="FACE")
+                                        
+                                        # Update bmesh before flipping
+                                        bmesh.update_edit_mesh(obj.data)
+                                        
+                                        # Flip normals
                                         bpy.ops.mesh.flip_normals()
+                                        
+                                        # Update mesh after flipping
+                                        bm.normal_update()
+                                        bmesh.update_edit_mesh(obj.data)
+                                        
                                         self.report(
                                             {"INFO"},
-                                            "Flipped panel normals to match shell orientation",
+                                            f"✓ Flipped panel normals to match shell orientation (was {avg_dot:.3f})",
                                         )
-                                        bmesh.update_edit_mesh(obj.data)
                                     except Exception as e:
                                         self.report(
-                                            {"WARNING"},
+                                            {"ERROR"},
                                             f"Failed to flip normals: {str(e)}",
                                         )
                                     finally:
@@ -280,6 +373,13 @@ class MESH_OT_SimpleGridFill(Operator):
                                             )
                                         except Exception:
                                             pass
+                                else:
+                                    self.report(
+                                        {"INFO"},
+                                        f"✓ Panel normals already aligned with shell (avg_dot: {avg_dot:.3f})",
+                                    )
+                            else:
+                                self.report({"WARNING"}, "No valid sample points found for normal comparison")
 
                         # Free evaluated mesh
                         try:
