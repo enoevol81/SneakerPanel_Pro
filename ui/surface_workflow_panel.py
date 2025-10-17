@@ -234,6 +234,44 @@ class OBJECT_PT_SurfaceWorkflow(bpy.types.Panel):
                 icon="MOD_TRIANGULATE",
             )
 
+            ap_row = step4.row(align=True)
+            ap_row.scale_y = 1.1
+            op_align = ap_row.operator(
+                "spp.auto_pave_grid_align",
+                text="Auto-Pave Align",
+                icon="SNAP_ON",
+            )
+            if hasattr(S, "spp_shell_object") and S.spp_shell_object:
+                op_align.shell = S.spp_shell_object.name
+            else:
+                op_align.shell = ""
+
+            # Auto-Pave Align Settings
+            ap_settings = step4.box()
+            ap_settings_header = ap_settings.row(align=True)
+            ap_settings_header.label(text="Auto-Pave Settings", icon="SETTINGS")
+
+            ap_content = ap_settings.column(align=True)
+            if hasattr(S, "spp_auto_pave_iterations"):
+                ap_content.prop(S, "spp_auto_pave_iterations", text="Iterations")
+            if hasattr(S, "spp_auto_pave_relax_strength"):
+                ap_content.prop(S, "spp_auto_pave_relax_strength", text="Tangent Relax")
+            if hasattr(S, "spp_auto_pave_normal_snap"):
+                ap_content.prop(S, "spp_auto_pave_normal_snap", text="Normal Snap")
+            if hasattr(S, "spp_auto_pave_lock_boundary"):
+                ap_content.prop(S, "spp_auto_pave_lock_boundary", text="Lock Boundary")
+            if hasattr(S, "spp_auto_pave_final_offset"):
+                ap_content.prop(S, "spp_auto_pave_final_offset", text="Final Offset")
+            
+            # Quadriflow Retopo section
+            if hasattr(S, "spp_auto_pave_use_retopo"):
+                ap_content.separator()
+                ap_content.prop(S, "spp_auto_pave_use_retopo", text="Use Quadriflow Retopo")
+                if hasattr(S, "spp_auto_pave_target_faces"):
+                    sub = ap_content.row()
+                    sub.enabled = S.spp_auto_pave_use_retopo
+                    sub.prop(S, "spp_auto_pave_target_faces", text="Target Faces")
+
 
 classes = [OBJECT_PT_SurfaceWorkflow]
 

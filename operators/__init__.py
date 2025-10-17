@@ -45,6 +45,7 @@ from . import (
     unwrap_shell,
     uv_boundary_checker,
     uv_to_mesh,
+    spp_auto_pave_align,
 )
 
 
@@ -82,7 +83,7 @@ def register():
     add_subsurf.register()
     set_edge_linear.register()
     ref_image_gen.register()
-
+    spp_auto_pave_align.register()
 
 def unregister():
     orient_uv_island.unregister()
@@ -119,3 +120,4 @@ def unregister():
     add_subsurf.unregister()
     set_edge_linear.unregister()
     ref_image_gen.unregister()
+    spp_auto_pave_align.unregister()
