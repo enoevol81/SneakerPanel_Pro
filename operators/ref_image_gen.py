@@ -80,17 +80,36 @@ def ensure_reference_material_on_main_uv(obj, baked_image, main_uv_name):
     itex.name = "SPP_BakedImage"
     itex.image = baked_image
 
-    # Wire baked image into Base Color using Main UV (not Projection)
-    uvn.location = (-400, 0)
-    itex.location = (-200, 0)
+    # Add Mix Color shader for saturation control
+    mix_color = nodes.get("SPP_SaturationMix") or nodes.new("ShaderNodeMix")
+    mix_color.name = "SPP_SaturationMix"
+    mix_color.data_type = 'RGBA'
+    mix_color.blend_type = 'MIX'
+    mix_color.inputs["Factor"].default_value = 1.0  # Full color by default
+    
+    # Wire baked image into Mix Color B, then Mix Color into Base Color using Main UV (not Projection)
+    uvn.location = (-600, 0)
+    itex.location = (-400, 0)
+    mix_color.location = (-200, 0)
+    bsdf.location = (200, 0)
+    out.location = (600, 0)
+    
     if itex.inputs["Vector"].is_linked:
         for link in list(itex.inputs["Vector"].links):
             nt.links.remove(link)
     links.new(uvn.outputs["UV"], itex.inputs["Vector"])
+    
+    # Connect Image Texture Color to Mix Color socket B
+    if mix_color.inputs["B"].is_linked:
+        for link in list(mix_color.inputs["B"].links):
+            nt.links.remove(link)
+    links.new(itex.outputs["Color"], mix_color.inputs["B"])
+    
+    # Connect Mix Color Result to Principled BSDF Base Color
     if bsdf.inputs["Base Color"].is_linked:
         for link in list(bsdf.inputs["Base Color"].links):
             nt.links.remove(link)
-    links.new(itex.outputs["Color"], bsdf.inputs["Base Color"])
+    links.new(mix_color.outputs["Result"], bsdf.inputs["Base Color"])
 
     # Make the image node the active paint slot (useful if switching to Material mode later)
     for n in nodes:
