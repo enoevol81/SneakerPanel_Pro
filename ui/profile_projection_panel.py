@@ -65,7 +65,7 @@ class PP_PT_Main(Panel):
             )
             tip_col.label(text="• Select output size")
             tip_col.label(text="• Run 'Create Image Texture and Material'")
-            tip_col.label(text="• Run 'Auto Clone Transfer'")
+            tip_col.label(text="• Run 'Transfer Image UV'")
             tip_col.label(
                 text="• Switch to Texture Paint mode to paint mesh with reference image"
             )
@@ -75,8 +75,9 @@ class PP_PT_Main(Panel):
             tip_col.label(
                 text="• In brush settings make sure 'Clone From Paint Slot' is ticked and 'Clone Image' is set to your reference drawing, and 'Source UV' is set to 'Projection'"
             )
-            tip_col.label(text="• Paint mesh with the reference image")
+            tip_col.label(text="• With render settings set to 'Material Preview', paint mesh with the reference image")
             tip_col.label(text="• Remember to save images")
+            tip_col.label(text="• Adjust Reference Image opacity in material properties to control the amount of projected image")        
             tip_col.operator(
                 "wm.url_open",
                 text="View Reference Image Projection Tutorial",
