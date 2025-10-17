@@ -799,6 +799,71 @@ def register_properties():
         default=False,
     )
 
+    # -------------------------------------------------------------------------
+    # Auto-Pave Align properties
+    # -------------------------------------------------------------------------
+    bpy.types.Scene.spp_auto_pave_iterations = bpy.props.IntProperty(
+        name="Iterations",
+        description="Number of relax + snap iterations. More = smoother but slower (recommended: 15-30)",
+        default=20,
+        min=1,
+        max=100,
+        update=_update_auto_pave_live,
+    )
+
+    bpy.types.Scene.spp_auto_pave_relax_strength = bpy.props.FloatProperty(
+        name="Tangent Relax",
+        description="Smoothing strength in tangent plane. Higher = more smoothing (recommended: 0.3-0.6)",
+        default=0.4,
+        min=0.0,
+        max=1.0,
+        precision=2,
+        update=_update_auto_pave_live,
+    )
+
+    bpy.types.Scene.spp_auto_pave_normal_snap = bpy.props.FloatProperty(
+        name="Normal Snap",
+        description="Snap strength toward shell surface. Higher = tighter conformity (recommended: 0.6-0.9)",
+        default=0.7,
+        min=0.0,
+        max=1.0,
+        precision=2,
+        update=_update_auto_pave_live,
+    )
+
+    bpy.types.Scene.spp_auto_pave_lock_boundary = bpy.props.BoolProperty(
+        name="Lock Boundary",
+        description="Keep boundary vertices completely fixed. Disable to allow smooth boundary transitions with boundary slide",
+        default=False,
+        update=_update_auto_pave_live,
+    )
+
+    bpy.types.Scene.spp_auto_pave_final_offset = bpy.props.FloatProperty(
+        name="Final Offset",
+        description="Offset outward along shell normal after final projection (meters)",
+        default=0.0005,
+        min=-0.01,
+        max=0.01,
+        precision=4,
+        update=_update_auto_pave_live,
+    )
+
+    bpy.types.Scene.spp_auto_pave_use_retopo = bpy.props.BoolProperty(
+        name="Use Retopo",
+        description="Run Quadriflow remesh after projection for cleaner quad flow",
+        default=False,
+        update=_update_auto_pave_live,
+    )
+
+    bpy.types.Scene.spp_auto_pave_target_faces = bpy.props.IntProperty(
+        name="Target Faces",
+        description="Approximate number of quads for Quadriflow retopo",
+        default=1500,
+        min=100,
+        max=50000,
+        update=_update_auto_pave_live,
+    )
+
 
 def _update_modifier_if_exists(context, modifier_name, property_name, value):
     """
@@ -841,6 +906,23 @@ def _update_curve_cyclic(self, context):
 
     # Force viewport update
     context.view_layer.update()
+
+
+def _update_auto_pave_live(self, context):
+    """Live update callback for Auto-Pave Align parameters."""
+    # Only trigger if we're in edit mode with a mesh selected
+    if context.mode != 'EDIT_MESH':
+        return
+    
+    obj = context.edit_object
+    if not obj or obj.type != 'MESH':
+        return
+    
+    # Force viewport update to show parameter changes
+    context.view_layer.update()
+    for area in context.screen.areas:
+        if area.type == 'VIEW_3D':
+            area.tag_redraw()
 
 
 def unregister_properties():
@@ -913,6 +995,14 @@ def unregister_properties():
         # UV workflow collapsible sections
         "spp_show_uv_stabilizer_settings",
         "spp_show_uv_curve_editing_tools",
+        # Auto-Pave Align
+        "spp_auto_pave_iterations",
+        "spp_auto_pave_relax_strength",
+        "spp_auto_pave_normal_snap",
+        "spp_auto_pave_lock_boundary",
+        "spp_auto_pave_final_offset",
+        "spp_auto_pave_use_retopo",
+        "spp_auto_pave_target_faces",
     ]
 
     for prop in props:
