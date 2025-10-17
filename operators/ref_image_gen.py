@@ -94,10 +94,21 @@ def ensure_reference_material_on_main_uv(obj, baked_image, main_uv_name):
     bsdf.location = (200, 0)
     out.location = (600, 0)
     
+    # Clean up UV input connections
     if itex.inputs["Vector"].is_linked:
         for link in list(itex.inputs["Vector"].links):
             nt.links.remove(link)
     links.new(uvn.outputs["UV"], itex.inputs["Vector"])
+    
+    # Remove any existing connections from Image Texture Color output (including direct to Base Color)
+    if itex.outputs["Color"].is_linked:
+        for link in list(itex.outputs["Color"].links):
+            nt.links.remove(link)
+    
+    # Remove any existing connections to Base Color input
+    if bsdf.inputs["Base Color"].is_linked:
+        for link in list(bsdf.inputs["Base Color"].links):
+            nt.links.remove(link)
     
     # Connect Image Texture Color to Mix Color socket B
     if mix_color.inputs["B"].is_linked:
@@ -106,9 +117,6 @@ def ensure_reference_material_on_main_uv(obj, baked_image, main_uv_name):
     links.new(itex.outputs["Color"], mix_color.inputs["B"])
     
     # Connect Mix Color Result to Principled BSDF Base Color
-    if bsdf.inputs["Base Color"].is_linked:
-        for link in list(bsdf.inputs["Base Color"].links):
-            nt.links.remove(link)
     links.new(mix_color.outputs["Result"], bsdf.inputs["Base Color"])
 
     # Make the image node the active paint slot (useful if switching to Material mode later)
